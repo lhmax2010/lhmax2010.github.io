@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="### AOSP 原生内置的 AI/ML 框架
+| 体系/模块      | 是否AOSP原生 | 框架主要用途             | 框架归属/分布                      | 端侧用法                  | 云端用法                  | 典型依赖          |
+|----------------|:------------:|--------------------------|-------------------------------------|---------------------------|---------------------------|-------------------|
+| NNAPI          | ✔️           | 端侧AI推理标准接口        | `frameworks/ml/nn/` (AOSP)         | TFLite/MediaPipe等可调用   | -                         | 硬件加速/HAL      |
+| TensorFlow Lite| ❌           | 端测AI模型推理            | Google官方独立SDK（外部依赖）       | App/服务端推理、可对接NNAPI| -                         | TFLite SDK/so     |
+| MediaPipe      | ❌           | AI管道/多模态推理         | Google官方独立工程（外部依赖）      | CV/音频等管道，可对接NNAPI | -                         | MediaPipe AAR/so  |
+| ML Kit         | ❌           | 高层AI功能SDK（OCR/翻译等）| Google Play Services 或独立SDK      | App端AI能力封装           | -                         | Google Play Services |
+| Google Assistant| ❌          | 语音助手/对话/多模态推理  | Google App/Play服务/云端服务        | 用TFLite/MediaPipe/NNAPI等| 云端TensorFlow/大模型等   | Google App/GMS    |
+
+| 框架        | 是否 Framework 层原生模块 | 对 Framework 的集成方式             | 典型使用场景         |
+| ----------- | :----------------------: | ----------------------------------- | -------------------- |
+| TFLite      | 否                       | App 层/JNI/NNAPI delegate           | App 端 AI 推理       |
+| MediaPipe   | 否                       | App 层/JNI                          | 实时多模态处理       |
+| ML Kit      | 否                       | App 层/Google Play Service/SDK      | 高级AI封装、OCR等    |
+| NNAPI       | 是                       | Framework 层唯一AI标准接口          | TFLite/厂商AI等底层  |
+
+### 1. NNAPI（Neural Networks API）
+是什么
+Android 官方定义的端侧神经网络推理标准接口，为应用和 ML 框架（如 TFLite）提供统一的本地 AI 加速入口，适配硬件 NPU/GPU/DSP/CPU。">
+<meta property="og:title" content="Android AI">
+<meta property="og:description" content="### AOSP 原生内置的 AI/ML 框架
+| 体系/模块      | 是否AOSP原生 | 框架主要用途             | 框架归属/分布                      | 端侧用法                  | 云端用法                  | 典型依赖          |
+|----------------|:------------:|--------------------------|-------------------------------------|---------------------------|---------------------------|-------------------|
+| NNAPI          | ✔️           | 端侧AI推理标准接口        | `frameworks/ml/nn/` (AOSP)         | TFLite/MediaPipe等可调用   | -                         | 硬件加速/HAL      |
+| TensorFlow Lite| ❌           | 端测AI模型推理            | Google官方独立SDK（外部依赖）       | App/服务端推理、可对接NNAPI| -                         | TFLite SDK/so     |
+| MediaPipe      | ❌           | AI管道/多模态推理         | Google官方独立工程（外部依赖）      | CV/音频等管道，可对接NNAPI | -                         | MediaPipe AAR/so  |
+| ML Kit         | ❌           | 高层AI功能SDK（OCR/翻译等）| Google Play Services 或独立SDK      | App端AI能力封装           | -                         | Google Play Services |
+| Google Assistant| ❌          | 语音助手/对话/多模态推理  | Google App/Play服务/云端服务        | 用TFLite/MediaPipe/NNAPI等| 云端TensorFlow/大模型等   | Google App/GMS    |
+
+| 框架        | 是否 Framework 层原生模块 | 对 Framework 的集成方式             | 典型使用场景         |
+| ----------- | :----------------------: | ----------------------------------- | -------------------- |
+| TFLite      | 否                       | App 层/JNI/NNAPI delegate           | App 端 AI 推理       |
+| MediaPipe   | 否                       | App 层/JNI                          | 实时多模态处理       |
+| ML Kit      | 否                       | App 层/Google Play Service/SDK      | 高级AI封装、OCR等    |
+| NNAPI       | 是                       | Framework 层唯一AI标准接口          | TFLite/厂商AI等底层  |
+
+### 1. NNAPI（Neural Networks API）
+是什么
+Android 官方定义的端侧神经网络推理标准接口，为应用和 ML 框架（如 TFLite）提供统一的本地 AI 加速入口，适配硬件 NPU/GPU/DSP/CPU。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lhmax2010.github.io/post/Android%20AI.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>Android AI</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Android AI</h1>
+<div class="title-right">
+    <a href="https://lhmax2010.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/lhmax2010/lhmax2010.github.io/issues/7" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><h3>AOSP 原生内置的 AI/ML 框架</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>体系/模块</th>
+<th align="center">是否AOSP原生</th>
+<th>框架主要用途</th>
+<th>框架归属/分布</th>
+<th>端侧用法</th>
+<th>云端用法</th>
+<th>典型依赖</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NNAPI</td>
+<td align="center">✔️</td>
+<td>端侧AI推理标准接口</td>
+<td><code class="notranslate">frameworks/ml/nn/</code> (AOSP)</td>
+<td>TFLite/MediaPipe等可调用</td>
+<td>-</td>
+<td>硬件加速/HAL</td>
+</tr>
+<tr>
+<td>TensorFlow Lite</td>
+<td align="center">❌</td>
+<td>端测AI模型推理</td>
+<td>Google官方独立SDK（外部依赖）</td>
+<td>App/服务端推理、可对接NNAPI</td>
+<td>-</td>
+<td>TFLite SDK/so</td>
+</tr>
+<tr>
+<td>MediaPipe</td>
+<td align="center">❌</td>
+<td>AI管道/多模态推理</td>
+<td>Google官方独立工程（外部依赖）</td>
+<td>CV/音频等管道，可对接NNAPI</td>
+<td>-</td>
+<td>MediaPipe AAR/so</td>
+</tr>
+<tr>
+<td>ML Kit</td>
+<td align="center">❌</td>
+<td>高层AI功能SDK（OCR/翻译等）</td>
+<td>Google Play Services 或独立SDK</td>
+<td>App端AI能力封装</td>
+<td>-</td>
+<td>Google Play Services</td>
+</tr>
+<tr>
+<td>Google Assistant</td>
+<td align="center">❌</td>
+<td>语音助手/对话/多模态推理</td>
+<td>Google App/Play服务/云端服务</td>
+<td>用TFLite/MediaPipe/NNAPI等</td>
+<td>云端TensorFlow/大模型等</td>
+<td>Google App/GMS</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>框架</th>
+<th align="center">是否 Framework 层原生模块</th>
+<th>对 Framework 的集成方式</th>
+<th>典型使用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TFLite</td>
+<td align="center">否</td>
+<td>App 层/JNI/NNAPI delegate</td>
+<td>App 端 AI 推理</td>
+</tr>
+<tr>
+<td>MediaPipe</td>
+<td align="center">否</td>
+<td>App 层/JNI</td>
+<td>实时多模态处理</td>
+</tr>
+<tr>
+<td>ML Kit</td>
+<td align="center">否</td>
+<td>App 层/Google Play Service/SDK</td>
+<td>高级AI封装、OCR等</td>
+</tr>
+<tr>
+<td>NNAPI</td>
+<td align="center">是</td>
+<td>Framework 层唯一AI标准接口</td>
+<td>TFLite/厂商AI等底层</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h3>1. NNAPI（Neural Networks API）</h3>
+<p>是什么<br>
+Android 官方定义的端侧神经网络推理标准接口，为应用和 ML 框架（如 TFLite）提供统一的本地 AI 加速入口，适配硬件 NPU/GPU/DSP/CPU。</p>
+<p>主要用于<br>
+各类深度学习模型（CV/NLP/音频等）的推理加速，面向图片识别、语音识别、翻译、AI拍照等端测场景。</p>
+<p>支持模型<br>
+支持 CNN/RNN/Transformer 等标准神经网络，兼容 ONNX、TFLite、Caffe、PyTorch（经转换）。</p>
+<p>接口是什么<br>
+Java: android.neuralnetworks.*（API 29+），<br>
+C/C++: NeuralNetworks.h NDK API，<br>
+TFLite/MediaPipe等可用 NNAPI Delegate。</p>
+<p>在哪一层/Android源码路径<br>
+Framework层/Native，主路径：frameworks/ml/nn/<br>
+HAL: hardware/interfaces/neuralnetworks/</p>
+<p>开发入口<br>
+<a href="https://developer.android.com/ndk/guides/neuralnetworks?hl=zh-cn" rel="nofollow">NNAPI 官方文档</a></p>
+<p>典型用例</p>
+<p>TFLite 调用 NNAPI delegate 实现离线图像识别/语音识别的本地推理加速</p>
+<p>AI 相机的本地超分辨率处理</p>
+<p>功能/性能/能力</p>
+<p>只管模型推理，依赖硬件能力，性能受 SoC/NPU 支持影响，适合通用端测加速</p>
+<h3>2. TensorFlow Lite</h3>
+<p>是什么<br>
+Google 开发的轻量级端侧深度学习推理库，专为移动和嵌入式设备优化，是 TensorFlow 框架的精简版。</p>
+<p>主要用于<br>
+在 Android/iOS/IoT/边缘设备上执行各类 AI/ML 任务。广泛用于图像分类、目标检测、人脸识别、语音识别、自然语言理解等。</p>
+<p>支持模型<br>
+支持大部分 TensorFlow 模型，TFLite、ONNX，支持 CNN、RNN、Transformer、量化/剪枝模型。</p>
+<p>接口是什么<br>
+Java: org.tensorflow.lite.Interpreter、org.tensorflow.lite.support.*<br>
+Native: libtensorflowlite.so、libtensorflowlite_jni.so<br>
+支持与 NNAPI/GPU Delegate 配合</p>
+<p>在哪一层/Android源码路径<br>
+App 层、Native 层<br>
+非AOSP，独立工程：<a href="https://github.com/tensorflow/tensorflow/tree/master/tensorflow/lite">GitHub TensorFlow</a></p>
+<p>开发入口<br>
+<a href="https://ai.google.dev/edge/litert?hl=zh-cn" rel="nofollow">TensorFlow Lite 官方</a></p>
+<p>典型用例</p>
+<p>App端离线识别：图像分类（如花草识别）、语音命令识别、翻译模型</p>
+<p>Google Assistant/相机/键盘等内置AI能力</p>
+<p>功能/性能/能力</p>
+<p>端测模型种类广，推理速度快，硬件可用性高（支持NNAPI/GPU），适合大多数本地 AI 场景</p>
+<h3>3. MediaPipe</h3>
+<p>是什么<br>
+Google 开源的端侧跨平台多模态 AI 流式管道框架，擅长视觉、音频、手势、姿态等实时分析。</p>
+<p>主要用于<br>
+实时 CV（如人脸/手势/姿态/对象追踪）、音频/多模态任务（如动作识别），常用于 AR、美颜、健身等。</p>
+<p>支持模型<br>
+支持 TFLite/ONNX/Caffe2 模型，pipeline 可嵌入多AI节点，如检测、分割、追踪、关键点提取等。</p>
+<p>接口是什么<br>
+Java: com.google.mediapipe.framework.*<br>
+Native: libmediapipe_jni.so、C++ Core<br>
+Pipeline 通过 Calculator Graph 配置，支持 TFLite 互操作</p>
+<p>在哪一层/Android源码路径<br>
+App/Native层，独立工程：<a href="https://github.com/google/mediapipe">MediaPipe GitHub</a><br>
+Java: mediapipe/java/src/main/java/com/google/mediapipe/</p>
+<p>开发入口<br>
+<a href="https://ai.google.dev/edge/mediapipe/solutions/guide?hl=zh-cn" rel="nofollow">MediaPipe 官方</a></p>
+<p>典型用例</p>
+<p>AR 相机：实时人脸、手势、身体姿态检测</p>
+<p>健身、视频会议、滤镜、AI 美颜等</p>
+<p>功能/性能/能力</p>
+<p>支持高性能流式多 AI 节点，低延迟实时分析，擅长 CV 端侧 Pipeline，部分场景性能优于单独模型推理</p>
+<h3>4. ML Kit</h3>
+<p>是什么<br>
+Google Play 服务提供的移动端 AI 能力高层 SDK，封装 OCR、翻译、人脸检测等常见功能，对开发者“即插即用”，不要求 ML 经验。</p>
+<p>主要用于<br>
+手机 App 快速集成 OCR、文本识别、条码识别、对象检测、语言翻译、智能回复等 AI 能力。</p>
+<p>支持模型<br>
+内置 Google 训练好的 TFLite、CNN、Transformer 等，自动下发和优化，部分可自定义导入自有模型。</p>
+<p>接口是什么<br>
+Java/Kotlin: com.google.mlkit.*（如 vision、nlp、barcode）<br>
+大部分能力基于 Google Play 服务/SDK调用</p>
+<p>在哪一层/Android源码路径<br>
+App 层/Google Play 服务，不在AOSP。SDK：<a href="https://developers.google.com/ml-kit?hl=zh-cn" rel="nofollow">ML Kit 官方</a></p>
+<p>开发入口<br>
+<a href="https://developers.google.com/ml-kit?hl=zh-cn" rel="nofollow">ML Kit 官方</a></p>
+<p>典型用例</p>
+<p>扫码识别、名片OCR、相册智能文字提取、实时翻译、图片标签、场景检测</p>
+<p>功能/性能/能力</p>
+<p>高度封装，免模型管理、即插即用，适合中轻度AI应用，推理速度适中但灵活性有限</p>
+<h3>5. Google Assistant</h3>
+<p>是什么<br>
+Google 生态中的全功能语音助手平台，集成自然语言理解、语音识别、对话管理、知识问答、视觉分析等多模态AI能力。属于Google App/服务，不是AOSP部分。</p>
+<p>主要用于<br>
+智能语音助手（手机、TV、IoT、汽车等），语音唤醒、指令执行、对话、翻译、视觉识别（如“看图识物”）。</p>
+<p>支持模型<br>
+云端大模型（BERT、LaMDA、Gemini等）、端侧唤醒词/命令识别用TFLite、视觉用MediaPipe</p>
+<p>接口是什么<br>
+对外以Intent/Activity/VoiceInteractionService等Android标准接口提供能力，API多为Google自有</p>
+<p>在哪一层/Android源码路径<br>
+主要为Google App（com.google.android.googlequicksearchbox）、Play服务和云端，非AOSP开源模块。</p>
+<p>开发入口<br>
+<a href="https://developers.google.com/assistant?hl=zh-cn" rel="nofollow">Google Assistant开发者中心</a></p>
+<p>典型用例</p>
+<p>语音唤醒手机、智能家居控制、语音搜索、AI对话、实时翻译、拍照识物</p>
+<p>功能/性能/能力</p>
+<p>能力最丰富，支持自然语言理解/多轮对话/多模态推理，端云结合，依赖云端大模型，智能性和复杂度远超一般本地AI能力</p>
+<h3>五个对比区别</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>框架/服务</th>
+<th align="center">是否AOSP原生</th>
+<th>定位</th>
+<th>主要AI能力</th>
+<th>性能与灵活性</th>
+<th>适用场景</th>
+<th>端/云</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>NNAPI</td>
+<td align="center">✔️</td>
+<td>AI加速标准接口</td>
+<td>任意推理模型（依赖实现）</td>
+<td>性能好（硬件适配度决定）</td>
+<td>TFLite等模型推理</td>
+<td>端侧</td>
+</tr>
+<tr>
+<td>TensorFlow Lite</td>
+<td align="center">❌</td>
+<td>端侧AI推理框架</td>
+<td>图像/语音/NLP推理，灵活性强</td>
+<td>高性能（配NNAPI/GPU）</td>
+<td>定制/通用AI应用</td>
+<td>端侧</td>
+</tr>
+<tr>
+<td>MediaPipe</td>
+<td align="center">❌</td>
+<td>AI多模态管道框架</td>
+<td>CV/音频/手势/姿态实时分析</td>
+<td>高性能流式分析、Pipeline</td>
+<td>AR/滤镜/健身</td>
+<td>端侧</td>
+</tr>
+<tr>
+<td>ML Kit</td>
+<td align="center">❌</td>
+<td>高层AI能力SDK</td>
+<td>OCR/翻译/检测等高层AI能力</td>
+<td>易用性高，性能适中</td>
+<td>快速集成AI场景</td>
+<td>端侧+云</td>
+</tr>
+<tr>
+<td>Google Assistant</td>
+<td align="center">❌</td>
+<td>语音助手AI平台</td>
+<td>语音/NLU/对话/视觉/家居控制等</td>
+<td>最强AI，端云协同</td>
+<td>智能助手/多模态</td>
+<td>端+云</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://lhmax2010.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","lhmax2010/lhmax2010.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+
+
+</html>

@@ -1,5 +1,23 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 03 Aug 2025 13:12:38 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>Android Framework</title><link>https://lhmax2010.github.io/post/Android%20Framework.html</link><description>1. ActivityManager
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 03 Aug 2025 13:34:34 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>Android AI</title><link>https://lhmax2010.github.io/post/Android%20AI.html</link><description>### AOSP 原生内置的 AI/ML 框架
+| 体系/模块      | 是否AOSP原生 | 框架主要用途             | 框架归属/分布                      | 端侧用法                  | 云端用法                  | 典型依赖          |
+|----------------|:------------:|--------------------------|-------------------------------------|---------------------------|---------------------------|-------------------|
+| NNAPI          | ✔️           | 端侧AI推理标准接口        | `frameworks/ml/nn/` (AOSP)         | TFLite/MediaPipe等可调用   | -                         | 硬件加速/HAL      |
+| TensorFlow Lite| ❌           | 端测AI模型推理            | Google官方独立SDK（外部依赖）       | App/服务端推理、可对接NNAPI| -                         | TFLite SDK/so     |
+| MediaPipe      | ❌           | AI管道/多模态推理         | Google官方独立工程（外部依赖）      | CV/音频等管道，可对接NNAPI | -                         | MediaPipe AAR/so  |
+| ML Kit         | ❌           | 高层AI功能SDK（OCR/翻译等）| Google Play Services 或独立SDK      | App端AI能力封装           | -                         | Google Play Services |
+| Google Assistant| ❌          | 语音助手/对话/多模态推理  | Google App/Play服务/云端服务        | 用TFLite/MediaPipe/NNAPI等| 云端TensorFlow/大模型等   | Google App/GMS    |
+
+| 框架        | 是否 Framework 层原生模块 | 对 Framework 的集成方式             | 典型使用场景         |
+| ----------- | :----------------------: | ----------------------------------- | -------------------- |
+| TFLite      | 否                       | App 层/JNI/NNAPI delegate           | App 端 AI 推理       |
+| MediaPipe   | 否                       | App 层/JNI                          | 实时多模态处理       |
+| ML Kit      | 否                       | App 层/Google Play Service/SDK      | 高级AI封装、OCR等    |
+| NNAPI       | 是                       | Framework 层唯一AI标准接口          | TFLite/厂商AI等底层  |
+
+### 1. NNAPI（Neural Networks API）
+是什么
+Android 官方定义的端侧神经网络推理标准接口，为应用和 ML 框架（如 TFLite）提供统一的本地 AI 加速入口，适配硬件 NPU/GPU/DSP/CPU。</description><guid isPermaLink="true">https://lhmax2010.github.io/post/Android%20AI.html</guid><pubDate>Sun, 03 Aug 2025 13:34:06 +0000</pubDate></item><item><title>Android Framework</title><link>https://lhmax2010.github.io/post/Android%20Framework.html</link><description>1. ActivityManager
 功能：管理四大组件（Activity/Service/Broadcast/Provider）生命周期，调度进程、任务栈、前后台切换，处理ANR。</description><guid isPermaLink="true">https://lhmax2010.github.io/post/Android%20Framework.html</guid><pubDate>Sun, 03 Aug 2025 13:04:09 +0000</pubDate></item><item><title>Android Runtime</title><link>https://lhmax2010.github.io/post/Android%20Runtime.html</link><description>1. runtime（art/runtime/）
 运行逻辑：
 ART 虚拟机主控层，负责 Java 类加载、对象创建、内存管理、线程管理、方法执行（解释、JIT、AOT）、异常捕获、同步、GC 协调等所有执行流的核心。</description><guid isPermaLink="true">https://lhmax2010.github.io/post/Android%20Runtime.html</guid><pubDate>Sun, 03 Aug 2025 12:33:32 +0000</pubDate></item><item><title>Native Libraries &amp; Native Deamons</title><link>https://lhmax2010.github.io/post/Native%20Libraries%20%26%20Native%20Deamons.html</link><description>### Native Libraries 详解
