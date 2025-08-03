@@ -201,7 +201,7 @@ Android 内核中有大量硬件相关的驱动和模块，确保硬件资源的
 
 **代码路径：drivers/input/**
 
-Samsung 特有功能
+### Samsung 特有功能
 源码位置
 https://opensource.samsung.com/downSrcCode
 
