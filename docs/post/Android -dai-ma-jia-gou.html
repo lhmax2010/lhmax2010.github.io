@@ -193,6 +193,55 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 | JNI              | Java 层与 native（C/C++）代码互操作桥梁，实现方法调用、数据转换、线程/对象管理 | art/runtime/jni/ <br> libcore/ojluni/src/main/native/include/jni.h |
 | libnativebridge  | Native Bridge 机制实现，不同架构下 native so 的兼容仿真加载，跨 ABI 支持 | art/libnativebridge/                      |
 | libnativeloader  | 动态库加载与命名空间隔离机制，管理 so 加载路径、安全隔离与卸载 | art/libnativeloader/                      |
+
+### Android Framework层
+| 模块                | 功能描述                                                      | 主要代码路径                                |
+|---------------------|---------------------------------------------------------------|---------------------------------------------|
+| ActivityManager     | 应用组件生命周期管理、进程调度、任务栈管理、后台管控           | frameworks/base/services/core/java/com/android/server/am/         |
+| PackageManager      | APK 安装/卸载、包管理、权限管理、签名校验、分区               | frameworks/base/services/core/java/com/android/server/pm/         |
+| WindowManager       | 窗口/层级管理、窗口动画、输入分发、屏幕适配                    | frameworks/base/services/core/java/com/android/server/wm/         |
+| InputManager        | 输入事件收集、分发、输入设备（键盘、触控、鼠标、遥控）管理      | frameworks/base/services/core/java/com/android/server/input/ <br> frameworks/base/core/java/android/hardware/input/ |
+| DisplayManager      | 屏幕显示设备管理、投屏、分辨率切换、亮度控制                   | frameworks/base/services/core/java/com/android/server/display/    |
+| PowerManager        | 电源管理、休眠/唤醒、亮度/省电控制、Wakelock                  | frameworks/base/services/core/java/com/android/server/power/      |
+| NotificationManager | 通知管理、消息推送、渠道与权限控制、锁屏与前台通知             | frameworks/base/services/core/java/com/android/server/notification/ <br> frameworks/base/core/java/android/app/NotificationManager.java |
+| AlarmManager        | 定时任务调度、闹钟服务                                         | frameworks/base/services/core/java/com/android/server/alarm/      |
+| ResourceManager     | 应用与系统资源（布局、图片、字符串、样式、主题）加载与管理     | frameworks/base/core/java/android/content/res/ <br> frameworks/base/libs/androidfw/ <br> frameworks/base/services/core/java/com/android/server/ |
+| LocationManager     | 定位服务、位置更新、地理围栏、GPS/网络定位                     | frameworks/base/services/core/java/com/android/server/location/   |
+| ConnectivityManager | 网络连接、Wi-Fi/蜂窝/以太网、VPN、代理、网络切换               | frameworks/base/services/core/java/com/android/server/connectivity/|
+| TelephonyManager    | 蜂窝网络、通话、短信、SIM 卡、信号强度                         | frameworks/opt/telephony/src/java/com/android/internal/telephony/ |
+| WifiManager         | 无线网络连接、Wi-Fi 扫描、热点、状态监听                       | frameworks/opt/net/wifi/service/java/com/android/server/wifi/     |
+| BluetoothManager    | 蓝牙连接、设备配对、BLE、音频控制                              | packages/modules/Bluetooth/service/java/com/android/server/bluetooth/ |
+| AudioManager        | 音频策略、音量、输出/输入路由、音效                            | frameworks/base/services/core/java/com/android/server/audio/      |
+| MediaSessionManager | 多媒体播放会话、媒体控制、通知交互                             | frameworks/base/services/core/java/com/android/server/media/      |
+| CameraService       | 摄像头设备管理、拍照、预览、视频采集                           | frameworks/av/services/camera/libcameraservice/                  |
+| SensorManager       | 传感器事件收集、数据融合、传感器策略                           | frameworks/base/services/core/java/com/android/server/sensor/     |
+| JobSchedulerService | 后台任务调度、任务约束、Doze/省电兼容                         | frameworks/base/services/core/java/com/android/server/job/        |
+| SystemUI            | 系统界面（状态栏、导航栏、通知栏、快设面板）                   | frameworks/base/packages/SystemUI/                               |
+| PermissionManager   | 权限申请、授权、管理、特殊权限分发                             | frameworks/base/services/core/java/com/android/server/pm/permission/ |
+| ContentProvider     | 跨应用数据共享、标准化数据访问接口（数据库、文件、网络等）      | frameworks/base/core/java/android/content/ContentProvider.java <br> frameworks/base/core/java/android/content/ |
+| Views               | UI 视图系统，所有控件、布局、动画、事件分发基础                | frameworks/base/core/java/android/view/ <br> frameworks/base/core/java/android/widget/ |
+| ClipboardService    | 剪贴板数据管理、读写、权限控制                                 | frameworks/base/services/core/java/com/android/server/clipboard/  |
+| StorageManager      | 存储空间管理、分区、OTG 设备、加密、文件系统挂载               | frameworks/base/services/core/java/com/android/server/storage/    |
+| MountService        | 存储挂载、卸载、监听、分区管理                                 | frameworks/base/services/core/java/com/android/server/mount/      |
+| UsbService          | USB 设备检测、状态管理、MTP/PTP、权限分发                      | frameworks/base/services/usb/java/com/android/server/usb/         |
+| PrintService        | 打印设备管理、打印任务、网络打印支持                           | frameworks/base/services/core/java/com/android/server/print/      |
+| DevicePolicyManager | 企业设备管理、策略下发、远程锁定/擦除                          | frameworks/base/services/devicepolicy/java/com/android/server/devicepolicy/ |
+| WallpaperManager    | 壁纸管理、壁纸设置、动态壁纸                                   | frameworks/base/services/core/java/com/android/server/wallpaper/  |
+| AccessibilityManager| 辅助功能（无障碍）、读屏、放大镜、辅助输入                    | frameworks/base/services/core/java/com/android/server/accessibility/|
+| BackupManager       | 数据备份与恢复、云备份接口                                     | frameworks/base/services/core/java/com/android/server/backup/     |
+| RestrictionsManager | 家长控制、内容限制、应用限制                                  | frameworks/base/services/core/java/com/android/server/restrictions/|
+| TrustManager        | 信任设备、解锁策略、设备信任级别                               | frameworks/base/services/core/java/com/android/server/trust/      |
+| LockSettingsService | 锁屏设置、密码/指纹/面部识别管理                              | frameworks/base/services/core/java/com/android/server/locksettings/|
+| AppOpsManager       | 应用操作权限控制、敏感操作监控                                | frameworks/base/services/core/java/com/android/server/appop/      |
+| UsageStatsManager   | 应用使用统计、前后台检测、屏幕时间、限制策略                   | frameworks/base/services/usage/java/com/android/server/usage/     |
+| ShortcutsManager    | 快捷方式管理、动态/固定快捷方式接口                           | frameworks/base/services/core/java/com/android/server/shortcuts/  |
+| IncidentManager     | 故障报告、系统诊断、异常事件收集                              | frameworks/base/services/core/java/com/android/server/incident/   |
+| StatsManager        | 性能统计、事件分析、系统指标采集                              | frameworks/base/services/core/java/com/android/server/stats/      |
+| PolicyManager       | 电源/设备/安全策略统一管理接口                                | frameworks/base/services/core/java/com/android/server/policy/     |
+| MediaService        | 多媒体会话管理、音视频路由、媒体资源分配与权限                 | frameworks/av/services/mediaresourcemanager/ <br> frameworks/base/services/core/java/com/android/server/media/ |
+| MediaCodec          | 多媒体编解码标准接口，硬件加速编解码适配                      | frameworks/base/media/java/android/media/MediaCodec.java <br> frameworks/av/media/libstagefright/ |
+| MediaExtractor      | 多媒体封装格式解析与音视频流提取                              | frameworks/base/media/java/android/media/MediaExtractor.java <br> frameworks/av/media/libstagefright/MediaExtractor.cpp |
+| OpenMAX AL          | 多媒体硬件抽象标准接口，底层音视频硬件访问                    | frameworks/wilhelm/ <br> frameworks/base/media/jni/              |
 。">
 <meta property="og:title" content="Android 代码架构">
 <meta property="og:description" content="### Android 架构
@@ -378,6 +427,55 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 | JNI              | Java 层与 native（C/C++）代码互操作桥梁，实现方法调用、数据转换、线程/对象管理 | art/runtime/jni/ <br> libcore/ojluni/src/main/native/include/jni.h |
 | libnativebridge  | Native Bridge 机制实现，不同架构下 native so 的兼容仿真加载，跨 ABI 支持 | art/libnativebridge/                      |
 | libnativeloader  | 动态库加载与命名空间隔离机制，管理 so 加载路径、安全隔离与卸载 | art/libnativeloader/                      |
+
+### Android Framework层
+| 模块                | 功能描述                                                      | 主要代码路径                                |
+|---------------------|---------------------------------------------------------------|---------------------------------------------|
+| ActivityManager     | 应用组件生命周期管理、进程调度、任务栈管理、后台管控           | frameworks/base/services/core/java/com/android/server/am/         |
+| PackageManager      | APK 安装/卸载、包管理、权限管理、签名校验、分区               | frameworks/base/services/core/java/com/android/server/pm/         |
+| WindowManager       | 窗口/层级管理、窗口动画、输入分发、屏幕适配                    | frameworks/base/services/core/java/com/android/server/wm/         |
+| InputManager        | 输入事件收集、分发、输入设备（键盘、触控、鼠标、遥控）管理      | frameworks/base/services/core/java/com/android/server/input/ <br> frameworks/base/core/java/android/hardware/input/ |
+| DisplayManager      | 屏幕显示设备管理、投屏、分辨率切换、亮度控制                   | frameworks/base/services/core/java/com/android/server/display/    |
+| PowerManager        | 电源管理、休眠/唤醒、亮度/省电控制、Wakelock                  | frameworks/base/services/core/java/com/android/server/power/      |
+| NotificationManager | 通知管理、消息推送、渠道与权限控制、锁屏与前台通知             | frameworks/base/services/core/java/com/android/server/notification/ <br> frameworks/base/core/java/android/app/NotificationManager.java |
+| AlarmManager        | 定时任务调度、闹钟服务                                         | frameworks/base/services/core/java/com/android/server/alarm/      |
+| ResourceManager     | 应用与系统资源（布局、图片、字符串、样式、主题）加载与管理     | frameworks/base/core/java/android/content/res/ <br> frameworks/base/libs/androidfw/ <br> frameworks/base/services/core/java/com/android/server/ |
+| LocationManager     | 定位服务、位置更新、地理围栏、GPS/网络定位                     | frameworks/base/services/core/java/com/android/server/location/   |
+| ConnectivityManager | 网络连接、Wi-Fi/蜂窝/以太网、VPN、代理、网络切换               | frameworks/base/services/core/java/com/android/server/connectivity/|
+| TelephonyManager    | 蜂窝网络、通话、短信、SIM 卡、信号强度                         | frameworks/opt/telephony/src/java/com/android/internal/telephony/ |
+| WifiManager         | 无线网络连接、Wi-Fi 扫描、热点、状态监听                       | frameworks/opt/net/wifi/service/java/com/android/server/wifi/     |
+| BluetoothManager    | 蓝牙连接、设备配对、BLE、音频控制                              | packages/modules/Bluetooth/service/java/com/android/server/bluetooth/ |
+| AudioManager        | 音频策略、音量、输出/输入路由、音效                            | frameworks/base/services/core/java/com/android/server/audio/      |
+| MediaSessionManager | 多媒体播放会话、媒体控制、通知交互                             | frameworks/base/services/core/java/com/android/server/media/      |
+| CameraService       | 摄像头设备管理、拍照、预览、视频采集                           | frameworks/av/services/camera/libcameraservice/                  |
+| SensorManager       | 传感器事件收集、数据融合、传感器策略                           | frameworks/base/services/core/java/com/android/server/sensor/     |
+| JobSchedulerService | 后台任务调度、任务约束、Doze/省电兼容                         | frameworks/base/services/core/java/com/android/server/job/        |
+| SystemUI            | 系统界面（状态栏、导航栏、通知栏、快设面板）                   | frameworks/base/packages/SystemUI/                               |
+| PermissionManager   | 权限申请、授权、管理、特殊权限分发                             | frameworks/base/services/core/java/com/android/server/pm/permission/ |
+| ContentProvider     | 跨应用数据共享、标准化数据访问接口（数据库、文件、网络等）      | frameworks/base/core/java/android/content/ContentProvider.java <br> frameworks/base/core/java/android/content/ |
+| Views               | UI 视图系统，所有控件、布局、动画、事件分发基础                | frameworks/base/core/java/android/view/ <br> frameworks/base/core/java/android/widget/ |
+| ClipboardService    | 剪贴板数据管理、读写、权限控制                                 | frameworks/base/services/core/java/com/android/server/clipboard/  |
+| StorageManager      | 存储空间管理、分区、OTG 设备、加密、文件系统挂载               | frameworks/base/services/core/java/com/android/server/storage/    |
+| MountService        | 存储挂载、卸载、监听、分区管理                                 | frameworks/base/services/core/java/com/android/server/mount/      |
+| UsbService          | USB 设备检测、状态管理、MTP/PTP、权限分发                      | frameworks/base/services/usb/java/com/android/server/usb/         |
+| PrintService        | 打印设备管理、打印任务、网络打印支持                           | frameworks/base/services/core/java/com/android/server/print/      |
+| DevicePolicyManager | 企业设备管理、策略下发、远程锁定/擦除                          | frameworks/base/services/devicepolicy/java/com/android/server/devicepolicy/ |
+| WallpaperManager    | 壁纸管理、壁纸设置、动态壁纸                                   | frameworks/base/services/core/java/com/android/server/wallpaper/  |
+| AccessibilityManager| 辅助功能（无障碍）、读屏、放大镜、辅助输入                    | frameworks/base/services/core/java/com/android/server/accessibility/|
+| BackupManager       | 数据备份与恢复、云备份接口                                     | frameworks/base/services/core/java/com/android/server/backup/     |
+| RestrictionsManager | 家长控制、内容限制、应用限制                                  | frameworks/base/services/core/java/com/android/server/restrictions/|
+| TrustManager        | 信任设备、解锁策略、设备信任级别                               | frameworks/base/services/core/java/com/android/server/trust/      |
+| LockSettingsService | 锁屏设置、密码/指纹/面部识别管理                              | frameworks/base/services/core/java/com/android/server/locksettings/|
+| AppOpsManager       | 应用操作权限控制、敏感操作监控                                | frameworks/base/services/core/java/com/android/server/appop/      |
+| UsageStatsManager   | 应用使用统计、前后台检测、屏幕时间、限制策略                   | frameworks/base/services/usage/java/com/android/server/usage/     |
+| ShortcutsManager    | 快捷方式管理、动态/固定快捷方式接口                           | frameworks/base/services/core/java/com/android/server/shortcuts/  |
+| IncidentManager     | 故障报告、系统诊断、异常事件收集                              | frameworks/base/services/core/java/com/android/server/incident/   |
+| StatsManager        | 性能统计、事件分析、系统指标采集                              | frameworks/base/services/core/java/com/android/server/stats/      |
+| PolicyManager       | 电源/设备/安全策略统一管理接口                                | frameworks/base/services/core/java/com/android/server/policy/     |
+| MediaService        | 多媒体会话管理、音视频路由、媒体资源分配与权限                 | frameworks/av/services/mediaresourcemanager/ <br> frameworks/base/services/core/java/com/android/server/media/ |
+| MediaCodec          | 多媒体编解码标准接口，硬件加速编解码适配                      | frameworks/base/media/java/android/media/MediaCodec.java <br> frameworks/av/media/libstagefright/ |
+| MediaExtractor      | 多媒体封装格式解析与音视频流提取                              | frameworks/base/media/java/android/media/MediaExtractor.java <br> frameworks/av/media/libstagefright/MediaExtractor.cpp |
+| OpenMAX AL          | 多媒体硬件抽象标准接口，底层音视频硬件访问                    | frameworks/wilhelm/ <br> frameworks/base/media/jni/              |
 。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://lhmax2010.github.io/post/Android%20-dai-ma-jia-gou.html">
@@ -1365,6 +1463,243 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <td>libnativeloader</td>
 <td>动态库加载与命名空间隔离机制，管理 so 加载路径、安全隔离与卸载</td>
 <td>art/libnativeloader/</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h3>Android Framework层</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>模块</th>
+<th>功能描述</th>
+<th>主要代码路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ActivityManager</td>
+<td>应用组件生命周期管理、进程调度、任务栈管理、后台管控</td>
+<td>frameworks/base/services/core/java/com/android/server/am/</td>
+</tr>
+<tr>
+<td>PackageManager</td>
+<td>APK 安装/卸载、包管理、权限管理、签名校验、分区</td>
+<td>frameworks/base/services/core/java/com/android/server/pm/</td>
+</tr>
+<tr>
+<td>WindowManager</td>
+<td>窗口/层级管理、窗口动画、输入分发、屏幕适配</td>
+<td>frameworks/base/services/core/java/com/android/server/wm/</td>
+</tr>
+<tr>
+<td>InputManager</td>
+<td>输入事件收集、分发、输入设备（键盘、触控、鼠标、遥控）管理</td>
+<td>frameworks/base/services/core/java/com/android/server/input/ <br> frameworks/base/core/java/android/hardware/input/</td>
+</tr>
+<tr>
+<td>DisplayManager</td>
+<td>屏幕显示设备管理、投屏、分辨率切换、亮度控制</td>
+<td>frameworks/base/services/core/java/com/android/server/display/</td>
+</tr>
+<tr>
+<td>PowerManager</td>
+<td>电源管理、休眠/唤醒、亮度/省电控制、Wakelock</td>
+<td>frameworks/base/services/core/java/com/android/server/power/</td>
+</tr>
+<tr>
+<td>NotificationManager</td>
+<td>通知管理、消息推送、渠道与权限控制、锁屏与前台通知</td>
+<td>frameworks/base/services/core/java/com/android/server/notification/ <br> frameworks/base/core/java/android/app/NotificationManager.java</td>
+</tr>
+<tr>
+<td>AlarmManager</td>
+<td>定时任务调度、闹钟服务</td>
+<td>frameworks/base/services/core/java/com/android/server/alarm/</td>
+</tr>
+<tr>
+<td>ResourceManager</td>
+<td>应用与系统资源（布局、图片、字符串、样式、主题）加载与管理</td>
+<td>frameworks/base/core/java/android/content/res/ <br> frameworks/base/libs/androidfw/ <br> frameworks/base/services/core/java/com/android/server/</td>
+</tr>
+<tr>
+<td>LocationManager</td>
+<td>定位服务、位置更新、地理围栏、GPS/网络定位</td>
+<td>frameworks/base/services/core/java/com/android/server/location/</td>
+</tr>
+<tr>
+<td>ConnectivityManager</td>
+<td>网络连接、Wi-Fi/蜂窝/以太网、VPN、代理、网络切换</td>
+<td>frameworks/base/services/core/java/com/android/server/connectivity/</td>
+</tr>
+<tr>
+<td>TelephonyManager</td>
+<td>蜂窝网络、通话、短信、SIM 卡、信号强度</td>
+<td>frameworks/opt/telephony/src/java/com/android/internal/telephony/</td>
+</tr>
+<tr>
+<td>WifiManager</td>
+<td>无线网络连接、Wi-Fi 扫描、热点、状态监听</td>
+<td>frameworks/opt/net/wifi/service/java/com/android/server/wifi/</td>
+</tr>
+<tr>
+<td>BluetoothManager</td>
+<td>蓝牙连接、设备配对、BLE、音频控制</td>
+<td>packages/modules/Bluetooth/service/java/com/android/server/bluetooth/</td>
+</tr>
+<tr>
+<td>AudioManager</td>
+<td>音频策略、音量、输出/输入路由、音效</td>
+<td>frameworks/base/services/core/java/com/android/server/audio/</td>
+</tr>
+<tr>
+<td>MediaSessionManager</td>
+<td>多媒体播放会话、媒体控制、通知交互</td>
+<td>frameworks/base/services/core/java/com/android/server/media/</td>
+</tr>
+<tr>
+<td>CameraService</td>
+<td>摄像头设备管理、拍照、预览、视频采集</td>
+<td>frameworks/av/services/camera/libcameraservice/</td>
+</tr>
+<tr>
+<td>SensorManager</td>
+<td>传感器事件收集、数据融合、传感器策略</td>
+<td>frameworks/base/services/core/java/com/android/server/sensor/</td>
+</tr>
+<tr>
+<td>JobSchedulerService</td>
+<td>后台任务调度、任务约束、Doze/省电兼容</td>
+<td>frameworks/base/services/core/java/com/android/server/job/</td>
+</tr>
+<tr>
+<td>SystemUI</td>
+<td>系统界面（状态栏、导航栏、通知栏、快设面板）</td>
+<td>frameworks/base/packages/SystemUI/</td>
+</tr>
+<tr>
+<td>PermissionManager</td>
+<td>权限申请、授权、管理、特殊权限分发</td>
+<td>frameworks/base/services/core/java/com/android/server/pm/permission/</td>
+</tr>
+<tr>
+<td>ContentProvider</td>
+<td>跨应用数据共享、标准化数据访问接口（数据库、文件、网络等）</td>
+<td>frameworks/base/core/java/android/content/ContentProvider.java <br> frameworks/base/core/java/android/content/</td>
+</tr>
+<tr>
+<td>Views</td>
+<td>UI 视图系统，所有控件、布局、动画、事件分发基础</td>
+<td>frameworks/base/core/java/android/view/ <br> frameworks/base/core/java/android/widget/</td>
+</tr>
+<tr>
+<td>ClipboardService</td>
+<td>剪贴板数据管理、读写、权限控制</td>
+<td>frameworks/base/services/core/java/com/android/server/clipboard/</td>
+</tr>
+<tr>
+<td>StorageManager</td>
+<td>存储空间管理、分区、OTG 设备、加密、文件系统挂载</td>
+<td>frameworks/base/services/core/java/com/android/server/storage/</td>
+</tr>
+<tr>
+<td>MountService</td>
+<td>存储挂载、卸载、监听、分区管理</td>
+<td>frameworks/base/services/core/java/com/android/server/mount/</td>
+</tr>
+<tr>
+<td>UsbService</td>
+<td>USB 设备检测、状态管理、MTP/PTP、权限分发</td>
+<td>frameworks/base/services/usb/java/com/android/server/usb/</td>
+</tr>
+<tr>
+<td>PrintService</td>
+<td>打印设备管理、打印任务、网络打印支持</td>
+<td>frameworks/base/services/core/java/com/android/server/print/</td>
+</tr>
+<tr>
+<td>DevicePolicyManager</td>
+<td>企业设备管理、策略下发、远程锁定/擦除</td>
+<td>frameworks/base/services/devicepolicy/java/com/android/server/devicepolicy/</td>
+</tr>
+<tr>
+<td>WallpaperManager</td>
+<td>壁纸管理、壁纸设置、动态壁纸</td>
+<td>frameworks/base/services/core/java/com/android/server/wallpaper/</td>
+</tr>
+<tr>
+<td>AccessibilityManager</td>
+<td>辅助功能（无障碍）、读屏、放大镜、辅助输入</td>
+<td>frameworks/base/services/core/java/com/android/server/accessibility/</td>
+</tr>
+<tr>
+<td>BackupManager</td>
+<td>数据备份与恢复、云备份接口</td>
+<td>frameworks/base/services/core/java/com/android/server/backup/</td>
+</tr>
+<tr>
+<td>RestrictionsManager</td>
+<td>家长控制、内容限制、应用限制</td>
+<td>frameworks/base/services/core/java/com/android/server/restrictions/</td>
+</tr>
+<tr>
+<td>TrustManager</td>
+<td>信任设备、解锁策略、设备信任级别</td>
+<td>frameworks/base/services/core/java/com/android/server/trust/</td>
+</tr>
+<tr>
+<td>LockSettingsService</td>
+<td>锁屏设置、密码/指纹/面部识别管理</td>
+<td>frameworks/base/services/core/java/com/android/server/locksettings/</td>
+</tr>
+<tr>
+<td>AppOpsManager</td>
+<td>应用操作权限控制、敏感操作监控</td>
+<td>frameworks/base/services/core/java/com/android/server/appop/</td>
+</tr>
+<tr>
+<td>UsageStatsManager</td>
+<td>应用使用统计、前后台检测、屏幕时间、限制策略</td>
+<td>frameworks/base/services/usage/java/com/android/server/usage/</td>
+</tr>
+<tr>
+<td>ShortcutsManager</td>
+<td>快捷方式管理、动态/固定快捷方式接口</td>
+<td>frameworks/base/services/core/java/com/android/server/shortcuts/</td>
+</tr>
+<tr>
+<td>IncidentManager</td>
+<td>故障报告、系统诊断、异常事件收集</td>
+<td>frameworks/base/services/core/java/com/android/server/incident/</td>
+</tr>
+<tr>
+<td>StatsManager</td>
+<td>性能统计、事件分析、系统指标采集</td>
+<td>frameworks/base/services/core/java/com/android/server/stats/</td>
+</tr>
+<tr>
+<td>PolicyManager</td>
+<td>电源/设备/安全策略统一管理接口</td>
+<td>frameworks/base/services/core/java/com/android/server/policy/</td>
+</tr>
+<tr>
+<td>MediaService</td>
+<td>多媒体会话管理、音视频路由、媒体资源分配与权限</td>
+<td>frameworks/av/services/mediaresourcemanager/ <br> frameworks/base/services/core/java/com/android/server/media/</td>
+</tr>
+<tr>
+<td>MediaCodec</td>
+<td>多媒体编解码标准接口，硬件加速编解码适配</td>
+<td>frameworks/base/media/java/android/media/MediaCodec.java <br> frameworks/av/media/libstagefright/</td>
+</tr>
+<tr>
+<td>MediaExtractor</td>
+<td>多媒体封装格式解析与音视频流提取</td>
+<td>frameworks/base/media/java/android/media/MediaExtractor.java <br> frameworks/av/media/libstagefright/MediaExtractor.cpp</td>
+</tr>
+<tr>
+<td>OpenMAX AL</td>
+<td>多媒体硬件抽象标准接口，底层音视频硬件访问</td>
+<td>frameworks/wilhelm/ <br> frameworks/base/media/jni/</td>
 </tr>
 </tbody>
 </table></markdown-accessiblity-table></div>
