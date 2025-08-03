@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="Android Linux Kernel
+
+**1. GKI（Generic Kernel Image）**
+GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。">
+<meta property="og:title" content="Android Linux Kernel 详解">
+<meta property="og:description" content="Android Linux Kernel
+
+**1. GKI（Generic Kernel Image）**
+GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lhmax2010.github.io/post/Android%20Linux%20Kernel%20-xiang-jie.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>Android Linux Kernel 详解</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Android Linux Kernel 详解</h1>
+<div class="title-right">
+    <a href="https://lhmax2010.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/lhmax2010/lhmax2010.github.io/issues/3" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>Android Linux Kernel</p>
+<p><strong>1. GKI（Generic Kernel Image）</strong><br>
+GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。</p>
+<p>定义与功能：<br>
+GKI（Generic Kernel Image） 是一个可以支持所有 Android 设备的通用内核，简化了设备的内核配置。<br>
+通过 GKI，Android 系统将 Android-specific drivers 从内核中拆分出来，并放到 vendor 目录下，这样可以保持内核的统一，同时让设备厂商可以提供与设备硬件匹配的驱动程序。<br>
+GKI 支持 Mainline Kernel，意味着系统更新可以通过 Google Play 更新内核而不需要设备厂商干预。</p>
+<p>GKI 结构：<br>
+GKI 核心：为 Android 系统提供通用的内核功能和驱动，保持一致性。</p>
+<p><strong>代码路径：kernel/</strong></p>
+<p><strong>Vendor 组件</strong>：硬件相关的驱动和配件由设备厂商提供，通过 vendor kernel modules 加载。</p>
+<p><strong>代码路径：vendor/ 和 hardware/</strong></p>
+<p>KGSL（Kernel Graphics Support Layer）是高通（Qualcomm）平台专有的 GPU 驱动内核模块，是 Android 设备（特别是搭载高通 Snapdragon 芯片的手机/平板）上 Adreno GPU 与操作系统和用户空间（如 OpenGL ES、Vulkan、Skia 等）之间的桥梁。</p>
+<p>Adreno GPU 的内核态驱动：负责管理 GPU 资源、上下文调度、内存分配、命令提交、功耗控制等。<br>
+为用户空间驱动和图形 HAL 提供接口：比如 libGLES、libEGL、libgralloc 以及 Android HAL。<br>
+支持多种图形 API：如 OpenGL ES、Vulkan、RenderScript、Skia、OpenCL 等。</p>
+<p><strong>代码路径：drivers/gpu/msm/kgsl/</strong></p>
+<p><strong>2. Linux Kernel 中 Android-specific 驱动与模块</strong><br>
+与 GKI 一起，Android 内核中还包括一些 Android-specific 驱动 和模块，这些是为了更好地支持 Android 设备的硬件和特性。</p>
+<p><strong>Android-specific 驱动和功能模块：</strong><br>
+<strong>Binder 驱动</strong>：用于 进程间通信（IPC），是 Android 系统与 Linux 内核之间的主要通信机制。</p>
+<p><strong>代码路径：kernel/binder/</strong></p>
+<p>功能：提供跨进程的对象调用、远程过程调用（RPC），并为设备提供进程间通信的机制。</p>
+<p><strong>Ashmem（Anonymous Shared Memory）</strong>：Android 提供的一个共享内存机制，供多个进程共享数据。</p>
+<p><strong>代码路径：kernel/ashmem/</strong></p>
+<p>功能：为内存敏感的 Android 应用提供高效的内存共享方式。</p>
+<p>LMK (lowmemorykiller): 系统低内存回收，保护用户前台体验，防止OOM崩溃</p>
+<p>代码路径：system/memory/lmkd</p>
+<p><strong>IOCTL（Input/Output Control）</strong>：用于设备与用户空间的通信，通过 ioctl 系统调用管理硬件。</p>
+<p><strong>代码路径：drivers/</strong></p>
+<p><strong>Power Management（电源管理）：</strong></p>
+<p>CPU 频率调节：通过 CPUFreq 框架动态调整 CPU 的频率，减少功耗。</p>
+<p><strong>代码路径：drivers/cpufreq/</strong></p>
+<p><strong>Wakelock</strong>：控制设备是否进入低功耗模式。</p>
+<p><strong>代码路径：kernel/power/</strong></p>
+<p><strong>SELinux</strong>：提供强制访问控制（MAC）机制，保障 Android 系统的安全性。</p>
+<p><strong>代码路径：security/selinux/</strong></p>
+<p><strong>Vendor Modules</strong>：这些模块通常由设备厂商提供，包含专门的硬件驱动。</p>
+<p><strong>代码路径：vendor/ 和 hardware/</strong></p>
+<p><strong>RIL（Radio Interface Layer）</strong>：为 Android 系统提供通信功能，包括电话、短信、数据服务等。</p>
+<p><strong>代码路径：system/rild/</strong></p>
+<p>代码路径：drivers/md/</p>
+<p><strong>3. 内存管理（Memory Management）</strong><br>
+内存管理是 Linux 内核的核心之一，Android 系统也对其进行了定制化以提高性能和资源利用率。</p>
+<p><strong>Android-specific Memory Management：</strong></p>
+<p><strong>低内存 Killer（LMK）</strong>：在内存不足时，内核会终止一些进程以释放内存，确保系统不会因为内存不足而崩溃。</p>
+<p><strong>代码路径：kernel/sched/</strong></p>
+<p><strong>ZRAM</strong>：压缩内存，用于提高内存利用效率，特别是在低内存设备上。</p>
+<p><strong>代码路径：drivers/staging/zram/</strong></p>
+<p><strong>Buddy System</strong>：Android 和 Linux 使用的 伙伴系统 分配器高效管理物理内存。</p>
+<p><strong>代码路径：mm/compaction.c</strong></p>
+<p><strong>Slab 分配器</strong>：用于内存缓存管理，提高对象分配效率。</p>
+<p><strong>代码路径：mm/slab.c</strong></p>
+<p>ION 内存管理驱动：Android 平台上为多媒体和 SoC 硬件加速设计的通用内存分配与管理驱动。</p>
+<p>它允许多个硬件模块（如 GPU、Video Codec、Camera、Display 等）高效共享物理连续内存或特定类型内存，实现跨硬件和用户空间/内核空间的零拷贝数据传递。</p>
+<p>代码路径：drivers/staging/android/ion/<br>
+但是Android 12开始，逐步想DMA-BUF Heap 标准靠拢</p>
+<p>DMA-BUF（Direct Memory Access Buffer）是 Linux 内核中为多个设备/驱动共享物理内存缓冲区而设计的内核标准接口和框架。<br>
+它主要用于高效的、零拷贝的数据流传递，特别适合多媒体、显示、视频解码、GPU/CPU 协同等场景。</p>
+<p>代码路径：drivers/dma-buf/</p>
+<p><strong>4. 文件系统（File System）</strong><br>
+Android 在 Linux 文件系统 基础上做了很多定制化，尤其是在 内存卡管理、加密文件系统 等方面。</p>
+<p><strong>Android 文件系统：</strong></p>
+<p>EXT4 文件系统：默认的 Android 文件系统，提供高性能和高可靠性。</p>
+<p><strong>代码路径：fs/ext4/</strong></p>
+<p><strong>F2FS</strong>：一种优化的 Flash 文件系统，用于 NAND 闪存存储。</p>
+<p><strong>代码路径：fs/f2fs/</strong></p>
+<p><strong>加密文件系统</strong>：Android 支持基于 LUKS 或 FSCRYPT 的文件系统加密。</p>
+<p><strong>代码路径：fs/crypto/</strong></p>
+<p><strong>Storage（存储）管理：</strong></p>
+<p><strong>Vold</strong>：Android 的存储管理系统，处理存储设备（如 SD 卡）的挂载与卸载。</p>
+<p><strong>代码路径：system/core/vold/</strong></p>
+<p><strong>Filesystem Encryption</strong>：Android 在设备上启用 文件系统加密，确保用户数据安全。</p>
+<p><strong>代码路径：fs/crypto/</strong></p>
+<p>Keymaster HAL（Hardware Abstraction Layer）是 Android 平台用于管理加密、签名等密钥相关操作的标准接口层，是安卓安全体系和硬件安全模块（如 TEE/SE/TrustZone）之间的桥梁。</p>
+<p>密钥管理统一接口：为 Android 系统和 App 提供统一、标准化的密钥生成、使用、存储和销毁能力。<br>
+安全隔离：把真正的密钥操作放在受信任环境（如 TEE/TrustZone/Secure Element）中，防止普通系统或恶意 App 访问明文密钥。<br>
+API 对接：上层服务如 Keystore、Gatekeeper、Biometrics 通过 Keymaster HAL 访问底层安全模块。</p>
+<p>代码路径：<br>
+AIDL：hardware/interfaces/security/keymint/aidl/</p>
+<p><strong>5. 网络（Networking）</strong><br>
+Android 对 Linux 网络栈 进行了定制，尤其在网络通信、连接管理和优化上。</p>
+<p>Android 网络栈：</p>
+<p><strong>TCP/IP 栈</strong>：Android 使用 Linux 内核的 TCP/IP 协议栈进行所有网络通信。</p>
+<p><strong>代码路径：net/ipv4/</strong></p>
+<p><strong>Wi-Fi 驱动与管理</strong>：Android 定制了与 Wi-Fi 相关的内核模块与用户空间服务。</p>
+<p><strong>代码路径：drivers/net/wireless/</strong></p>
+<p><strong>蓝牙管理</strong>：通过 BlueDroid 提供蓝牙协议栈。</p>
+<p><strong>代码路径：drivers/bluetooth/</strong></p>
+<p><strong>Netfilter（防火墙）</strong>：Android 使用 Netfilter 管理网络流量，提供数据包过滤与 NAT 功能。</p>
+<p><strong>代码路径：net/netfilter/</strong></p>
+<p><strong>6. 安全性（Security）</strong><br>
+Android 对 Linux 内核的安全性进行了增强，主要通过 SELinux 和其他 Android-specific 安全模块。</p>
+<p><strong>SELinux（Security-Enhanced Linux）</strong>：通过强制访问控制（MAC）确保系统安全。</p>
+<p><strong>代码路径：security/selinux/</strong></p>
+<p><strong>硬件安全模块（HSM）</strong>：Android 与硬件平台集成，为敏感数据提供硬件级的加密保护。</p>
+<p><strong>代码路径：drivers/crypto/</strong></p>
+<p><strong>AppArmor（可选）</strong>：另一种用于提供强制访问控制的安全机制。</p>
+<p><strong>代码路径：security/apparmor/</strong></p>
+<p><strong>7. 中断处理与硬件管理（Interrupt Handling &amp; Hardware Management）</strong><br>
+Android 内核中有大量硬件相关的驱动和模块，确保硬件资源的高效利用。</p>
+<p><strong>硬件中断（Interrupts）：</strong></p>
+<p><strong>中断管理</strong>：处理来自硬件的中断信号。</p>
+<p><strong>代码路径：kernel/irq/</strong></p>
+<p><strong>硬件驱动</strong>：</p>
+<p><strong>GPU 驱动</strong>：管理图形处理单元（GPU）及其加速功能。</p>
+<p><strong>代码路径：drivers/gpu/</strong></p>
+<p><strong>传感器驱动</strong>：Android 支持各种传感器（如加速度计、陀螺仪）。</p>
+<p><strong>代码路径：drivers/iio/</strong></p>
+<p><strong>输入设备驱动</strong>：包括键盘、触摸屏等输入设备的管理。</p>
+<p><strong>代码路径：drivers/input/</strong></p>
+<p>Samsung 特有功能<br>
+源码位置<br>
+<a href="https://opensource.samsung.com/downSrcCode" rel="nofollow">https://opensource.samsung.com/downSrcCode</a></p>
+<p>三星（Samsung）Linux Kernel 层常见自研机制与增强汇总</p>
+<ol>
+<li>SLMK / SLMKD（Samsung Low Memory Killer/Daemon）<br>
+路径：drivers/android/lowmemorykiller.c、drivers/android/swap_lowmemorykiller.c</li>
+</ol>
+<p>说明：自研内核态内存回收/冻结机制，细粒度管理内存，多任务体验更优。</p>
+<ol start="2">
+<li>SPM / PM QoS（Samsung Power Management / Quality of Service）<br>
+路径：drivers/samsung/pm_qos/、drivers/soc/samsung/pm_qos/</li>
+</ol>
+<p>说明：电源性能 QoS 策略，支持按场景动态调整 CPU/GPU 频率、总线带宽等，减少卡顿和功耗。</p>
+<ol start="3">
+<li>EXYNOS SoC 相关驱动和控制子系统<br>
+路径：drivers/soc/samsung/、drivers/soc/exynos/、arch/arm64/boot/dts/samsung/</li>
+</ol>
+<p>说明：包括 CPU/GPU 电源域、总线调度、温控、DVFS、Secure Monitor、ISP/VPU/NPU 控制等全套 SoC 控制逻辑。</p>
+<ol start="4">
+<li>Seclog / SELinux 扩展（Samsung Security Logger）<br>
+路径：security/samsung/、security/selinux/（有三星自定义 patch）</li>
+</ol>
+<p>说明：系统安全增强日志、动态安全策略、Root 检测、Knox 支持。</p>
+<ol start="5">
+<li>Knox / TIMA（TrustZone-based Integrity Measurement Architecture）<br>
+路径：drivers/samsung/tima/、drivers/samsung/knox/</li>
+</ol>
+<p>说明：安全启动、加密、应用容器，防 root、数据保护、企业级安全体系。部分功能通过 TrustZone/TEE 驱动实现。</p>
+<ol start="6">
+<li>SecCamera / SecAudio / SecDisplay（多媒体安全与增强）<br>
+路径：drivers/media/platform/samsung/、drivers/sound/samsung/、drivers/video/fbdev/exynos/</li>
+</ol>
+<p>说明：摄像头、音频、显示等硬件的专有优化和安全扩展（如 secure buffer, watermark, HDR, 多摄像头切换）。</p>
+<ol start="7">
+<li>Samsung MMC/Storage 定制驱动（F2FS/ufs/ext4等增强）<br>
+路径：drivers/mmc/host/、fs/f2fs/（有三星定制补丁）、drivers/scsi/ufs/</li>
+</ol>
+<p>说明：支持自家定制 eMMC/UFS/NAND 存储，扩展命令、智能健康管理、碎片整理和 TRIM、动态调度。</p>
+<ol start="8">
+<li>Samsung Debug/Diag/Log 系统<br>
+路径：drivers/samsung/debug/、drivers/samsung/log/、drivers/samsung/diag/</li>
+</ol>
+<p>说明：厂测、用户态抓 log、在线诊断、调试开关。对系统异常监控和信息回溯提供专用接口。</p>
+<ol start="9">
+<li>Battery/Powershare/Charger 定制管理<br>
+路径：drivers/power/samsung/、drivers/power/supply/</li>
+</ol>
+<p>说明：电池健康、充电协议、反向充电、快充和多电池场景专用管理，含多种安全策略。</p>
+<ol start="10">
+<li>SecComp/SecKmsg/Procfs 扩展<br>
+路径：security/samsung/、fs/proc/（含三星 patch）、kernel/sec/</li>
+</ol>
+<p>说明：内核安全、进程/系统监控增强、日志接口拓展（比如通过 seccomp 增强进程隔离、kmsg 日志加密等）。</p>
+<ol start="11">
+<li>内核冷启动/热重启/系统恢复/Watchdog 增强<br>
+路径：drivers/samsung/recovery/、drivers/watchdog/</li>
+</ol>
+<p>说明：异常自动重启、系统镜像校验、OTA 恢复、厂商级看门狗逻辑。</p>
+<ol start="12">
+<li>Samsung Haptic/Display/Touch Driver<br>
+路径：drivers/input/touchscreen/samsung/、drivers/video/fbdev/exynos/</li>
+</ol>
+<p>说明：振动马达、超声波指纹、AMOLED 显示、自适应触控优化与私有特性。</p>
+<ol start="13">
+<li>专有调度、隔离与优先级机制<br>
+路径：kernel/sched/、kernel/cgroup/、drivers/samsung/sched/</li>
+</ol>
+<p>说明：基于场景/AI/进程特征调整调度优先级，支持前后台自适应切换。</p>
+<ol start="14">
+<li>ZRAM/Zswap/Swap 扩展与优化<br>
+路径：drivers/block/zram/、mm/zswap.c（含三星 patch）</li>
+</ol>
+<p>说明：压缩内存、动态 swap 策略，提升低内存设备流畅度和后台多任务能力。</p>
+<ol start="15">
+<li>无线/射频/定位增强（Wi-Fi、BT、GNSS等）<br>
+路径：drivers/net/wireless/samsung/、drivers/bluetooth/samsung/、drivers/gnss/samsung/</li>
+</ol>
+<p>说明：无线协议/射频链路/热点共享等多项私有增强，提升连接稳定性和速度。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://lhmax2010.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","lhmax2010/lhmax2010.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+
+
+</html>
