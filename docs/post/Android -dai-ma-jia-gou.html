@@ -16,9 +16,92 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 
 ### 代码框架整理
 ### Linux Kernel 层
+| 大类             | 子模块              | 主要功能                                 | 代码路径                                         |
+|------------------|---------------------|------------------------------------------|--------------------------------------------------|
+| GKI 与厂商驱动   | GKI 核心            | 通用内核，简化配置，支撑主线生态         | kernel/                                          |
+| GKI 与厂商驱动   | Vendor 驱动         | 厂商专用硬件驱动，模块化加载             | vendor/ 、 hardware/                             |
+| GKI 与厂商驱动   | KGSL                | 高通 Adreno GPU 驱动，管理 GPU 资源/功耗/命令 | drivers/gpu/msm/kgsl/                        |
+| Android专有模块  | Binder              | 主 IPC 机制，进程间对象/RPC通信          | drivers/android/binder/                          |
+| Android专有模块  | Ashmem              | 匿名共享内存（高效进程间共享）           | drivers/staging/android/ashmem.c                 |
+| Android专有模块  | Lowmemorykiller     | 低内存回收（LMK，内核/用户空间）         | drivers/staging/android/lowmemorykiller.c / system/memory/lmkd/ |
+| Android专有模块  | IOCTL 框架          | 标准 I/O 控制接口                        | drivers/                                         |
+| Android专有模块  | 电源管理            | CPU 频率调节、wakelock、休眠唤醒         | drivers/cpufreq/ , kernel/power/                 |
+| Android专有模块  | SELinux             | 强制访问控制，保障系统安全               | security/selinux/                                |
+| Android专有模块  | Vendor Modules      | 各类厂商专用硬件驱动                     | vendor/ 、 hardware/                             |
+| Android专有模块  | RIL                 | 无线通信接口                             | system/rild/                                     |
+| 内存管理         | LMK                 | 低内存回收机制（内核/用户空间）          | drivers/staging/android/lowmemorykiller.c / system/memory/lmkd/ |
+| 内存管理         | ZRAM                | 压缩内存，提升低端设备内存利用           | drivers/staging/zram/                            |
+| 内存管理         | Buddy System        | 物理内存分配与合并                       | mm/compaction.c                                  |
+| 内存管理         | Slab/SLUB 分配器    | 内核对象缓存池式分配                     | mm/slab.c , mm/slub.c                            |
+| 内存管理         | ION                 | 多媒体/SoC物理内存分配与共享             | drivers/staging/android/ion/                     |
+| 内存管理         | DMA-BUF             | 跨驱动共享物理内存标准接口               | drivers/dma-buf/                                 |
+| 文件系统与存储   | EXT4                | 默认文件系统，高性能高可靠               | fs/ext4/                                         |
+| 文件系统与存储   | F2FS                | 针对 Flash 优化的文件系统                | fs/f2fs/                                         |
+| 文件系统与存储   | 加密文件系统        | FSCRYPT/LUKS 文件系统加密                | fs/crypto/                                       |
+| 文件系统与存储   | Vold                | 存储管理守护进程，挂载/卸载/OTG管理      | system/core/vold/                                |
+| 文件系统与存储   | DM-Verity           | 只读分区完整性校验，防篡改               | drivers/md/                                      |
+| 文件系统与存储   | Keymaster HAL       | 密钥管理/安全生成功能                    | hardware/interfaces/security/keymint/aidl/       |
+| 网络             | TCP/IP 协议栈       | IPv4/IPv6/TCP/UDP 网络通信               | net/ipv4/ , net/ipv6/                            |
+| 网络             | Wi-Fi 驱动          | 无线网卡、Wi-Fi 管理                     | drivers/net/wireless/                            |
+| 网络             | 蓝牙驱动            | 蓝牙协议栈驱动                           | drivers/bluetooth/                               |
+| 网络             | Netfilter           | 防火墙/NAT/数据包过滤                    | net/netfilter/                                   |
+| 安全性           | SELinux             | 强制访问控制                             | security/selinux/                                |
+| 安全性           | HSM                 | 硬件安全模块，加密运算加速               | drivers/crypto/                                  |
+| 安全性           | AppArmor（可选）    | 可选安全沙箱策略                         | security/apparmor/                               |
+| 中断/硬件管理    | 中断管理            | 硬件/软件中断分发和处理                  | kernel/irq/                                      |
+| 中断/硬件管理    | GPU 驱动            | Adreno/Mali 等 GPU 内核驱动              | drivers/gpu/ , drivers/gpu/msm/kgsl/             |
+| 中断/硬件管理    | 传感器驱动          | 各类传感器（加速度计、陀螺仪等）         | drivers/iio/                                     |
+| 中断/硬件管理    | 输入设备驱动        | 触摸屏、键盘等输入设备                   | drivers/input/                                   |
 
-**1. GKI（Generic Kernel Image）**
-GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。">
+### Native Libraries
+| 类别       | 名称             | 主要功能                           | 代码路径                                         |
+|------------|------------------|------------------------------------|--------------------------------------------------|
+| 基础库     | Bionic libc      | C 标准库，系统调用、内存分配       | bionic/                                          |
+| 基础库     | libc++           | C++ 标准库                         | external/libcxx/                                 |
+| 基础库     | libm             | 数学函数库                         | bionic/libm/                                     |
+| 系统基础   | liblog           | 日志接口                           | system/core/liblog/                              |
+| 系统基础   | libbinder        | Binder IPC 支持                    | frameworks/native/libs/binder/                    |
+| 系统基础   | libutils         | 字符串、Mutex、引用计数等工具      | system/core/libutils/                            |
+| 系统基础   | libandroid       | Native 和 Java 桥接接口            | frameworks/native/libs/android/                   |
+| 系统基础   | libnativehelper  | JNI 辅助库                         | frameworks/native/libs/nativehelper/              |
+| 安全      | libselinux        | SELinux 支持库                     | external/selinux/libselinux/                     |
+| 安全      | libcrypto         | 加密算法库                         | external/openssl/                                |
+| 安全      | libssl            | SSL/TLS 支持                       | external/openssl/                                |
+| 算法/压缩 | libz              | 压缩算法库（zlib）                 | external/zlib/                                   |
+| 多媒体     | libjpeg           | JPEG 图像解码                      | external/libjpeg-turbo/                          |
+| 多媒体     | libpng            | PNG 图像解码                       | external/libpng/                                 |
+| 多媒体     | libwebp           | WebP 图像处理                      | external/libwebp/                                |
+| 多媒体     | libskia           | 2D 图形渲染                        | external/skia/                                   |
+| 图形       | libEGL/libGLES    | OpenGL ES 支持                     | frameworks/native/opengl/                        |
+| 图形       | libvulkan         | Vulkan 支持                        | external/vulkan/                                 |
+| 摄像头     | libcamera         | 摄像头 HAL 通用库                  | external/libcamera/                              |
+| 输入       | libinput          | 输入设备支持                       | system/core/libinput/                            |
+| 多媒体     | libstagefright    | 多媒体编解码                       | frameworks/av/media/libstagefright/              |
+| 多媒体     | libmediandk       | 多媒体原生接口                     | frameworks/av/media/ndk/                         |
+| 序列化     | libprotobuf       | Protocol Buffers 序列化库          | external/protobuf/                               |
+| ART        | libdexfile        | DEX 字节码解析与支持               | art/libdexfile/                                  |
+| ART        | libart            | ART 虚拟机核心库                   | art/runtime/                                     |
+
+### Native Deamons
+| 类别           | 名称             | 主要功能                                    | 代码路径                                       |
+|----------------|------------------|---------------------------------------------|------------------------------------------------|
+| 启动/管理      | init             | 系统启动初始化，启动守护进程                | system/core/init/                              |
+| 调试           | adbd             | ADB 调试守护进程                            | system/core/adb/                               |
+| 存储           | vold             | 存储设备管理（挂载、加密、OTG等）           | system/vold/                                   |
+| 网络           | netd             | 网络配置、DNS、防火墙等                      | system/netd/                                   |
+| 日志           | logd             | 系统日志服务                                 | system/core/logd/                              |
+| 管理           | servicemanager   | Binder 服务管理器                            | frameworks/native/cmds/servicemanager/         |
+| 应用孵化       | zygote           | 应用进程孵化器，启动 Java 应用               | frameworks/base/cmds/zygote/                   |
+| 图形           | surfaceflinger   | 图形合成服务，负责屏幕显示                   | frameworks/native/services/surfaceflinger/      |
+| 内存           | lmkd             | Low Memory Killer Daemon 内存回收守护进程    | system/memory/lmkd/                            |
+| 无线           | rild             | 无线通信守护进程（Radio Interface Layer）    | hardware/ril/                                  |
+| 电池           | healthd          | 电池和健康状态监控                           | system/core/healthd/                           |
+| 安全           | keystore         | 密钥/证书安全管理                            | system/security/keystore/                      |
+| 安装           | installd         | APK 安装、数据目录管理                        | system/extras/installd/                        |
+| DRM            | drmserver        | 数字版权管理（DRM）服务                      | frameworks/av/drm/drmserver/                   |
+| 安全           | gatekeeperd      | 屏幕解锁验证（Gatekeeper HAL）               | system/gatekeeperd/                            |
+| 统计           | statsd           | 统计与遥测收集服务                           | frameworks/base/cmds/statsd/                   |
+。">
 <meta property="og:title" content="Android 代码架构">
 <meta property="og:description" content="### Android 架构
 Refer https://source.android.com/docs/core/architecture?hl=zh-cn
@@ -26,9 +109,92 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 
 ### 代码框架整理
 ### Linux Kernel 层
+| 大类             | 子模块              | 主要功能                                 | 代码路径                                         |
+|------------------|---------------------|------------------------------------------|--------------------------------------------------|
+| GKI 与厂商驱动   | GKI 核心            | 通用内核，简化配置，支撑主线生态         | kernel/                                          |
+| GKI 与厂商驱动   | Vendor 驱动         | 厂商专用硬件驱动，模块化加载             | vendor/ 、 hardware/                             |
+| GKI 与厂商驱动   | KGSL                | 高通 Adreno GPU 驱动，管理 GPU 资源/功耗/命令 | drivers/gpu/msm/kgsl/                        |
+| Android专有模块  | Binder              | 主 IPC 机制，进程间对象/RPC通信          | drivers/android/binder/                          |
+| Android专有模块  | Ashmem              | 匿名共享内存（高效进程间共享）           | drivers/staging/android/ashmem.c                 |
+| Android专有模块  | Lowmemorykiller     | 低内存回收（LMK，内核/用户空间）         | drivers/staging/android/lowmemorykiller.c / system/memory/lmkd/ |
+| Android专有模块  | IOCTL 框架          | 标准 I/O 控制接口                        | drivers/                                         |
+| Android专有模块  | 电源管理            | CPU 频率调节、wakelock、休眠唤醒         | drivers/cpufreq/ , kernel/power/                 |
+| Android专有模块  | SELinux             | 强制访问控制，保障系统安全               | security/selinux/                                |
+| Android专有模块  | Vendor Modules      | 各类厂商专用硬件驱动                     | vendor/ 、 hardware/                             |
+| Android专有模块  | RIL                 | 无线通信接口                             | system/rild/                                     |
+| 内存管理         | LMK                 | 低内存回收机制（内核/用户空间）          | drivers/staging/android/lowmemorykiller.c / system/memory/lmkd/ |
+| 内存管理         | ZRAM                | 压缩内存，提升低端设备内存利用           | drivers/staging/zram/                            |
+| 内存管理         | Buddy System        | 物理内存分配与合并                       | mm/compaction.c                                  |
+| 内存管理         | Slab/SLUB 分配器    | 内核对象缓存池式分配                     | mm/slab.c , mm/slub.c                            |
+| 内存管理         | ION                 | 多媒体/SoC物理内存分配与共享             | drivers/staging/android/ion/                     |
+| 内存管理         | DMA-BUF             | 跨驱动共享物理内存标准接口               | drivers/dma-buf/                                 |
+| 文件系统与存储   | EXT4                | 默认文件系统，高性能高可靠               | fs/ext4/                                         |
+| 文件系统与存储   | F2FS                | 针对 Flash 优化的文件系统                | fs/f2fs/                                         |
+| 文件系统与存储   | 加密文件系统        | FSCRYPT/LUKS 文件系统加密                | fs/crypto/                                       |
+| 文件系统与存储   | Vold                | 存储管理守护进程，挂载/卸载/OTG管理      | system/core/vold/                                |
+| 文件系统与存储   | DM-Verity           | 只读分区完整性校验，防篡改               | drivers/md/                                      |
+| 文件系统与存储   | Keymaster HAL       | 密钥管理/安全生成功能                    | hardware/interfaces/security/keymint/aidl/       |
+| 网络             | TCP/IP 协议栈       | IPv4/IPv6/TCP/UDP 网络通信               | net/ipv4/ , net/ipv6/                            |
+| 网络             | Wi-Fi 驱动          | 无线网卡、Wi-Fi 管理                     | drivers/net/wireless/                            |
+| 网络             | 蓝牙驱动            | 蓝牙协议栈驱动                           | drivers/bluetooth/                               |
+| 网络             | Netfilter           | 防火墙/NAT/数据包过滤                    | net/netfilter/                                   |
+| 安全性           | SELinux             | 强制访问控制                             | security/selinux/                                |
+| 安全性           | HSM                 | 硬件安全模块，加密运算加速               | drivers/crypto/                                  |
+| 安全性           | AppArmor（可选）    | 可选安全沙箱策略                         | security/apparmor/                               |
+| 中断/硬件管理    | 中断管理            | 硬件/软件中断分发和处理                  | kernel/irq/                                      |
+| 中断/硬件管理    | GPU 驱动            | Adreno/Mali 等 GPU 内核驱动              | drivers/gpu/ , drivers/gpu/msm/kgsl/             |
+| 中断/硬件管理    | 传感器驱动          | 各类传感器（加速度计、陀螺仪等）         | drivers/iio/                                     |
+| 中断/硬件管理    | 输入设备驱动        | 触摸屏、键盘等输入设备                   | drivers/input/                                   |
 
-**1. GKI（Generic Kernel Image）**
-GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。">
+### Native Libraries
+| 类别       | 名称             | 主要功能                           | 代码路径                                         |
+|------------|------------------|------------------------------------|--------------------------------------------------|
+| 基础库     | Bionic libc      | C 标准库，系统调用、内存分配       | bionic/                                          |
+| 基础库     | libc++           | C++ 标准库                         | external/libcxx/                                 |
+| 基础库     | libm             | 数学函数库                         | bionic/libm/                                     |
+| 系统基础   | liblog           | 日志接口                           | system/core/liblog/                              |
+| 系统基础   | libbinder        | Binder IPC 支持                    | frameworks/native/libs/binder/                    |
+| 系统基础   | libutils         | 字符串、Mutex、引用计数等工具      | system/core/libutils/                            |
+| 系统基础   | libandroid       | Native 和 Java 桥接接口            | frameworks/native/libs/android/                   |
+| 系统基础   | libnativehelper  | JNI 辅助库                         | frameworks/native/libs/nativehelper/              |
+| 安全      | libselinux        | SELinux 支持库                     | external/selinux/libselinux/                     |
+| 安全      | libcrypto         | 加密算法库                         | external/openssl/                                |
+| 安全      | libssl            | SSL/TLS 支持                       | external/openssl/                                |
+| 算法/压缩 | libz              | 压缩算法库（zlib）                 | external/zlib/                                   |
+| 多媒体     | libjpeg           | JPEG 图像解码                      | external/libjpeg-turbo/                          |
+| 多媒体     | libpng            | PNG 图像解码                       | external/libpng/                                 |
+| 多媒体     | libwebp           | WebP 图像处理                      | external/libwebp/                                |
+| 多媒体     | libskia           | 2D 图形渲染                        | external/skia/                                   |
+| 图形       | libEGL/libGLES    | OpenGL ES 支持                     | frameworks/native/opengl/                        |
+| 图形       | libvulkan         | Vulkan 支持                        | external/vulkan/                                 |
+| 摄像头     | libcamera         | 摄像头 HAL 通用库                  | external/libcamera/                              |
+| 输入       | libinput          | 输入设备支持                       | system/core/libinput/                            |
+| 多媒体     | libstagefright    | 多媒体编解码                       | frameworks/av/media/libstagefright/              |
+| 多媒体     | libmediandk       | 多媒体原生接口                     | frameworks/av/media/ndk/                         |
+| 序列化     | libprotobuf       | Protocol Buffers 序列化库          | external/protobuf/                               |
+| ART        | libdexfile        | DEX 字节码解析与支持               | art/libdexfile/                                  |
+| ART        | libart            | ART 虚拟机核心库                   | art/runtime/                                     |
+
+### Native Deamons
+| 类别           | 名称             | 主要功能                                    | 代码路径                                       |
+|----------------|------------------|---------------------------------------------|------------------------------------------------|
+| 启动/管理      | init             | 系统启动初始化，启动守护进程                | system/core/init/                              |
+| 调试           | adbd             | ADB 调试守护进程                            | system/core/adb/                               |
+| 存储           | vold             | 存储设备管理（挂载、加密、OTG等）           | system/vold/                                   |
+| 网络           | netd             | 网络配置、DNS、防火墙等                      | system/netd/                                   |
+| 日志           | logd             | 系统日志服务                                 | system/core/logd/                              |
+| 管理           | servicemanager   | Binder 服务管理器                            | frameworks/native/cmds/servicemanager/         |
+| 应用孵化       | zygote           | 应用进程孵化器，启动 Java 应用               | frameworks/base/cmds/zygote/                   |
+| 图形           | surfaceflinger   | 图形合成服务，负责屏幕显示                   | frameworks/native/services/surfaceflinger/      |
+| 内存           | lmkd             | Low Memory Killer Daemon 内存回收守护进程    | system/memory/lmkd/                            |
+| 无线           | rild             | 无线通信守护进程（Radio Interface Layer）    | hardware/ril/                                  |
+| 电池           | healthd          | 电池和健康状态监控                           | system/core/healthd/                           |
+| 安全           | keystore         | 密钥/证书安全管理                            | system/security/keystore/                      |
+| 安装           | installd         | APK 安装、数据目录管理                        | system/extras/installd/                        |
+| DRM            | drmserver        | 数字版权管理（DRM）服务                      | frameworks/av/drm/drmserver/                   |
+| 安全           | gatekeeperd      | 屏幕解锁验证（Gatekeeper HAL）               | system/gatekeeperd/                            |
+| 统计           | statsd           | 统计与遥测收集服务                           | frameworks/base/cmds/statsd/                   |
+。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://lhmax2010.github.io/post/Android%20-dai-ma-jia-gou.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
@@ -94,176 +260,494 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <a target="_blank" rel="noopener noreferrer" href="https://github.com/user-attachments/assets/d62a8932-05dc-40d3-b406-57c9005daad9"><img src="https://github.com/user-attachments/assets/d62a8932-05dc-40d3-b406-57c9005daad9" alt="Image" style="max-width: 100%;"></a></p>
 <h3>代码框架整理</h3>
 <h3>Linux Kernel 层</h3>
-<p><strong>1. GKI（Generic Kernel Image）</strong><br>
-GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。</p>
-<p>定义与功能：<br>
-GKI（Generic Kernel Image） 是一个可以支持所有 Android 设备的通用内核，简化了设备的内核配置。<br>
-通过 GKI，Android 系统将 Android-specific drivers 从内核中拆分出来，并放到 vendor 目录下，这样可以保持内核的统一，同时让设备厂商可以提供与设备硬件匹配的驱动程序。<br>
-GKI 支持 Mainline Kernel，意味着系统更新可以通过 Google Play 更新内核而不需要设备厂商干预。</p>
-<p>GKI 结构：<br>
-GKI 核心：为 Android 系统提供通用的内核功能和驱动，保持一致性。</p>
-<p><strong>代码路径：kernel/</strong></p>
-<p><strong>Vendor 组件</strong>：硬件相关的驱动和配件由设备厂商提供，通过 vendor kernel modules 加载。</p>
-<p><strong>代码路径：vendor/ 和 hardware/</strong></p>
-<p><strong>2. Linux Kernel 中 Android-specific 驱动与模块</strong><br>
-与 GKI 一起，Android 内核中还包括一些 Android-specific 驱动 和模块，这些是为了更好地支持 Android 设备的硬件和特性。</p>
-<p><strong>Android-specific 驱动和功能模块：</strong><br>
-<strong>Binder 驱动</strong>：用于 进程间通信（IPC），是 Android 系统与 Linux 内核之间的主要通信机制。</p>
-<p><strong>代码路径：kernel/binder/</strong></p>
-<p>功能：提供跨进程的对象调用、远程过程调用（RPC），并为设备提供进程间通信的机制。</p>
-<p><strong>Ashmem（Anonymous Shared Memory）</strong>：Android 提供的一个共享内存机制，供多个进程共享数据。</p>
-<p><strong>代码路径：kernel/ashmem/</strong></p>
-<p>功能：为内存敏感的 Android 应用提供高效的内存共享方式。</p>
-<p>LMK (lowmemorykiller): 系统低内存回收，保护用户前台体验，防止OOM崩溃</p>
-<p>代码路径：system/memory/lmkd</p>
-<p><strong>IOCTL（Input/Output Control）</strong>：用于设备与用户空间的通信，通过 ioctl 系统调用管理硬件。</p>
-<p><strong>代码路径：drivers/</strong></p>
-<p><strong>Power Management（电源管理）：</strong></p>
-<p>CPU 频率调节：通过 CPUFreq 框架动态调整 CPU 的频率，减少功耗。</p>
-<p><strong>代码路径：drivers/cpufreq/</strong></p>
-<p><strong>Wakelock</strong>：控制设备是否进入低功耗模式。</p>
-<p><strong>代码路径：kernel/power/</strong></p>
-<p><strong>SELinux</strong>：提供强制访问控制（MAC）机制，保障 Android 系统的安全性。</p>
-<p><strong>代码路径：security/selinux/</strong></p>
-<p><strong>Vendor Modules</strong>：这些模块通常由设备厂商提供，包含专门的硬件驱动。</p>
-<p><strong>代码路径：vendor/ 和 hardware/</strong></p>
-<p><strong>RIL（Radio Interface Layer）</strong>：为 Android 系统提供通信功能，包括电话、短信、数据服务等。</p>
-<p><strong>代码路径：system/rild/</strong></p>
-<p><strong>3. 内存管理（Memory Management）</strong><br>
-内存管理是 Linux 内核的核心之一，Android 系统也对其进行了定制化以提高性能和资源利用率。</p>
-<p><strong>Android-specific Memory Management：</strong></p>
-<p><strong>低内存 Killer（LMK）</strong>：在内存不足时，内核会终止一些进程以释放内存，确保系统不会因为内存不足而崩溃。</p>
-<p><strong>代码路径：kernel/sched/</strong></p>
-<p><strong>ZRAM</strong>：压缩内存，用于提高内存利用效率，特别是在低内存设备上。</p>
-<p><strong>代码路径：drivers/staging/zram/</strong></p>
-<p><strong>Buddy System</strong>：Android 和 Linux 使用的 伙伴系统 分配器高效管理物理内存。</p>
-<p><strong>代码路径：mm/compaction.c</strong></p>
-<p><strong>Slab 分配器</strong>：用于内存缓存管理，提高对象分配效率。</p>
-<p><strong>代码路径：mm/slab.c</strong></p>
-<p><strong>4. 文件系统（File System）</strong><br>
-Android 在 Linux 文件系统 基础上做了很多定制化，尤其是在 内存卡管理、加密文件系统 等方面。</p>
-<p><strong>Android 文件系统：</strong></p>
-<p>EXT4 文件系统：默认的 Android 文件系统，提供高性能和高可靠性。</p>
-<p><strong>代码路径：fs/ext4/</strong></p>
-<p><strong>F2FS</strong>：一种优化的 Flash 文件系统，用于 NAND 闪存存储。</p>
-<p><strong>代码路径：fs/f2fs/</strong></p>
-<p><strong>加密文件系统</strong>：Android 支持基于 LUKS 或 FSCRYPT 的文件系统加密。</p>
-<p><strong>代码路径：fs/crypto/</strong></p>
-<p><strong>Storage（存储）管理：</strong></p>
-<p><strong>Vold</strong>：Android 的存储管理系统，处理存储设备（如 SD 卡）的挂载与卸载。</p>
-<p><strong>代码路径：system/core/vold/</strong></p>
-<p><strong>Filesystem Encryption</strong>：Android 在设备上启用 文件系统加密，确保用户数据安全。</p>
-<p><strong>代码路径：fs/crypto/</strong></p>
-<p><strong>5. 网络（Networking）</strong><br>
-Android 对 Linux 网络栈 进行了定制，尤其在网络通信、连接管理和优化上。</p>
-<p>Android 网络栈：</p>
-<p><strong>TCP/IP 栈</strong>：Android 使用 Linux 内核的 TCP/IP 协议栈进行所有网络通信。</p>
-<p><strong>代码路径：net/ipv4/</strong></p>
-<p><strong>Wi-Fi 驱动与管理</strong>：Android 定制了与 Wi-Fi 相关的内核模块与用户空间服务。</p>
-<p><strong>代码路径：drivers/net/wireless/</strong></p>
-<p><strong>蓝牙管理</strong>：通过 BlueDroid 提供蓝牙协议栈。</p>
-<p><strong>代码路径：drivers/bluetooth/</strong></p>
-<p><strong>Netfilter（防火墙）</strong>：Android 使用 Netfilter 管理网络流量，提供数据包过滤与 NAT 功能。</p>
-<p><strong>代码路径：net/netfilter/</strong></p>
-<p><strong>6. 安全性（Security）</strong><br>
-Android 对 Linux 内核的安全性进行了增强，主要通过 SELinux 和其他 Android-specific 安全模块。</p>
-<p><strong>SELinux（Security-Enhanced Linux）</strong>：通过强制访问控制（MAC）确保系统安全。</p>
-<p><strong>代码路径：security/selinux/</strong></p>
-<p><strong>硬件安全模块（HSM）</strong>：Android 与硬件平台集成，为敏感数据提供硬件级的加密保护。</p>
-<p><strong>代码路径：drivers/crypto/</strong></p>
-<p><strong>AppArmor（可选）</strong>：另一种用于提供强制访问控制的安全机制。</p>
-<p><strong>代码路径：security/apparmor/</strong></p>
-<p><strong>7. 中断处理与硬件管理（Interrupt Handling &amp; Hardware Management）</strong><br>
-Android 内核中有大量硬件相关的驱动和模块，确保硬件资源的高效利用。</p>
-<p><strong>硬件中断（Interrupts）：</strong></p>
-<p><strong>中断管理</strong>：处理来自硬件的中断信号。</p>
-<p><strong>代码路径：kernel/irq/</strong></p>
-<p><strong>硬件驱动</strong>：</p>
-<p><strong>GPU 驱动</strong>：管理图形处理单元（GPU）及其加速功能。</p>
-<p><strong>代码路径：drivers/gpu/</strong></p>
-<p><strong>传感器驱动</strong>：Android 支持各种传感器（如加速度计、陀螺仪）。</p>
-<p><strong>代码路径：drivers/iio/</strong></p>
-<p><strong>输入设备驱动</strong>：包括键盘、触摸屏等输入设备的管理。</p>
-<p><strong>代码路径：drivers/input/</strong></p>
-<p>Samsung 特有功能<br>
-源码位置<br>
-<a href="https://opensource.samsung.com/downSrcCode" rel="nofollow">https://opensource.samsung.com/downSrcCode</a></p>
-<p>三星（Samsung）Linux Kernel 层常见自研机制与增强汇总</p>
-<ol>
-<li>SLMK / SLMKD（Samsung Low Memory Killer/Daemon）<br>
-路径：drivers/android/lowmemorykiller.c、drivers/android/swap_lowmemorykiller.c</li>
-</ol>
-<p>说明：自研内核态内存回收/冻结机制，细粒度管理内存，多任务体验更优。</p>
-<ol start="2">
-<li>SPM / PM QoS（Samsung Power Management / Quality of Service）<br>
-路径：drivers/samsung/pm_qos/、drivers/soc/samsung/pm_qos/</li>
-</ol>
-<p>说明：电源性能 QoS 策略，支持按场景动态调整 CPU/GPU 频率、总线带宽等，减少卡顿和功耗。</p>
-<ol start="3">
-<li>EXYNOS SoC 相关驱动和控制子系统<br>
-路径：drivers/soc/samsung/、drivers/soc/exynos/、arch/arm64/boot/dts/samsung/</li>
-</ol>
-<p>说明：包括 CPU/GPU 电源域、总线调度、温控、DVFS、Secure Monitor、ISP/VPU/NPU 控制等全套 SoC 控制逻辑。</p>
-<ol start="4">
-<li>Seclog / SELinux 扩展（Samsung Security Logger）<br>
-路径：security/samsung/、security/selinux/（有三星自定义 patch）</li>
-</ol>
-<p>说明：系统安全增强日志、动态安全策略、Root 检测、Knox 支持。</p>
-<ol start="5">
-<li>Knox / TIMA（TrustZone-based Integrity Measurement Architecture）<br>
-路径：drivers/samsung/tima/、drivers/samsung/knox/</li>
-</ol>
-<p>说明：安全启动、加密、应用容器，防 root、数据保护、企业级安全体系。部分功能通过 TrustZone/TEE 驱动实现。</p>
-<ol start="6">
-<li>SecCamera / SecAudio / SecDisplay（多媒体安全与增强）<br>
-路径：drivers/media/platform/samsung/、drivers/sound/samsung/、drivers/video/fbdev/exynos/</li>
-</ol>
-<p>说明：摄像头、音频、显示等硬件的专有优化和安全扩展（如 secure buffer, watermark, HDR, 多摄像头切换）。</p>
-<ol start="7">
-<li>Samsung MMC/Storage 定制驱动（F2FS/ufs/ext4等增强）<br>
-路径：drivers/mmc/host/、fs/f2fs/（有三星定制补丁）、drivers/scsi/ufs/</li>
-</ol>
-<p>说明：支持自家定制 eMMC/UFS/NAND 存储，扩展命令、智能健康管理、碎片整理和 TRIM、动态调度。</p>
-<ol start="8">
-<li>Samsung Debug/Diag/Log 系统<br>
-路径：drivers/samsung/debug/、drivers/samsung/log/、drivers/samsung/diag/</li>
-</ol>
-<p>说明：厂测、用户态抓 log、在线诊断、调试开关。对系统异常监控和信息回溯提供专用接口。</p>
-<ol start="9">
-<li>Battery/Powershare/Charger 定制管理<br>
-路径：drivers/power/samsung/、drivers/power/supply/</li>
-</ol>
-<p>说明：电池健康、充电协议、反向充电、快充和多电池场景专用管理，含多种安全策略。</p>
-<ol start="10">
-<li>SecComp/SecKmsg/Procfs 扩展<br>
-路径：security/samsung/、fs/proc/（含三星 patch）、kernel/sec/</li>
-</ol>
-<p>说明：内核安全、进程/系统监控增强、日志接口拓展（比如通过 seccomp 增强进程隔离、kmsg 日志加密等）。</p>
-<ol start="11">
-<li>内核冷启动/热重启/系统恢复/Watchdog 增强<br>
-路径：drivers/samsung/recovery/、drivers/watchdog/</li>
-</ol>
-<p>说明：异常自动重启、系统镜像校验、OTA 恢复、厂商级看门狗逻辑。</p>
-<ol start="12">
-<li>Samsung Haptic/Display/Touch Driver<br>
-路径：drivers/input/touchscreen/samsung/、drivers/video/fbdev/exynos/</li>
-</ol>
-<p>说明：振动马达、超声波指纹、AMOLED 显示、自适应触控优化与私有特性。</p>
-<ol start="13">
-<li>专有调度、隔离与优先级机制<br>
-路径：kernel/sched/、kernel/cgroup/、drivers/samsung/sched/</li>
-</ol>
-<p>说明：基于场景/AI/进程特征调整调度优先级，支持前后台自适应切换。</p>
-<ol start="14">
-<li>ZRAM/Zswap/Swap 扩展与优化<br>
-路径：drivers/block/zram/、mm/zswap.c（含三星 patch）</li>
-</ol>
-<p>说明：压缩内存、动态 swap 策略，提升低内存设备流畅度和后台多任务能力。</p>
-<ol start="15">
-<li>无线/射频/定位增强（Wi-Fi、BT、GNSS等）<br>
-路径：drivers/net/wireless/samsung/、drivers/bluetooth/samsung/、drivers/gnss/samsung/</li>
-</ol>
-<p>说明：无线协议/射频链路/热点共享等多项私有增强，提升连接稳定性和速度。</p></div>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>大类</th>
+<th>子模块</th>
+<th>主要功能</th>
+<th>代码路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GKI 与厂商驱动</td>
+<td>GKI 核心</td>
+<td>通用内核，简化配置，支撑主线生态</td>
+<td>kernel/</td>
+</tr>
+<tr>
+<td>GKI 与厂商驱动</td>
+<td>Vendor 驱动</td>
+<td>厂商专用硬件驱动，模块化加载</td>
+<td>vendor/ 、 hardware/</td>
+</tr>
+<tr>
+<td>GKI 与厂商驱动</td>
+<td>KGSL</td>
+<td>高通 Adreno GPU 驱动，管理 GPU 资源/功耗/命令</td>
+<td>drivers/gpu/msm/kgsl/</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>Binder</td>
+<td>主 IPC 机制，进程间对象/RPC通信</td>
+<td>drivers/android/binder/</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>Ashmem</td>
+<td>匿名共享内存（高效进程间共享）</td>
+<td>drivers/staging/android/ashmem.c</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>Lowmemorykiller</td>
+<td>低内存回收（LMK，内核/用户空间）</td>
+<td>drivers/staging/android/lowmemorykiller.c / system/memory/lmkd/</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>IOCTL 框架</td>
+<td>标准 I/O 控制接口</td>
+<td>drivers/</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>电源管理</td>
+<td>CPU 频率调节、wakelock、休眠唤醒</td>
+<td>drivers/cpufreq/ , kernel/power/</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>SELinux</td>
+<td>强制访问控制，保障系统安全</td>
+<td>security/selinux/</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>Vendor Modules</td>
+<td>各类厂商专用硬件驱动</td>
+<td>vendor/ 、 hardware/</td>
+</tr>
+<tr>
+<td>Android专有模块</td>
+<td>RIL</td>
+<td>无线通信接口</td>
+<td>system/rild/</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>LMK</td>
+<td>低内存回收机制（内核/用户空间）</td>
+<td>drivers/staging/android/lowmemorykiller.c / system/memory/lmkd/</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>ZRAM</td>
+<td>压缩内存，提升低端设备内存利用</td>
+<td>drivers/staging/zram/</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>Buddy System</td>
+<td>物理内存分配与合并</td>
+<td>mm/compaction.c</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>Slab/SLUB 分配器</td>
+<td>内核对象缓存池式分配</td>
+<td>mm/slab.c , mm/slub.c</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>ION</td>
+<td>多媒体/SoC物理内存分配与共享</td>
+<td>drivers/staging/android/ion/</td>
+</tr>
+<tr>
+<td>内存管理</td>
+<td>DMA-BUF</td>
+<td>跨驱动共享物理内存标准接口</td>
+<td>drivers/dma-buf/</td>
+</tr>
+<tr>
+<td>文件系统与存储</td>
+<td>EXT4</td>
+<td>默认文件系统，高性能高可靠</td>
+<td>fs/ext4/</td>
+</tr>
+<tr>
+<td>文件系统与存储</td>
+<td>F2FS</td>
+<td>针对 Flash 优化的文件系统</td>
+<td>fs/f2fs/</td>
+</tr>
+<tr>
+<td>文件系统与存储</td>
+<td>加密文件系统</td>
+<td>FSCRYPT/LUKS 文件系统加密</td>
+<td>fs/crypto/</td>
+</tr>
+<tr>
+<td>文件系统与存储</td>
+<td>Vold</td>
+<td>存储管理守护进程，挂载/卸载/OTG管理</td>
+<td>system/core/vold/</td>
+</tr>
+<tr>
+<td>文件系统与存储</td>
+<td>DM-Verity</td>
+<td>只读分区完整性校验，防篡改</td>
+<td>drivers/md/</td>
+</tr>
+<tr>
+<td>文件系统与存储</td>
+<td>Keymaster HAL</td>
+<td>密钥管理/安全生成功能</td>
+<td>hardware/interfaces/security/keymint/aidl/</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>TCP/IP 协议栈</td>
+<td>IPv4/IPv6/TCP/UDP 网络通信</td>
+<td>net/ipv4/ , net/ipv6/</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>Wi-Fi 驱动</td>
+<td>无线网卡、Wi-Fi 管理</td>
+<td>drivers/net/wireless/</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>蓝牙驱动</td>
+<td>蓝牙协议栈驱动</td>
+<td>drivers/bluetooth/</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>Netfilter</td>
+<td>防火墙/NAT/数据包过滤</td>
+<td>net/netfilter/</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>SELinux</td>
+<td>强制访问控制</td>
+<td>security/selinux/</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>HSM</td>
+<td>硬件安全模块，加密运算加速</td>
+<td>drivers/crypto/</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>AppArmor（可选）</td>
+<td>可选安全沙箱策略</td>
+<td>security/apparmor/</td>
+</tr>
+<tr>
+<td>中断/硬件管理</td>
+<td>中断管理</td>
+<td>硬件/软件中断分发和处理</td>
+<td>kernel/irq/</td>
+</tr>
+<tr>
+<td>中断/硬件管理</td>
+<td>GPU 驱动</td>
+<td>Adreno/Mali 等 GPU 内核驱动</td>
+<td>drivers/gpu/ , drivers/gpu/msm/kgsl/</td>
+</tr>
+<tr>
+<td>中断/硬件管理</td>
+<td>传感器驱动</td>
+<td>各类传感器（加速度计、陀螺仪等）</td>
+<td>drivers/iio/</td>
+</tr>
+<tr>
+<td>中断/硬件管理</td>
+<td>输入设备驱动</td>
+<td>触摸屏、键盘等输入设备</td>
+<td>drivers/input/</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h3>Native Libraries</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>类别</th>
+<th>名称</th>
+<th>主要功能</th>
+<th>代码路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>基础库</td>
+<td>Bionic libc</td>
+<td>C 标准库，系统调用、内存分配</td>
+<td>bionic/</td>
+</tr>
+<tr>
+<td>基础库</td>
+<td>libc++</td>
+<td>C++ 标准库</td>
+<td>external/libcxx/</td>
+</tr>
+<tr>
+<td>基础库</td>
+<td>libm</td>
+<td>数学函数库</td>
+<td>bionic/libm/</td>
+</tr>
+<tr>
+<td>系统基础</td>
+<td>liblog</td>
+<td>日志接口</td>
+<td>system/core/liblog/</td>
+</tr>
+<tr>
+<td>系统基础</td>
+<td>libbinder</td>
+<td>Binder IPC 支持</td>
+<td>frameworks/native/libs/binder/</td>
+</tr>
+<tr>
+<td>系统基础</td>
+<td>libutils</td>
+<td>字符串、Mutex、引用计数等工具</td>
+<td>system/core/libutils/</td>
+</tr>
+<tr>
+<td>系统基础</td>
+<td>libandroid</td>
+<td>Native 和 Java 桥接接口</td>
+<td>frameworks/native/libs/android/</td>
+</tr>
+<tr>
+<td>系统基础</td>
+<td>libnativehelper</td>
+<td>JNI 辅助库</td>
+<td>frameworks/native/libs/nativehelper/</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>libselinux</td>
+<td>SELinux 支持库</td>
+<td>external/selinux/libselinux/</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>libcrypto</td>
+<td>加密算法库</td>
+<td>external/openssl/</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>libssl</td>
+<td>SSL/TLS 支持</td>
+<td>external/openssl/</td>
+</tr>
+<tr>
+<td>算法/压缩</td>
+<td>libz</td>
+<td>压缩算法库（zlib）</td>
+<td>external/zlib/</td>
+</tr>
+<tr>
+<td>多媒体</td>
+<td>libjpeg</td>
+<td>JPEG 图像解码</td>
+<td>external/libjpeg-turbo/</td>
+</tr>
+<tr>
+<td>多媒体</td>
+<td>libpng</td>
+<td>PNG 图像解码</td>
+<td>external/libpng/</td>
+</tr>
+<tr>
+<td>多媒体</td>
+<td>libwebp</td>
+<td>WebP 图像处理</td>
+<td>external/libwebp/</td>
+</tr>
+<tr>
+<td>多媒体</td>
+<td>libskia</td>
+<td>2D 图形渲染</td>
+<td>external/skia/</td>
+</tr>
+<tr>
+<td>图形</td>
+<td>libEGL/libGLES</td>
+<td>OpenGL ES 支持</td>
+<td>frameworks/native/opengl/</td>
+</tr>
+<tr>
+<td>图形</td>
+<td>libvulkan</td>
+<td>Vulkan 支持</td>
+<td>external/vulkan/</td>
+</tr>
+<tr>
+<td>摄像头</td>
+<td>libcamera</td>
+<td>摄像头 HAL 通用库</td>
+<td>external/libcamera/</td>
+</tr>
+<tr>
+<td>输入</td>
+<td>libinput</td>
+<td>输入设备支持</td>
+<td>system/core/libinput/</td>
+</tr>
+<tr>
+<td>多媒体</td>
+<td>libstagefright</td>
+<td>多媒体编解码</td>
+<td>frameworks/av/media/libstagefright/</td>
+</tr>
+<tr>
+<td>多媒体</td>
+<td>libmediandk</td>
+<td>多媒体原生接口</td>
+<td>frameworks/av/media/ndk/</td>
+</tr>
+<tr>
+<td>序列化</td>
+<td>libprotobuf</td>
+<td>Protocol Buffers 序列化库</td>
+<td>external/protobuf/</td>
+</tr>
+<tr>
+<td>ART</td>
+<td>libdexfile</td>
+<td>DEX 字节码解析与支持</td>
+<td>art/libdexfile/</td>
+</tr>
+<tr>
+<td>ART</td>
+<td>libart</td>
+<td>ART 虚拟机核心库</td>
+<td>art/runtime/</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h3>Native Deamons</h3>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>类别</th>
+<th>名称</th>
+<th>主要功能</th>
+<th>代码路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>启动/管理</td>
+<td>init</td>
+<td>系统启动初始化，启动守护进程</td>
+<td>system/core/init/</td>
+</tr>
+<tr>
+<td>调试</td>
+<td>adbd</td>
+<td>ADB 调试守护进程</td>
+<td>system/core/adb/</td>
+</tr>
+<tr>
+<td>存储</td>
+<td>vold</td>
+<td>存储设备管理（挂载、加密、OTG等）</td>
+<td>system/vold/</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>netd</td>
+<td>网络配置、DNS、防火墙等</td>
+<td>system/netd/</td>
+</tr>
+<tr>
+<td>日志</td>
+<td>logd</td>
+<td>系统日志服务</td>
+<td>system/core/logd/</td>
+</tr>
+<tr>
+<td>管理</td>
+<td>servicemanager</td>
+<td>Binder 服务管理器</td>
+<td>frameworks/native/cmds/servicemanager/</td>
+</tr>
+<tr>
+<td>应用孵化</td>
+<td>zygote</td>
+<td>应用进程孵化器，启动 Java 应用</td>
+<td>frameworks/base/cmds/zygote/</td>
+</tr>
+<tr>
+<td>图形</td>
+<td>surfaceflinger</td>
+<td>图形合成服务，负责屏幕显示</td>
+<td>frameworks/native/services/surfaceflinger/</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>lmkd</td>
+<td>Low Memory Killer Daemon 内存回收守护进程</td>
+<td>system/memory/lmkd/</td>
+</tr>
+<tr>
+<td>无线</td>
+<td>rild</td>
+<td>无线通信守护进程（Radio Interface Layer）</td>
+<td>hardware/ril/</td>
+</tr>
+<tr>
+<td>电池</td>
+<td>healthd</td>
+<td>电池和健康状态监控</td>
+<td>system/core/healthd/</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>keystore</td>
+<td>密钥/证书安全管理</td>
+<td>system/security/keystore/</td>
+</tr>
+<tr>
+<td>安装</td>
+<td>installd</td>
+<td>APK 安装、数据目录管理</td>
+<td>system/extras/installd/</td>
+</tr>
+<tr>
+<td>DRM</td>
+<td>drmserver</td>
+<td>数字版权管理（DRM）服务</td>
+<td>frameworks/av/drm/drmserver/</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>gatekeeperd</td>
+<td>屏幕解锁验证（Gatekeeper HAL）</td>
+<td>system/gatekeeperd/</td>
+</tr>
+<tr>
+<td>统计</td>
+<td>statsd</td>
+<td>统计与遥测收集服务</td>
+<td>frameworks/base/cmds/statsd/</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
