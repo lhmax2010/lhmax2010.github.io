@@ -10,12 +10,12 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="Android Linux Kernel
+<meta name="description" content="### Android Linux Kernel
 
 **1. GKI（Generic Kernel Image）**
 GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。">
 <meta property="og:title" content="Android Linux Kernel 详解">
-<meta property="og:description" content="Android Linux Kernel
+<meta property="og:description" content="### Android Linux Kernel
 
 **1. GKI（Generic Kernel Image）**
 GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。">
@@ -79,7 +79,7 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p>Android Linux Kernel</p>
+<div class="markdown-body" id="postBody"><h3>Android Linux Kernel</h3>
 <p><strong>1. GKI（Generic Kernel Image）</strong><br>
 GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。</p>
 <p>定义与功能：<br>
@@ -193,7 +193,7 @@ Android 内核中有大量硬件相关的驱动和模块，确保硬件资源的
 <p>Samsung 特有功能<br>
 源码位置<br>
 <a href="https://opensource.samsung.com/downSrcCode" rel="nofollow">https://opensource.samsung.com/downSrcCode</a></p>
-<p>三星（Samsung）Linux Kernel 层常见自研机制与增强汇总</p>
+<h3>三星（Samsung）Linux Kernel 层常见自研机制与增强汇总</h3>
 <ol>
 <li>SLMK / SLMKD（Samsung Low Memory Killer/Daemon）<br>
 路径：drivers/android/lowmemorykiller.c、drivers/android/swap_lowmemorykiller.c</li>
@@ -268,7 +268,95 @@ Android 内核中有大量硬件相关的驱动和模块，确保硬件资源的
 <li>无线/射频/定位增强（Wi-Fi、BT、GNSS等）<br>
 路径：drivers/net/wireless/samsung/、drivers/bluetooth/samsung/、drivers/gnss/samsung/</li>
 </ol>
-<p>说明：无线协议/射频链路/热点共享等多项私有增强，提升连接稳定性和速度。</p></div>
+<p>说明：无线协议/射频链路/热点共享等多项私有增强，提升连接稳定性和速度。</p>
+<h3>Android TV 厂商该层研究技术</h3>
+<p>一、视频与音频硬件加速</p>
+<ol>
+<li>专有 VPU（Video Processing Unit）/GPU 驱动<br>
+4K/8K/HDR10+/Dolby Vision/HLG 硬解，AI 画质算法（MEMC/降噪/超分）</li>
+</ol>
+<p>索尼（X1/XR）、TCL（AiPQ）、海信（ULED）、小米（MTK/Amlogic）、康佳、飞利浦</p>
+<p>多路视频流/多画面（PIP/PBP）并发处理</p>
+<p>索尼、TCL、海信、飞利浦</p>
+<p>专有 PQ（画质）算法驱动（动态背光/锐化/色彩校准）</p>
+<p>索尼、TCL、海信、小米、康佳</p>
+<ol start="2">
+<li>专有音频 DSP/Codec 驱动<br>
+杜比音效/DTS/3D空间音频/低延迟音频直通</li>
+</ol>
+<p>索尼、TCL、海信、小米、飞利浦</p>
+<p>AI 语音降噪/远场麦克风/声源定位</p>
+<p>TCL、海信、小米、索尼</p>
+<p>多声道混音/硬件后处理</p>
+<p>索尼、TCL、海信、飞利浦</p>
+<p>二、信号源与多外设管理</p>
+<ol>
+<li>TV Tuner/DVB/CI+ 驱动<br>
+全球多制式 DVB/ATSC/ISDB/CI+ 智能卡适配</li>
+</ol>
+<p>索尼、TCL、海信、飞利浦、康佳</p>
+<p>多频道/时移/回看/EPG</p>
+<p>TCL、海信、索尼、飞利浦</p>
+<p>CA 智能卡安全解码</p>
+<p>TCL、海信、索尼</p>
+<ol start="2">
+<li>多 HDMI/AV 输入与 CEC（HDMI 控制）<br>
+多路 HDMI/AV 输入自动切换、ARC/eARC、CEC 智能链路</li>
+</ol>
+<p>索尼、TCL、海信、小米、飞利浦</p>
+<p>HDMI 快速唤醒、信号源同步、低延迟输入（ALLM）</p>
+<p>TCL、索尼、海信、小米</p>
+<ol start="3">
+<li>遥控/体感/麦克风/智能外设<br>
+多通道遥控（红外/蓝牙/2.4G）、语音/体感遥控、远场麦克风</li>
+</ol>
+<p>小米（语音遥控/体感）、索尼、TCL、海信、康佳</p>
+<p>智能摄像头/视频通话/体感交互支持</p>
+<p>TCL、海信、康佳、飞利浦</p>
+<p>三、存储、内存与性能优化</p>
+<ol>
+<li>高速存储与分区管理<br>
+eMMC/UFS/F2FS 优化、动态分区扩容、U盘/移动硬盘快速挂载</li>
+</ol>
+<p>小米、TCL、海信、索尼</p>
+<p>断电保护、低延迟 I/O、写放大控制</p>
+<p>TCL、索尼、海信</p>
+<ol start="2">
+<li>定制内存管理/多媒体缓存<br>
+LMK（LowMemoryKiller）/zRAM/ION/DMA-BUF 动态大缓存</li>
+</ol>
+<p>小米、TCL、海信、索尼</p>
+<p>多媒体硬件间零拷贝传输、高效帧缓冲</p>
+<p>TCL、索尼、海信</p>
+<p>四、安全性与内容保护</p>
+<ol>
+<li>DRM/CA 安全模块<br>
+Widevine/PlayReady/CA/CI+ 模块，内容加密链路、硬件密钥隔离</li>
+</ol>
+<p>索尼、TCL、海信、飞利浦</p>
+<p>HDCP 2.2/2.3 认证、广电级智能卡支持</p>
+<p>TCL、海信、索尼</p>
+<ol start="2">
+<li>防篡改与完整性保护<br>
+DM-Verity/SELinux/安全启动、Root 检测</li>
+</ol>
+<p>小米、TCL、索尼、海信、康佳</p>
+<p>五、功耗与散热智能控制<br>
+动态电源管理/CPU-GPU/VPU 智能调频/场景自适应背光/风扇/LED 控制</p>
+<p>TCL、索尼、海信、小米、飞利浦</p>
+<p>待机秒开、HDMI 唤醒、低功耗遥控待命</p>
+<p>TCL、小米、索尼、海信</p>
+<p>六、其他亮点</p>
+<ol>
+<li>快速启动与 OTA 升级<br>
+内核级待机唤醒/秒开机、差分 OTA、远程诊断</li>
+</ol>
+<p>小米、TCL、海信、索尼</p>
+<ol start="2">
+<li>厂商专有远程调测与日志收集<br>
+自有远程维护、智能健康监控</li>
+</ol>
+<p>TCL、海信、索尼</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>

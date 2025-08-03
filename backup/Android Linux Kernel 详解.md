@@ -1,4 +1,4 @@
-Android Linux Kernel
+### Android Linux Kernel
 
 **1. GKI（Generic Kernel Image）**
 GKI（Generic Kernel Image） 是 Android 在 Linux Kernel 基础上推出的一个标准化内核，旨在简化设备硬件驱动和系统服务的兼容性管理。
@@ -205,7 +205,7 @@ Samsung 特有功能
 源码位置
 https://opensource.samsung.com/downSrcCode
 
-三星（Samsung）Linux Kernel 层常见自研机制与增强汇总
+### 三星（Samsung）Linux Kernel 层常见自研机制与增强汇总
 1. SLMK / SLMKD（Samsung Low Memory Killer/Daemon）
 路径：drivers/android/lowmemorykiller.c、drivers/android/swap_lowmemorykiller.c
 
@@ -280,3 +280,117 @@ https://opensource.samsung.com/downSrcCode
 路径：drivers/net/wireless/samsung/、drivers/bluetooth/samsung/、drivers/gnss/samsung/
 
 说明：无线协议/射频链路/热点共享等多项私有增强，提升连接稳定性和速度。
+
+### Android TV 厂商该层研究技术
+一、视频与音频硬件加速
+1. 专有 VPU（Video Processing Unit）/GPU 驱动
+4K/8K/HDR10+/Dolby Vision/HLG 硬解，AI 画质算法（MEMC/降噪/超分）
+
+索尼（X1/XR）、TCL（AiPQ）、海信（ULED）、小米（MTK/Amlogic）、康佳、飞利浦
+
+多路视频流/多画面（PIP/PBP）并发处理
+
+索尼、TCL、海信、飞利浦
+
+专有 PQ（画质）算法驱动（动态背光/锐化/色彩校准）
+
+索尼、TCL、海信、小米、康佳
+
+2. 专有音频 DSP/Codec 驱动
+杜比音效/DTS/3D空间音频/低延迟音频直通
+
+索尼、TCL、海信、小米、飞利浦
+
+AI 语音降噪/远场麦克风/声源定位
+
+TCL、海信、小米、索尼
+
+多声道混音/硬件后处理
+
+索尼、TCL、海信、飞利浦
+
+二、信号源与多外设管理
+1. TV Tuner/DVB/CI+ 驱动
+全球多制式 DVB/ATSC/ISDB/CI+ 智能卡适配
+
+索尼、TCL、海信、飞利浦、康佳
+
+多频道/时移/回看/EPG
+
+TCL、海信、索尼、飞利浦
+
+CA 智能卡安全解码
+
+TCL、海信、索尼
+
+2. 多 HDMI/AV 输入与 CEC（HDMI 控制）
+多路 HDMI/AV 输入自动切换、ARC/eARC、CEC 智能链路
+
+索尼、TCL、海信、小米、飞利浦
+
+HDMI 快速唤醒、信号源同步、低延迟输入（ALLM）
+
+TCL、索尼、海信、小米
+
+3. 遥控/体感/麦克风/智能外设
+多通道遥控（红外/蓝牙/2.4G）、语音/体感遥控、远场麦克风
+
+小米（语音遥控/体感）、索尼、TCL、海信、康佳
+
+智能摄像头/视频通话/体感交互支持
+
+TCL、海信、康佳、飞利浦
+
+三、存储、内存与性能优化
+1. 高速存储与分区管理
+eMMC/UFS/F2FS 优化、动态分区扩容、U盘/移动硬盘快速挂载
+
+小米、TCL、海信、索尼
+
+断电保护、低延迟 I/O、写放大控制
+
+TCL、索尼、海信
+
+2. 定制内存管理/多媒体缓存
+LMK（LowMemoryKiller）/zRAM/ION/DMA-BUF 动态大缓存
+
+小米、TCL、海信、索尼
+
+多媒体硬件间零拷贝传输、高效帧缓冲
+
+TCL、索尼、海信
+
+四、安全性与内容保护
+1. DRM/CA 安全模块
+Widevine/PlayReady/CA/CI+ 模块，内容加密链路、硬件密钥隔离
+
+索尼、TCL、海信、飞利浦
+
+HDCP 2.2/2.3 认证、广电级智能卡支持
+
+TCL、海信、索尼
+
+2. 防篡改与完整性保护
+DM-Verity/SELinux/安全启动、Root 检测
+
+小米、TCL、索尼、海信、康佳
+
+五、功耗与散热智能控制
+动态电源管理/CPU-GPU/VPU 智能调频/场景自适应背光/风扇/LED 控制
+
+TCL、索尼、海信、小米、飞利浦
+
+待机秒开、HDMI 唤醒、低功耗遥控待命
+
+TCL、小米、索尼、海信
+
+六、其他亮点
+1. 快速启动与 OTA 升级
+内核级待机唤醒/秒开机、差分 OTA、远程诊断
+
+小米、TCL、海信、索尼
+
+2. 厂商专有远程调测与日志收集
+自有远程维护、智能健康监控
+
+TCL、海信、索尼
