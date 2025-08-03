@@ -101,6 +101,64 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 | DRM            | drmserver        | 数字版权管理（DRM）服务                      | frameworks/av/drm/drmserver/                   |
 | 安全           | gatekeeperd      | 屏幕解锁验证（Gatekeeper HAL）               | system/gatekeeperd/                            |
 | 统计           | statsd           | 统计与遥测收集服务                           | frameworks/base/cmds/statsd/                   |
+
+HAL
+| 模块             | 功能描述                                                   | 代码路径                                                          |
+|------------------|------------------------------------------------------------|-------------------------------------------------------------------|
+| audio            | 音频采集、播放、处理和音频硬件控制                         | hardware/interfaces/audio/aidl/                                  |
+| camera           | 摄像头操作、采集、拍照、视频录制、参数调节                  | hardware/interfaces/camera/aidl/                                 |
+| graphics         | 显示合成（HWC）、图形 buffer 分配、显示刷新                 | hardware/interfaces/graphics/composer/aidl/ <br> hardware/interfaces/graphics/allocator/aidl/ |
+| light            | 屏幕、键盘、通知 LED 灯光控制                              | hardware/interfaces/light/aidl/                                  |
+| vibrator         | 振动器控制（马达驱动、震感反馈）                           | hardware/interfaces/vibrator/aidl/                               |
+| sensors          | 各类传感器（加速度、陀螺仪、磁力、环境、计步等）            | hardware/interfaces/sensors/aidl/                                |
+| biometrics       | 指纹、人脸、虹膜等生物识别接口                             | hardware/interfaces/biometrics/fingerprint/aidl/ <br> hardware/interfaces/biometrics/face/aidl/ |
+| bluetooth        | 蓝牙功能（扫描、配对、音频、BLE等）                        | hardware/interfaces/bluetooth/aidl/                              |
+| wifi             | 无线网络（Wi-Fi）配置、扫描、连接、热点                     | hardware/interfaces/wifi/aidl/                                   |
+| gnss             | 卫星定位（GPS、GLONASS、北斗、Galileo）                     | hardware/interfaces/gnss/aidl/                                   |
+| radio            | 无线通信（蜂窝基带，电话、短信、数据、SIM等）               | hardware/interfaces/radio/aidl/                                  |
+| nfc              | 近场通信（NFC）                                            | hardware/interfaces/nfc/aidl/                                    |
+| usb              | USB 设备检测、模式切换、充电控制                           | hardware/interfaces/usb/aidl/                                    |
+| thermal          | 芯片、CPU/GPU/电池等温度采集与管理                         | hardware/interfaces/thermal/aidl/                                |
+| health           | 电池健康、电量、温度、电池状态采集与上报                   | hardware/interfaces/health/aidl/                                 |
+| power            | 电源管理（省电模式、唤醒、休眠、boost等）                  | hardware/interfaces/power/aidl/                                  |
+| keymaster        | 密钥/加密硬件支持（安全密钥生成、签名、硬件安全区）        | hardware/interfaces/security/keymint/aidl/                       |
+| gatekeeper       | 锁屏密码/生物识别 gatekeeper 认证支持                      | hardware/interfaces/gatekeeper/aidl/                             |
+| drm              | 数字版权管理（DRM），密钥协商、内容保护                    | hardware/interfaces/drm/aidl/                                    |
+| automotive       | 车载信息娱乐、CAN 总线、仪表盘等车辆相关控制               | hardware/interfaces/automotive/                                  |
+| graphics_mapper  | GraphicBuffer Mapper，图形内存映射接口                      | hardware/interfaces/graphics/mapper/aidl/                        |
+| media            | 多媒体硬件加速（视频编解码、音频处理、Camera ISP）         | hardware/interfaces/media/aidl/                                  |
+| configstore      | 配置信息存取，提供 SoC/HW 相关参数                         | hardware/interfaces/configstore/aidl/                            |
+| display          | 显示输出（Display HAL，屏幕参数、亮度、刷新率等）           | hardware/interfaces/display/aidl/                                |
+| input            | 输入设备（键盘、触控板、手写笔等）管理和事件采集           | hardware/interfaces/input/aidl/                                  |
+| boot             | 设备启动、bootloader 状态、分区切换                        | hardware/interfaces/boot/aidl/                                   |
+| fastboot         | fastboot 模式和接口实现                                    | hardware/interfaces/fastboot/aidl/                               |
+| time             | 时间管理、RTC、系统时间设置                                 | hardware/interfaces/time/aidl/                                   |
+| secure_element   | SE（安全芯片，NFC/支付/安全存储等）接口                     | hardware/interfaces/secure_element/aidl/                         |
+| identity         | 身份认证、证件接口（如 eID、国密、护照等）                  | hardware/interfaces/identity/aidl/                               |
+| oemlock          | OEM 锁控制（设备解锁、bootloader 锁等）                     | hardware/interfaces/oemlock/aidl/                                |
+| wifi_offload     | Wi-Fi 卸载、低功耗扫描等                                   | hardware/interfaces/wifi/offload/aidl/                           |
+| confirmationui   | 安全确认 UI 支持                                           | hardware/interfaces/confirmationui/aidl/                         |
+| soundtrigger     | 声音唤醒（如“OK Google”热词检测）                          | hardware/interfaces/soundtrigger/aidl/                           |
+
+TV HAL
+| 模块             | 功能描述                                                   | 代码路径                                                          |
+|------------------|------------------------------------------------------------|-------------------------------------------------------------------|
+| tv_input         | 电视输入源（HDMI、ATV、DTV、AV、Component 等）管理         | hardware/interfaces/tv/input/aidl/                                |
+| tv_cec           | HDMI CEC (Consumer Electronics Control) 控制和事件          | hardware/interfaces/tv/cec/aidl/                                  |
+| tv_tuner         | 电视调谐器（DVB/ATSC/ISDB）支持，频道扫描、播放             | hardware/interfaces/tv/tuner/aidl/                                |
+| tv_audio          | 电视音频输入、解码、音效处理                               | hardware/interfaces/tv/audio/aidl/                                |
+| tv_hdmi           | HDMI 输入检测与管理，EDID、热插拔、模式切换                | hardware/interfaces/tv/hdmi/aidl/                                 |
+| tv_smartcard      | 电视智能卡（CA 解密、授权、付费电视等）接口                | hardware/interfaces/tv/smartcard/aidl/                            |
+| tv_ci             | 条件接收（CAM 卡、Conditional Access）管理                 | hardware/interfaces/tv/ci/aidl/                                   |
+| tv_wakeup         | TV 唤醒（遥控器、HDMI CEC 唤醒、定时唤醒等）               | hardware/interfaces/tv/wakeup/aidl/                               |
+| tv_input_control  | 电视输入切换、信号状态管理                                | hardware/interfaces/tv/inputcontrol/aidl/                         |
+| tv_antenna        | 天线、信号强度、信号质量检测与控制                         | hardware/interfaces/tv/antenna/aidl/                              |
+| tv_overlay        | TV 画中画（PIP）、OSD、图层叠加控制                        | hardware/interfaces/tv/overlay/aidl/                              |
+| tv_dvr            | 数字录像（DVR，录制电视节目、回放）                        | hardware/interfaces/tv/dvr/aidl/                                  |
+| tv_hbbtv          | HbbTV（混合广播宽带电视标准）应用与数据接口                 | hardware/interfaces/tv/hbbtv/aidl/                                |
+| tv_boot           | TV 专用开机流程、待机与恢复控制                            | hardware/interfaces/tv/boot/aidl/                                 |
+| tv_remote         | 电视遥控器（红外/Bluetooth/语音）事件采集和管理            | hardware/interfaces/tv/remote/aidl/                               |
+| tv_hdmi_arc       | HDMI ARC（音频回传通道）/eARC 支持                          | hardware/interfaces/tv/hdmi_arc/aidl/                             |
 。">
 <meta property="og:title" content="Android 代码架构">
 <meta property="og:description" content="### Android 架构
@@ -194,6 +252,64 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 | DRM            | drmserver        | 数字版权管理（DRM）服务                      | frameworks/av/drm/drmserver/                   |
 | 安全           | gatekeeperd      | 屏幕解锁验证（Gatekeeper HAL）               | system/gatekeeperd/                            |
 | 统计           | statsd           | 统计与遥测收集服务                           | frameworks/base/cmds/statsd/                   |
+
+HAL
+| 模块             | 功能描述                                                   | 代码路径                                                          |
+|------------------|------------------------------------------------------------|-------------------------------------------------------------------|
+| audio            | 音频采集、播放、处理和音频硬件控制                         | hardware/interfaces/audio/aidl/                                  |
+| camera           | 摄像头操作、采集、拍照、视频录制、参数调节                  | hardware/interfaces/camera/aidl/                                 |
+| graphics         | 显示合成（HWC）、图形 buffer 分配、显示刷新                 | hardware/interfaces/graphics/composer/aidl/ <br> hardware/interfaces/graphics/allocator/aidl/ |
+| light            | 屏幕、键盘、通知 LED 灯光控制                              | hardware/interfaces/light/aidl/                                  |
+| vibrator         | 振动器控制（马达驱动、震感反馈）                           | hardware/interfaces/vibrator/aidl/                               |
+| sensors          | 各类传感器（加速度、陀螺仪、磁力、环境、计步等）            | hardware/interfaces/sensors/aidl/                                |
+| biometrics       | 指纹、人脸、虹膜等生物识别接口                             | hardware/interfaces/biometrics/fingerprint/aidl/ <br> hardware/interfaces/biometrics/face/aidl/ |
+| bluetooth        | 蓝牙功能（扫描、配对、音频、BLE等）                        | hardware/interfaces/bluetooth/aidl/                              |
+| wifi             | 无线网络（Wi-Fi）配置、扫描、连接、热点                     | hardware/interfaces/wifi/aidl/                                   |
+| gnss             | 卫星定位（GPS、GLONASS、北斗、Galileo）                     | hardware/interfaces/gnss/aidl/                                   |
+| radio            | 无线通信（蜂窝基带，电话、短信、数据、SIM等）               | hardware/interfaces/radio/aidl/                                  |
+| nfc              | 近场通信（NFC）                                            | hardware/interfaces/nfc/aidl/                                    |
+| usb              | USB 设备检测、模式切换、充电控制                           | hardware/interfaces/usb/aidl/                                    |
+| thermal          | 芯片、CPU/GPU/电池等温度采集与管理                         | hardware/interfaces/thermal/aidl/                                |
+| health           | 电池健康、电量、温度、电池状态采集与上报                   | hardware/interfaces/health/aidl/                                 |
+| power            | 电源管理（省电模式、唤醒、休眠、boost等）                  | hardware/interfaces/power/aidl/                                  |
+| keymaster        | 密钥/加密硬件支持（安全密钥生成、签名、硬件安全区）        | hardware/interfaces/security/keymint/aidl/                       |
+| gatekeeper       | 锁屏密码/生物识别 gatekeeper 认证支持                      | hardware/interfaces/gatekeeper/aidl/                             |
+| drm              | 数字版权管理（DRM），密钥协商、内容保护                    | hardware/interfaces/drm/aidl/                                    |
+| automotive       | 车载信息娱乐、CAN 总线、仪表盘等车辆相关控制               | hardware/interfaces/automotive/                                  |
+| graphics_mapper  | GraphicBuffer Mapper，图形内存映射接口                      | hardware/interfaces/graphics/mapper/aidl/                        |
+| media            | 多媒体硬件加速（视频编解码、音频处理、Camera ISP）         | hardware/interfaces/media/aidl/                                  |
+| configstore      | 配置信息存取，提供 SoC/HW 相关参数                         | hardware/interfaces/configstore/aidl/                            |
+| display          | 显示输出（Display HAL，屏幕参数、亮度、刷新率等）           | hardware/interfaces/display/aidl/                                |
+| input            | 输入设备（键盘、触控板、手写笔等）管理和事件采集           | hardware/interfaces/input/aidl/                                  |
+| boot             | 设备启动、bootloader 状态、分区切换                        | hardware/interfaces/boot/aidl/                                   |
+| fastboot         | fastboot 模式和接口实现                                    | hardware/interfaces/fastboot/aidl/                               |
+| time             | 时间管理、RTC、系统时间设置                                 | hardware/interfaces/time/aidl/                                   |
+| secure_element   | SE（安全芯片，NFC/支付/安全存储等）接口                     | hardware/interfaces/secure_element/aidl/                         |
+| identity         | 身份认证、证件接口（如 eID、国密、护照等）                  | hardware/interfaces/identity/aidl/                               |
+| oemlock          | OEM 锁控制（设备解锁、bootloader 锁等）                     | hardware/interfaces/oemlock/aidl/                                |
+| wifi_offload     | Wi-Fi 卸载、低功耗扫描等                                   | hardware/interfaces/wifi/offload/aidl/                           |
+| confirmationui   | 安全确认 UI 支持                                           | hardware/interfaces/confirmationui/aidl/                         |
+| soundtrigger     | 声音唤醒（如“OK Google”热词检测）                          | hardware/interfaces/soundtrigger/aidl/                           |
+
+TV HAL
+| 模块             | 功能描述                                                   | 代码路径                                                          |
+|------------------|------------------------------------------------------------|-------------------------------------------------------------------|
+| tv_input         | 电视输入源（HDMI、ATV、DTV、AV、Component 等）管理         | hardware/interfaces/tv/input/aidl/                                |
+| tv_cec           | HDMI CEC (Consumer Electronics Control) 控制和事件          | hardware/interfaces/tv/cec/aidl/                                  |
+| tv_tuner         | 电视调谐器（DVB/ATSC/ISDB）支持，频道扫描、播放             | hardware/interfaces/tv/tuner/aidl/                                |
+| tv_audio          | 电视音频输入、解码、音效处理                               | hardware/interfaces/tv/audio/aidl/                                |
+| tv_hdmi           | HDMI 输入检测与管理，EDID、热插拔、模式切换                | hardware/interfaces/tv/hdmi/aidl/                                 |
+| tv_smartcard      | 电视智能卡（CA 解密、授权、付费电视等）接口                | hardware/interfaces/tv/smartcard/aidl/                            |
+| tv_ci             | 条件接收（CAM 卡、Conditional Access）管理                 | hardware/interfaces/tv/ci/aidl/                                   |
+| tv_wakeup         | TV 唤醒（遥控器、HDMI CEC 唤醒、定时唤醒等）               | hardware/interfaces/tv/wakeup/aidl/                               |
+| tv_input_control  | 电视输入切换、信号状态管理                                | hardware/interfaces/tv/inputcontrol/aidl/                         |
+| tv_antenna        | 天线、信号强度、信号质量检测与控制                         | hardware/interfaces/tv/antenna/aidl/                              |
+| tv_overlay        | TV 画中画（PIP）、OSD、图层叠加控制                        | hardware/interfaces/tv/overlay/aidl/                              |
+| tv_dvr            | 数字录像（DVR，录制电视节目、回放）                        | hardware/interfaces/tv/dvr/aidl/                                  |
+| tv_hbbtv          | HbbTV（混合广播宽带电视标准）应用与数据接口                 | hardware/interfaces/tv/hbbtv/aidl/                                |
+| tv_boot           | TV 专用开机流程、待机与恢复控制                            | hardware/interfaces/tv/boot/aidl/                                 |
+| tv_remote         | 电视遥控器（红外/Bluetooth/语音）事件采集和管理            | hardware/interfaces/tv/remote/aidl/                               |
+| tv_hdmi_arc       | HDMI ARC（音频回传通道）/eARC 支持                          | hardware/interfaces/tv/hdmi_arc/aidl/                             |
 。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://lhmax2010.github.io/post/Android%20-dai-ma-jia-gou.html">
@@ -745,6 +861,280 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 <td>statsd</td>
 <td>统计与遥测收集服务</td>
 <td>frameworks/base/cmds/statsd/</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>HAL</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>模块</th>
+<th>功能描述</th>
+<th>代码路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>audio</td>
+<td>音频采集、播放、处理和音频硬件控制</td>
+<td>hardware/interfaces/audio/aidl/</td>
+</tr>
+<tr>
+<td>camera</td>
+<td>摄像头操作、采集、拍照、视频录制、参数调节</td>
+<td>hardware/interfaces/camera/aidl/</td>
+</tr>
+<tr>
+<td>graphics</td>
+<td>显示合成（HWC）、图形 buffer 分配、显示刷新</td>
+<td>hardware/interfaces/graphics/composer/aidl/ <br> hardware/interfaces/graphics/allocator/aidl/</td>
+</tr>
+<tr>
+<td>light</td>
+<td>屏幕、键盘、通知 LED 灯光控制</td>
+<td>hardware/interfaces/light/aidl/</td>
+</tr>
+<tr>
+<td>vibrator</td>
+<td>振动器控制（马达驱动、震感反馈）</td>
+<td>hardware/interfaces/vibrator/aidl/</td>
+</tr>
+<tr>
+<td>sensors</td>
+<td>各类传感器（加速度、陀螺仪、磁力、环境、计步等）</td>
+<td>hardware/interfaces/sensors/aidl/</td>
+</tr>
+<tr>
+<td>biometrics</td>
+<td>指纹、人脸、虹膜等生物识别接口</td>
+<td>hardware/interfaces/biometrics/fingerprint/aidl/ <br> hardware/interfaces/biometrics/face/aidl/</td>
+</tr>
+<tr>
+<td>bluetooth</td>
+<td>蓝牙功能（扫描、配对、音频、BLE等）</td>
+<td>hardware/interfaces/bluetooth/aidl/</td>
+</tr>
+<tr>
+<td>wifi</td>
+<td>无线网络（Wi-Fi）配置、扫描、连接、热点</td>
+<td>hardware/interfaces/wifi/aidl/</td>
+</tr>
+<tr>
+<td>gnss</td>
+<td>卫星定位（GPS、GLONASS、北斗、Galileo）</td>
+<td>hardware/interfaces/gnss/aidl/</td>
+</tr>
+<tr>
+<td>radio</td>
+<td>无线通信（蜂窝基带，电话、短信、数据、SIM等）</td>
+<td>hardware/interfaces/radio/aidl/</td>
+</tr>
+<tr>
+<td>nfc</td>
+<td>近场通信（NFC）</td>
+<td>hardware/interfaces/nfc/aidl/</td>
+</tr>
+<tr>
+<td>usb</td>
+<td>USB 设备检测、模式切换、充电控制</td>
+<td>hardware/interfaces/usb/aidl/</td>
+</tr>
+<tr>
+<td>thermal</td>
+<td>芯片、CPU/GPU/电池等温度采集与管理</td>
+<td>hardware/interfaces/thermal/aidl/</td>
+</tr>
+<tr>
+<td>health</td>
+<td>电池健康、电量、温度、电池状态采集与上报</td>
+<td>hardware/interfaces/health/aidl/</td>
+</tr>
+<tr>
+<td>power</td>
+<td>电源管理（省电模式、唤醒、休眠、boost等）</td>
+<td>hardware/interfaces/power/aidl/</td>
+</tr>
+<tr>
+<td>keymaster</td>
+<td>密钥/加密硬件支持（安全密钥生成、签名、硬件安全区）</td>
+<td>hardware/interfaces/security/keymint/aidl/</td>
+</tr>
+<tr>
+<td>gatekeeper</td>
+<td>锁屏密码/生物识别 gatekeeper 认证支持</td>
+<td>hardware/interfaces/gatekeeper/aidl/</td>
+</tr>
+<tr>
+<td>drm</td>
+<td>数字版权管理（DRM），密钥协商、内容保护</td>
+<td>hardware/interfaces/drm/aidl/</td>
+</tr>
+<tr>
+<td>automotive</td>
+<td>车载信息娱乐、CAN 总线、仪表盘等车辆相关控制</td>
+<td>hardware/interfaces/automotive/</td>
+</tr>
+<tr>
+<td>graphics_mapper</td>
+<td>GraphicBuffer Mapper，图形内存映射接口</td>
+<td>hardware/interfaces/graphics/mapper/aidl/</td>
+</tr>
+<tr>
+<td>media</td>
+<td>多媒体硬件加速（视频编解码、音频处理、Camera ISP）</td>
+<td>hardware/interfaces/media/aidl/</td>
+</tr>
+<tr>
+<td>configstore</td>
+<td>配置信息存取，提供 SoC/HW 相关参数</td>
+<td>hardware/interfaces/configstore/aidl/</td>
+</tr>
+<tr>
+<td>display</td>
+<td>显示输出（Display HAL，屏幕参数、亮度、刷新率等）</td>
+<td>hardware/interfaces/display/aidl/</td>
+</tr>
+<tr>
+<td>input</td>
+<td>输入设备（键盘、触控板、手写笔等）管理和事件采集</td>
+<td>hardware/interfaces/input/aidl/</td>
+</tr>
+<tr>
+<td>boot</td>
+<td>设备启动、bootloader 状态、分区切换</td>
+<td>hardware/interfaces/boot/aidl/</td>
+</tr>
+<tr>
+<td>fastboot</td>
+<td>fastboot 模式和接口实现</td>
+<td>hardware/interfaces/fastboot/aidl/</td>
+</tr>
+<tr>
+<td>time</td>
+<td>时间管理、RTC、系统时间设置</td>
+<td>hardware/interfaces/time/aidl/</td>
+</tr>
+<tr>
+<td>secure_element</td>
+<td>SE（安全芯片，NFC/支付/安全存储等）接口</td>
+<td>hardware/interfaces/secure_element/aidl/</td>
+</tr>
+<tr>
+<td>identity</td>
+<td>身份认证、证件接口（如 eID、国密、护照等）</td>
+<td>hardware/interfaces/identity/aidl/</td>
+</tr>
+<tr>
+<td>oemlock</td>
+<td>OEM 锁控制（设备解锁、bootloader 锁等）</td>
+<td>hardware/interfaces/oemlock/aidl/</td>
+</tr>
+<tr>
+<td>wifi_offload</td>
+<td>Wi-Fi 卸载、低功耗扫描等</td>
+<td>hardware/interfaces/wifi/offload/aidl/</td>
+</tr>
+<tr>
+<td>confirmationui</td>
+<td>安全确认 UI 支持</td>
+<td>hardware/interfaces/confirmationui/aidl/</td>
+</tr>
+<tr>
+<td>soundtrigger</td>
+<td>声音唤醒（如“OK Google”热词检测）</td>
+<td>hardware/interfaces/soundtrigger/aidl/</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>TV HAL</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>模块</th>
+<th>功能描述</th>
+<th>代码路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tv_input</td>
+<td>电视输入源（HDMI、ATV、DTV、AV、Component 等）管理</td>
+<td>hardware/interfaces/tv/input/aidl/</td>
+</tr>
+<tr>
+<td>tv_cec</td>
+<td>HDMI CEC (Consumer Electronics Control) 控制和事件</td>
+<td>hardware/interfaces/tv/cec/aidl/</td>
+</tr>
+<tr>
+<td>tv_tuner</td>
+<td>电视调谐器（DVB/ATSC/ISDB）支持，频道扫描、播放</td>
+<td>hardware/interfaces/tv/tuner/aidl/</td>
+</tr>
+<tr>
+<td>tv_audio</td>
+<td>电视音频输入、解码、音效处理</td>
+<td>hardware/interfaces/tv/audio/aidl/</td>
+</tr>
+<tr>
+<td>tv_hdmi</td>
+<td>HDMI 输入检测与管理，EDID、热插拔、模式切换</td>
+<td>hardware/interfaces/tv/hdmi/aidl/</td>
+</tr>
+<tr>
+<td>tv_smartcard</td>
+<td>电视智能卡（CA 解密、授权、付费电视等）接口</td>
+<td>hardware/interfaces/tv/smartcard/aidl/</td>
+</tr>
+<tr>
+<td>tv_ci</td>
+<td>条件接收（CAM 卡、Conditional Access）管理</td>
+<td>hardware/interfaces/tv/ci/aidl/</td>
+</tr>
+<tr>
+<td>tv_wakeup</td>
+<td>TV 唤醒（遥控器、HDMI CEC 唤醒、定时唤醒等）</td>
+<td>hardware/interfaces/tv/wakeup/aidl/</td>
+</tr>
+<tr>
+<td>tv_input_control</td>
+<td>电视输入切换、信号状态管理</td>
+<td>hardware/interfaces/tv/inputcontrol/aidl/</td>
+</tr>
+<tr>
+<td>tv_antenna</td>
+<td>天线、信号强度、信号质量检测与控制</td>
+<td>hardware/interfaces/tv/antenna/aidl/</td>
+</tr>
+<tr>
+<td>tv_overlay</td>
+<td>TV 画中画（PIP）、OSD、图层叠加控制</td>
+<td>hardware/interfaces/tv/overlay/aidl/</td>
+</tr>
+<tr>
+<td>tv_dvr</td>
+<td>数字录像（DVR，录制电视节目、回放）</td>
+<td>hardware/interfaces/tv/dvr/aidl/</td>
+</tr>
+<tr>
+<td>tv_hbbtv</td>
+<td>HbbTV（混合广播宽带电视标准）应用与数据接口</td>
+<td>hardware/interfaces/tv/hbbtv/aidl/</td>
+</tr>
+<tr>
+<td>tv_boot</td>
+<td>TV 专用开机流程、待机与恢复控制</td>
+<td>hardware/interfaces/tv/boot/aidl/</td>
+</tr>
+<tr>
+<td>tv_remote</td>
+<td>电视遥控器（红外/Bluetooth/语音）事件采集和管理</td>
+<td>hardware/interfaces/tv/remote/aidl/</td>
+</tr>
+<tr>
+<td>tv_hdmi_arc</td>
+<td>HDMI ARC（音频回传通道）/eARC 支持</td>
+<td>hardware/interfaces/tv/hdmi_arc/aidl/</td>
 </tr>
 </tbody>
 </table></markdown-accessiblity-table></div>
