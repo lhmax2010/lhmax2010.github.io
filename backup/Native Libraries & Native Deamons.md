@@ -1,4 +1,4 @@
-一、Native Libraries 详解
+### Native Libraries 详解
 Bionic libc
 功能/用途：Android 专用 C 标准库，实现系统调用、字符串/内存/文件操作、动态链接等，是所有 native 层应用与守护的基础。
 
@@ -306,7 +306,7 @@ DEX 文件结构校验、即时编译（JIT/AOT）、GC 管理、线程/栈隔�
 
 代码完整性校验、加固反作弊。
 
-二、Native Daemons 详解
+### Native Daemons 详解
 init
 功能/用途：系统第一个进程，解析 .rc 文件，拉起并维护所有守护与系统服务。
 
@@ -551,7 +551,7 @@ statsd
 
 
 
-一、三星在 Native Daemons 层的修正与定制
+### 三星在 Native Daemons 层的修正与定制
 1. 典型修正/定制（深度 patch 或替换）
 lmkd
 
@@ -588,7 +588,7 @@ Bixby、Samsung Health、SecCamera/SecAudio/SecDisplay 等
 
 Samsung Pass/biometrics 等生物识别守护
 
-二、三星在 Native Libraries 层的修正与定制
+###  三星在 Native Libraries 层的修正与定制
 1. 典型修正/定制点
 libart/libdexfile
 
@@ -620,3 +620,83 @@ Knox/Security/SE API
 实现硬件安全、企业级安全、数据加密、设备管理等，供自家系统和 App 使用。
 
 S Pen、S Voice、Samsung Health、Bixby、AI、图像增强专用库等
+
+### Android TV 厂商调研技术方向
+一、Native Libraries（本地库）层亮点
+1. 多媒体加速库
+厂商专有硬件编解码/画质/音效本地库（如 libPQ, libAQ, libvpu, libavdec, libmediaext）
+
+负责高性能视频解码、帧插值、降噪、HDR 画质增强、AI 超分、动态色彩管理等
+
+代表厂商：索尼（libpqxr, libx1engine）、TCL（libaipq, libaiav）、海信（libuledenhance, libvidaaav）、小米、康佳、飞利浦
+
+2. 信号源/输入源处理库
+DVB/ATSC/IPTV/HDMI 输入源处理库（如 libtvinput, libdvb, libatv, libci, libiptv）
+
+实现数字/模拟电视信号处理、通道扫描、加密卡解码、频道时移回看、EPG、CA 认证
+
+代表厂商：索尼、TCL、海信、飞利浦、康佳
+
+3. 专有音频处理库
+杜比/DTS/自研音效/声学/回声消除本地库（如 libdts, libdolby, libsoundalive, libnoise, libecho）
+
+支持多声道混音、AI 降噪、空间音频、耳机适配等
+
+代表厂商：索尼（libxrssound）、TCL、海信、小米、飞利浦
+
+4. AI/语音/视觉引擎库
+本地 AI 推理/语音助手/图像识别本地库（如 libaispeech, libaivision, libaiobject）
+
+实现远场唤醒、语音指令解析、AI 内容推荐、实时场景检测
+
+代表厂商：TCL、海信、小米、索尼
+
+5. DRM/CA 安全与加密库
+内容加密、CA/CI+ 智能卡、本地 DRM 验证库（如 libwidevine, libplayready, libci, libdvbcam）
+
+支持 Widevine、PlayReady、广电级 CA 认证、智能卡交互、HDCP
+
+代表厂商：索尼、TCL、海信、飞利浦、康佳
+
+6. 多屏协同/投屏/IoT 库
+厂商自有多屏协同/投屏/设备快连库（如 libquickshare, libmiracast, libsmartthings, libmiio）
+
+支持手机/平板/PC 快投、家庭 IoT 联动
+
+代表厂商：小米（libmiio）、TCL、海信、三星（libsmartthings）
+
+二、Native Daemons（本地守护进程）层亮点
+1. 多媒体/信号源服务进程
+专有媒体/信号守护进程（如 tvinputd, tvdvbserviced, mediad, pqd, audiofxd）
+
+负责信号采集、频道切换、时移/回看、PQ/AQ 实时调度、音视频同步
+
+代表厂商：TCL（tvdvbserviced, pqd）、海信（tvinputd, avsyncd）、索尼、康佳、飞利浦
+
+2. CI+/CA/智能卡守护
+CI+/CA 认证进程（如 ciagentd, caauthd, camd）
+
+负责 CA 智能卡协议交互、密钥认证和授权管理
+
+代表厂商：TCL、海信、索尼、飞利浦
+
+3. 音频与语音服务进程
+音频路由/增强/语音助手守护进程（如 audiofxd, voiceassistd, speechd）
+
+实现音效实时调度、远场唤醒、语音命令监听
+
+代表厂商：TCL、海信、小米、索尼
+
+4. 多屏/IoT/快投服务
+多屏协同/投屏/家庭中控守护进程（如 quickshared, miracastd, miio-daemon, smartthingsd）
+
+管理家庭设备联动、投屏管理、远程协同
+
+代表厂商：小米（miio-daemon）、TCL、海信、三星（smartthingsd）
+
+5. OTA/远程运维与日志服务
+远程升级/健康检测/日志采集守护（如 otad, logd, healthd, rmtserverd）
+
+实现差分 OTA 升级、智能诊断、系统健康管理
+
+代表厂商：TCL、海信、小米、索尼

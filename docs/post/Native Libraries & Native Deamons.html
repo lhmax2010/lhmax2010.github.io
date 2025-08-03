@@ -10,11 +10,11 @@
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-<meta name="description" content="一、Native Libraries 详解
+<meta name="description" content="### Native Libraries 详解
 Bionic libc
 功能/用途：Android 专用 C 标准库，实现系统调用、字符串/内存/文件操作、动态链接等，是所有 native 层应用与守护的基础。">
 <meta property="og:title" content="Native Libraries & Native Deamons">
-<meta property="og:description" content="一、Native Libraries 详解
+<meta property="og:description" content="### Native Libraries 详解
 Bionic libc
 功能/用途：Android 专用 C 标准库，实现系统调用、字符串/内存/文件操作、动态链接等，是所有 native 层应用与守护的基础。">
 <meta property="og:type" content="article">
@@ -77,8 +77,8 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </div>
 </div>
     <div id="content">
-<div class="markdown-body" id="postBody"><p>一、Native Libraries 详解<br>
-Bionic libc<br>
+<div class="markdown-body" id="postBody"><h3>Native Libraries 详解</h3>
+<p>Bionic libc<br>
 功能/用途：Android 专用 C 标准库，实现系统调用、字符串/内存/文件操作、动态链接等，是所有 native 层应用与守护的基础。</p>
 <p>原理/算法：</p>
 <p>采用更轻量、嵌入式友好的实现，部分接口有针对 ARM 架构的高度优化（如 memcpy、strlen 用 NEON/SIMD 实现）。</p>
@@ -241,8 +241,8 @@ Bionic libc<br>
 <p>优化与安全：</p>
 <p>及时 GC、逃逸分析减少内存消耗。</p>
 <p>代码完整性校验、加固反作弊。</p>
-<p>二、Native Daemons 详解<br>
-init<br>
+<h3>Native Daemons 详解</h3>
+<p>init<br>
 功能/用途：系统第一个进程，解析 .rc 文件，拉起并维护所有守护与系统服务。</p>
 <p>原理/算法：</p>
 <p>基于事件驱动状态机，分阶段初始化服务。</p>
@@ -371,7 +371,7 @@ init<br>
 <p>代码路径：frameworks/base/cmds/statsd/</p>
 <p>优化与安全：</p>
 <p>数据脱敏采集，严控上报频率，保护用户隐私。</p>
-<p>一、三星在 Native Daemons 层的修正与定制</p>
+<h3>三星在 Native Daemons 层的修正与定制</h3>
 <ol>
 <li>典型修正/定制（深度 patch 或替换）<br>
 lmkd</li>
@@ -395,7 +395,7 @@ Knox、TIMA 守护进程（如 tima_daemon、sepd、sksd 等）</li>
 </ol>
 <p>Bixby、Samsung Health、SecCamera/SecAudio/SecDisplay 等</p>
 <p>Samsung Pass/biometrics 等生物识别守护</p>
-<p>二、三星在 Native Libraries 层的修正与定制</p>
+<h3>三星在 Native Libraries 层的修正与定制</h3>
 <ol>
 <li>典型修正/定制点<br>
 libart/libdexfile</li>
@@ -416,7 +416,76 @@ libart/libdexfile</li>
 Knox/Security/SE API</li>
 </ol>
 <p>实现硬件安全、企业级安全、数据加密、设备管理等，供自家系统和 App 使用。</p>
-<p>S Pen、S Voice、Samsung Health、Bixby、AI、图像增强专用库等</p></div>
+<p>S Pen、S Voice、Samsung Health、Bixby、AI、图像增强专用库等</p>
+<h3>Android TV 厂商调研技术方向</h3>
+<p>一、Native Libraries（本地库）层亮点</p>
+<ol>
+<li>多媒体加速库<br>
+厂商专有硬件编解码/画质/音效本地库（如 libPQ, libAQ, libvpu, libavdec, libmediaext）</li>
+</ol>
+<p>负责高性能视频解码、帧插值、降噪、HDR 画质增强、AI 超分、动态色彩管理等</p>
+<p>代表厂商：索尼（libpqxr, libx1engine）、TCL（libaipq, libaiav）、海信（libuledenhance, libvidaaav）、小米、康佳、飞利浦</p>
+<ol start="2">
+<li>信号源/输入源处理库<br>
+DVB/ATSC/IPTV/HDMI 输入源处理库（如 libtvinput, libdvb, libatv, libci, libiptv）</li>
+</ol>
+<p>实现数字/模拟电视信号处理、通道扫描、加密卡解码、频道时移回看、EPG、CA 认证</p>
+<p>代表厂商：索尼、TCL、海信、飞利浦、康佳</p>
+<ol start="3">
+<li>专有音频处理库<br>
+杜比/DTS/自研音效/声学/回声消除本地库（如 libdts, libdolby, libsoundalive, libnoise, libecho）</li>
+</ol>
+<p>支持多声道混音、AI 降噪、空间音频、耳机适配等</p>
+<p>代表厂商：索尼（libxrssound）、TCL、海信、小米、飞利浦</p>
+<ol start="4">
+<li>AI/语音/视觉引擎库<br>
+本地 AI 推理/语音助手/图像识别本地库（如 libaispeech, libaivision, libaiobject）</li>
+</ol>
+<p>实现远场唤醒、语音指令解析、AI 内容推荐、实时场景检测</p>
+<p>代表厂商：TCL、海信、小米、索尼</p>
+<ol start="5">
+<li>DRM/CA 安全与加密库<br>
+内容加密、CA/CI+ 智能卡、本地 DRM 验证库（如 libwidevine, libplayready, libci, libdvbcam）</li>
+</ol>
+<p>支持 Widevine、PlayReady、广电级 CA 认证、智能卡交互、HDCP</p>
+<p>代表厂商：索尼、TCL、海信、飞利浦、康佳</p>
+<ol start="6">
+<li>多屏协同/投屏/IoT 库<br>
+厂商自有多屏协同/投屏/设备快连库（如 libquickshare, libmiracast, libsmartthings, libmiio）</li>
+</ol>
+<p>支持手机/平板/PC 快投、家庭 IoT 联动</p>
+<p>代表厂商：小米（libmiio）、TCL、海信、三星（libsmartthings）</p>
+<p>二、Native Daemons（本地守护进程）层亮点</p>
+<ol>
+<li>多媒体/信号源服务进程<br>
+专有媒体/信号守护进程（如 tvinputd, tvdvbserviced, mediad, pqd, audiofxd）</li>
+</ol>
+<p>负责信号采集、频道切换、时移/回看、PQ/AQ 实时调度、音视频同步</p>
+<p>代表厂商：TCL（tvdvbserviced, pqd）、海信（tvinputd, avsyncd）、索尼、康佳、飞利浦</p>
+<ol start="2">
+<li>CI+/CA/智能卡守护<br>
+CI+/CA 认证进程（如 ciagentd, caauthd, camd）</li>
+</ol>
+<p>负责 CA 智能卡协议交互、密钥认证和授权管理</p>
+<p>代表厂商：TCL、海信、索尼、飞利浦</p>
+<ol start="3">
+<li>音频与语音服务进程<br>
+音频路由/增强/语音助手守护进程（如 audiofxd, voiceassistd, speechd）</li>
+</ol>
+<p>实现音效实时调度、远场唤醒、语音命令监听</p>
+<p>代表厂商：TCL、海信、小米、索尼</p>
+<ol start="4">
+<li>多屏/IoT/快投服务<br>
+多屏协同/投屏/家庭中控守护进程（如 quickshared, miracastd, miio-daemon, smartthingsd）</li>
+</ol>
+<p>管理家庭设备联动、投屏管理、远程协同</p>
+<p>代表厂商：小米（miio-daemon）、TCL、海信、三星（smartthingsd）</p>
+<ol start="5">
+<li>OTA/远程运维与日志服务<br>
+远程升级/健康检测/日志采集守护（如 otad, logd, healthd, rmtserverd）</li>
+</ol>
+<p>实现差分 OTA 升级、智能诊断、系统健康管理</p>
+<p>代表厂商：TCL、海信、小米、索尼</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
