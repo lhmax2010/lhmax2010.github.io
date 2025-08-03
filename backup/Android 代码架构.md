@@ -41,7 +41,7 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 | 中断/硬件管理    | 传感器驱动          | 各类传感器（加速度计、陀螺仪等）         | drivers/iio/                                     |
 | 中断/硬件管理    | 输入设备驱动        | 触摸屏、键盘等输入设备                   | drivers/input/                                   |
 
-### Native Libraries
+### Native Libraries 层
 | 类别       | 名称             | 主要功能                           | 代码路径                                         |
 |------------|------------------|------------------------------------|--------------------------------------------------|
 | 基础库     | Bionic libc      | C 标准库，系统调用、内存分配       | bionic/                                          |
@@ -70,7 +70,7 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 | ART        | libdexfile        | DEX 字节码解析与支持               | art/libdexfile/                                  |
 | ART        | libart            | ART 虚拟机核心库                   | art/runtime/                                     |
 
-### Native Deamons
+### Native Deamons 层
 | 类别           | 名称             | 主要功能                                    | 代码路径                                       |
 |----------------|------------------|---------------------------------------------|------------------------------------------------|
 | 启动/管理      | init             | 系统启动初始化，启动守护进程                | system/core/init/                              |
@@ -90,7 +90,7 @@ Refer https://source.android.com/docs/core/architecture?hl=zh-cn
 | 安全           | gatekeeperd      | 屏幕解锁验证（Gatekeeper HAL）               | system/gatekeeperd/                            |
 | 统计           | statsd           | 统计与遥测收集服务                           | frameworks/base/cmds/statsd/                   |
 
-HAL
+### HAL(Harware Abstraction Layer) 层
 | 模块             | 功能描述                                                   | 代码路径                                                          |
 |------------------|------------------------------------------------------------|-------------------------------------------------------------------|
 | audio            | 音频采集、播放、处理和音频硬件控制                         | hardware/interfaces/audio/aidl/                                  |
@@ -128,7 +128,7 @@ HAL
 | confirmationui   | 安全确认 UI 支持                                           | hardware/interfaces/confirmationui/aidl/                         |
 | soundtrigger     | 声音唤醒（如“OK Google”热词检测）                          | hardware/interfaces/soundtrigger/aidl/                           |
 
-TV HAL
+### TV HAL 层
 | 模块             | 功能描述                                                   | 代码路径                                                          |
 |------------------|------------------------------------------------------------|-------------------------------------------------------------------|
 | tv_input         | 电视输入源（HDMI、ATV、DTV、AV、Component 等）管理         | hardware/interfaces/tv/input/aidl/                                |
@@ -147,3 +147,37 @@ TV HAL
 | tv_boot           | TV 专用开机流程、待机与恢复控制                            | hardware/interfaces/tv/boot/aidl/                                 |
 | tv_remote         | 电视遥控器（红外/Bluetooth/语音）事件采集和管理            | hardware/interfaces/tv/remote/aidl/                               |
 | tv_hdmi_arc       | HDMI ARC（音频回传通道）/eARC 支持                          | hardware/interfaces/tv/hdmi_arc/aidl/                             |
+
+### ART(Android Runtime) 层
+| 模块             | 功能描述                                                   | 代码路径                                  |
+|------------------|------------------------------------------------------------|-------------------------------------------|
+| runtime          | ART 虚拟机主运行时环境，负责类加载、内存管理、线程调度、异常处理、GC、JIT/AOT 执行 | art/runtime/                             |
+| dex2oat          | DEX 到 OAT（本地代码）的 AOT 编译工具                       | art/dex2oat/                              |
+| odrefresh        | OAT/DEX 优化与刷新的守护与工具，增量重编译与文件一致性检测   | art/odrefresh/                            |
+| oatdump          | OAT 文件结构、内容及本地代码分析与调试工具                  | art/oatdump/                              |
+| dalvikvm         | Dalvik 兼容入口（历史兼容层，实际调用 ART runtime）         | art/dalvikvm/                             |
+| libart           | ART VM 核心运行时库与平台适配                              | art/libartbase/ <br> art/libartpalette/   |
+| libdexfile       | DEX 字节码格式解析、操作与校验                               | art/libdexfile/                           |
+| libart-compiler  | ART 编译器核心，字节码到本地代码转换、优化                   | art/compiler/                             |
+| libart-disassembler | 字节码与本地指令反汇编分析                               | art/disassembler/                         |
+| libartbase       | ART 基础工具、数据结构、日志、调试支持                      | art/libartbase/                           |
+| libartpalette    | 平台适配接口，跨架构/OS 抽象层                              | art/libartpalette/                        |
+| gc               | 垃圾回收（GC）模块，内存回收算法与调优                      | art/runtime/gc/                           |
+| jit              | 即时编译（JIT），运行时热点代码本地化与优化                  | art/runtime/jit/                          |
+| interpreter      | 字节码解释器，DEX 指令动态调度执行                          | art/runtime/interpreter/                   |
+| imgdiag          | Image 文件分析工具（system image 校验与分析）               | art/imgdiag/                              |
+| profile          | 方法/代码块热度分析、profile 数据收集与利用                  | art/profile/                              |
+| quick            | 快速方法调用和内联、调用链优化等                            | art/runtime/quick/                        |
+| signal_catcher   | 信号捕捉与故障转储（crash、ANR、native 信号管理）           | art/runtime/signal_catcher.cc             |
+| monitor          | 对象锁、同步、Monitor 机制实现                              | art/runtime/monitor.cc                    |
+| verifier         | DEX 字节码静态校验与安全验证                                | art/runtime/verifier/                     |
+| debugger         | Java 调试接口 JDWP/断点/单步执行等                          | art/runtime/debugger/                     |
+| trace            | 方法调用/性能追踪与分析支持                                 | art/runtime/trace/                        |
+| hidden_api       | 隐藏 API 管控，防止 App 访问系统私有接口                     | art/runtime/hidden_api/                   |
+| hprof            | Java 堆内存快照与分析工具（heap profiler）                  | art/runtime/hprof/                        |
+| jdwp             | Java 调试线协议实现（JDWP）                                 | art/runtime/jdwp/                         |
+| libcore          | Java 标准库与通用 API 实现（集合、IO、网络、XML、加密、ICU 等），为 ART/Java Framework 提供核心类库支持 | libcore/                                 |
+| OAT（.oat 文件） | ART 将 DEX 字节码 AOT 编译后的产物，包含本地机器码和元数据，提升启动和执行效率 | art/dex2oat/ <br> art/runtime/oat_file.h <br> art/oatdump/ <br> art/odrefresh/ |
+| JNI              | Java 层与 native（C/C++）代码互操作桥梁，实现方法调用、数据转换、线程/对象管理 | art/runtime/jni/ <br> libcore/ojluni/src/main/native/include/jni.h |
+| libnativebridge  | Native Bridge 机制实现，不同架构下 native so 的兼容仿真加载，跨 ABI 支持 | art/libnativebridge/                      |
+| libnativeloader  | 动态库加载与命名空间隔离机制，管理 so 加载路径、安全隔离与卸载 | art/libnativeloader/                      |
