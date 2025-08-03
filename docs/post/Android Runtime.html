@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="1. runtime（art/runtime/）
+运行逻辑：
+ART 虚拟机主控层，负责 Java 类加载、对象创建、内存管理、线程管理、方法执行（解释、JIT、AOT）、异常捕获、同步、GC 协调等所有执行流的核心。">
+<meta property="og:title" content="Android Runtime">
+<meta property="og:description" content="1. runtime（art/runtime/）
+运行逻辑：
+ART 虚拟机主控层，负责 Java 类加载、对象创建、内存管理、线程管理、方法执行（解释、JIT、AOT）、异常捕获、同步、GC 协调等所有执行流的核心。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lhmax2010.github.io/post/Android%20Runtime.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>Android Runtime</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Android Runtime</h1>
+<div class="title-right">
+    <a href="https://lhmax2010.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/lhmax2010/lhmax2010.github.io/issues/5" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><ol>
+<li>runtime（art/runtime/）<br>
+运行逻辑：<br>
+ART 虚拟机主控层，负责 Java 类加载、对象创建、内存管理、线程管理、方法执行（解释、JIT、AOT）、异常捕获、同步、GC 协调等所有执行流的核心。<br>
+启动时加载 boot image，初始化 ClassLoader、JNI 环境、GC 策略、启动主线程，fork 子线程运行用户代码。</li>
+</ol>
+<p>关键算法：</p>
+<p>对象分配采用 TLAB（Thread Local Allocation Buffer）加速小对象分配。</p>
+<p>方法调用多层 inline cache 与调用链预测。</p>
+<p>线程管理基于 pthread 映射与调度优化。</p>
+<p>优化点：</p>
+<p>合理配置 GC 策略、内存池参数。</p>
+<p>启动流程预加载常用类，减少冷启动开销。</p>
+<p>多线程调度避免长时间锁争用与死锁。</p>
+<ol start="2">
+<li>dex2oat（art/dex2oat/）<br>
+运行逻辑：<br>
+DEX 到 OAT（本地代码）的 AOT 编译器，安装或 OTA 升级时将应用 DEX 字节码批量编译为特定平台的机器码，提高启动和运行效率。<br>
+支持多种编译策略（全部编译、按需编译、Profile 引导优化等）。</li>
+</ol>
+<p>关键算法：</p>
+<p>静态单赋值（SSA）中间表示，便于后续优化。</p>
+<p>通用编译优化（常量传播、死代码消除、循环展开、内联、寄存器分配）。</p>
+<p>指令选择与平台专用调度（x86/arm/arm64）。</p>
+<p>优化点：</p>
+<p>Profile Guided Compilation：利用运行时采集的热代码数据只编译热点，降低安装时延和空间消耗。</p>
+<p>按需编译（Just-in-Time）与 AOT 策略结合。</p>
+<p>支持“增量编译”减少 OAT 刷新压力。</p>
+<ol start="3">
+<li>odrefresh（art/odrefresh/）<br>
+运行逻辑：<br>
+负责 OAT/DEX 优化文件的检查、刷写、增量重编译，监控 DEX、OAT、VDEX 之间的一致性。用于系统升级、补丁、硬件变更后自动修复编译产物，保证兼容性和性能。</li>
+</ol>
+<p>关键算法：</p>
+<p>文件校验与元数据比对。</p>
+<p>最小集增量编译策略（只编译真正需要更新的部分）。</p>
+<p>优化点：</p>
+<p>提升检测效率（文件哈希、时间戳比对）。</p>
+<p>合理安排后台编译时机，降低用户感知时延。</p>
+<ol start="4">
+<li>oatdump（art/oatdump/）<br>
+运行逻辑：<br>
+OAT 文件分析与调试工具，用于解析 OAT 文件内部结构（类、方法、本地码、映射关系）、反汇编本地机器码，支持开发调试和安全分析。</li>
+</ol>
+<p>关键算法：</p>
+<p>ELF/OAT 文件头解析。</p>
+<p>指令反汇编、符号地址映射。</p>
+<p>优化点：</p>
+<p>提升大文件解析与搜索速度。</p>
+<p>支持多架构和指令集动态适配。</p>
+<ol start="5">
+<li>dalvikvm（art/dalvikvm/）<br>
+运行逻辑：<br>
+历史兼容进程入口，解析 dalvikvm 参数后实际调起 ART runtime，保证老版本应用或脚本兼容性。</li>
+</ol>
+<p>关键算法：</p>
+<p>启动参数和环境适配映射。</p>
+<p>优化点：</p>
+<p>精简兼容路径，保证兼容性同时减少维护负担。</p>
+<ol start="6">
+<li>libartbase / libartpalette（art/libartbase/, art/libartpalette/）<br>
+运行逻辑：<br>
+ART 虚拟机的基础工具与平台适配层。libartbase 提供数据结构、日志、调试、错误处理。libartpalette 提供不同硬件/OS 下的抽象实现（如文件、线程、锁等）。</li>
+</ol>
+<p>关键算法：</p>
+<p>平台无关的 STL 优化与错误处理。</p>
+<p>优化点：</p>
+<p>针对目标平台定制内存池、线程同步等底层细节。</p>
+<ol start="7">
+<li>libdexfile（art/libdexfile/）<br>
+运行逻辑：<br>
+负责 DEX 文件格式的解析、验证、接口抽象、Class 查找、指令流读取，是 ART 和 Dalvik 运行时字节码操作的核心。</li>
+</ol>
+<p>关键算法：</p>
+<p>DEX 头部和 classdef 查找加速索引。</p>
+<p>指令流快速遍历与解码表驱动。</p>
+<p>优化点：</p>
+<p>多线程安全的类索引缓存。</p>
+<p>大型 DEX 多索引文件的解析效率优化。</p>
+<ol start="8">
+<li>libart-compiler（art/compiler/）<br>
+运行逻辑：<br>
+ART 专用编译器，提供字节码到本地代码的 JIT/AOT 转换核心，包含前端解析、中端优化、后端机器码生成，供 dex2oat/JIT 使用。</li>
+</ol>
+<p>关键算法：</p>
+<p>SSA 变换、中间表示（IR）、数据流分析。</p>
+<p>LLVM 风格的优化 passes（循环优化、常量传播、寄存器分配）。</p>
+<p>平台特定指令选择与调度。</p>
+<p>优化点：</p>
+<p>热点函数优先、冷热分区优化。</p>
+<p>交叉平台指令生成的调优。</p>
+<ol start="9">
+<li>libart-disassembler（art/disassembler/）<br>
+运行逻辑：<br>
+用于将 DEX 字节码或 OAT 本地指令反汇编成人类可读格式，方便开发调试、逆向分析和安全审计。</li>
+</ol>
+<p>关键算法：</p>
+<p>指令流映射与模式匹配。</p>
+<p>优化点：</p>
+<p>提升跨指令集架构适配能力。</p>
+<p>输出格式丰富化（JSON、XML、汇编代码）。</p>
+<ol start="10">
+<li>gc（art/runtime/gc/）<br>
+运行逻辑：<br>
+ART 的垃圾回收（GC）核心，实现对象内存回收、堆整理、弱引用管理。支持多种 GC 策略：CMS、标记-清除、标记-整理、并发 GC。</li>
+</ol>
+<p>关键算法：</p>
+<p>分代 GC、并发标记-清除、增量 GC、卡表（Card Table）写屏障。</p>
+<p>并发/增量回收，最小化停顿时间（STW）。</p>
+<p>优化点：</p>
+<p>分配速率/垃圾产生速率监控，动态调整 GC 策略。</p>
+<p>TLAB 优化减少锁竞争。</p>
+<p>背景 GC 与前台业务解耦。</p>
+<ol start="11">
+<li>jit（art/runtime/jit/）<br>
+运行逻辑：<br>
+即时编译（JIT）模块，在应用运行时将热点方法/代码段动态编译为本地代码，提升执行效率。JIT 编译后的结果可通过 profile 反馈给下次 AOT 编译。</li>
+</ol>
+<p>关键算法：</p>
+<p>热度计数与采样、逃逸分析、方法内联、OSR（On-Stack Replacement）。</p>
+<p>Inline cache 预测与去虚拟化。</p>
+<p>优化点：</p>
+<p>动态调整编译阈值，防止过多 JIT 导致卡顿。</p>
+<p>优化编译缓存管理与回收。</p>
+<ol start="12">
+<li>interpreter（art/runtime/interpreter/）<br>
+运行逻辑：<br>
+DEX 字节码解释器，负责非热点代码和首次运行代码的执行，支撑 JIT、AOT 切换和调试。</li>
+</ol>
+<p>关键算法：</p>
+<p>表驱动和 switch-case 优化指令分发。</p>
+<p>直接/间接线程机制提升解释器性能。</p>
+<p>优化点：</p>
+<p>热路径内联解释。</p>
+<p>指令流预测减少分支误判。</p>
+<ol start="13">
+<li>imgdiag（art/imgdiag/）<br>
+运行逻辑：<br>
+Image 文件分析工具，用于 system image（如 boot.art、system.art）的校验、结构解析、故障排查。</li>
+</ol>
+<p>关键算法：</p>
+<p>ELF/Image 文件结构解析。</p>
+<p>优化点：</p>
+<p>边缘 case 的鲁棒性提升。</p>
+<ol start="14">
+<li>profile（art/profile/）<br>
+运行逻辑：<br>
+采集方法、类、代码块的执行热度与调用信息，支撑 Profile Guided Compilation（PGC），为 JIT/AOT 提供数据驱动优化依据。</li>
+</ol>
+<p>关键算法：</p>
+<p>采样、热点识别、Profile 数据合并与压缩。</p>
+<p>优化点：</p>
+<p>Profile 数据持久化和跨版本兼容。</p>
+<p>合理冷热分区，提升命中率。</p>
+<ol start="15">
+<li>quick（art/runtime/quick/）<br>
+运行逻辑：<br>
+快速方法调用实现，支持内联、调用链优化、fast-path 路径。</li>
+</ol>
+<p>关键算法：</p>
+<p>方法表缓存、快速分派表（QuickInvoke Table）。</p>
+<p>优化点：</p>
+<p>结合 JIT 热方法实时优化。</p>
+<p>缓存回收与命中率提升。</p>
+<ol start="16">
+<li>signal_catcher（art/runtime/signal_catcher.cc）<br>
+运行逻辑：<br>
+捕获 native 信号（如 SIGSEGV、SIGABRT）、处理崩溃转储、ANR 事件，协助生成堆栈、日志、dump 文件，支撑开发调试和线上排障。</li>
+</ol>
+<p>关键算法：</p>
+<p>信号链管理、线程上下文保存与恢复。</p>
+<p>优化点：</p>
+<p>dump 信息脱敏与采样降噪。</p>
+<p>限制 dump 频率，防止资源耗尽。</p>
+<ol start="17">
+<li>monitor（art/runtime/monitor.cc）<br>
+运行逻辑：<br>
+ART 的 Java 对象锁与同步机制，支持 synchronized、wait/notify、条件变量。</li>
+</ol>
+<p>关键算法：</p>
+<p>轻量级锁、偏向锁、锁膨胀与自旋锁优化。</p>
+<p>优化点：</p>
+<p>避免锁竞争和死锁，合适使用细粒度锁和无锁结构。</p>
+<ol start="18">
+<li>verifier（art/runtime/verifier/）<br>
+运行逻辑：<br>
+DEX 字节码静态校验，检查类型安全、栈平衡、分支有效性，预防恶意代码和崩溃。</li>
+</ol>
+<p>关键算法：</p>
+<p>数据流分析，类型流跟踪与校验。</p>
+<p>优化点：</p>
+<p>大型 DEX 并行校验。</p>
+<p>更丰富的静态检查规则。</p>
+<ol start="19">
+<li>debugger（art/runtime/debugger/）、jdwp（art/runtime/jdwp/）<br>
+运行逻辑：<br>
+ART Java 调试支持（JDWP 协议），实现断点、单步执行、变量观察、远程调试等，配合 Android Studio。</li>
+</ol>
+<p>关键算法：</p>
+<p>调试信息映射表、事件分发。</p>
+<p>优化点：</p>
+<p>调试时性能损耗降至最低。</p>
+<p>动态启停调试会话。</p>
+<ol start="20">
+<li>trace（art/runtime/trace/）<br>
+运行逻辑：<br>
+方法调用、线程事件、性能追踪，支持 systrace、method trace、call graph 等多种追踪模式，便于性能瓶颈定位。</li>
+</ol>
+<p>关键算法：</p>
+<p>环形缓冲、事件压缩、异步采集。</p>
+<p>优化点：</p>
+<p>动态采样率调整，减少性能干扰。</p>
+<ol start="21">
+<li>hidden_api（art/runtime/hidden_api/）<br>
+运行逻辑：<br>
+实现对 Android Framework 隐藏/内测 API 的访问控制，阻止三方 App 滥用系统内部接口，支撑灰名单、黑名单管控。</li>
+</ol>
+<p>关键算法：</p>
+<p>白名单/黑名单判定。</p>
+<p>调用路径追踪。</p>
+<p>优化点：</p>
+<p>兼容老应用的灰名单例外处理。</p>
+<p>动态 API 调用记录与审计。</p>
+<ol start="22">
+<li>hprof（art/runtime/hprof/）<br>
+运行逻辑：<br>
+Java 堆快照与分析工具，采集 heap dump 支持内存泄漏、对象分析。</li>
+</ol>
+<p>关键算法：</p>
+<p>堆遍历与对象图构建、分代采样。</p>
+<p>优化点：</p>
+<p>dump 性能提升，文件压缩存储。</p>
+<p>大堆场景下分批次 dump。</p>
+<ol start="23">
+<li>libcore（libcore/）<br>
+运行逻辑：<br>
+Java 标准库和基础 API 实现，涵盖集合、IO、并发、网络、安全、ICU、XML、JSON、加密等所有 Java 应用基础功能。ART/Dalvik 运行时调用。</li>
+</ol>
+<p>关键算法：</p>
+<p>各类通用算法（排序、hash、同步、SSL/加密等）。</p>
+<p>优化点：</p>
+<p>定期合并 OpenJDK 新算法和安全补丁。</p>
+<p>针对移动端内存、性能裁剪与定制。</p>
+<ol start="24">
+<li>OAT 相关（art/dex2oat/、art/runtime/oat_file.h、art/oatdump/、art/odrefresh/）<br>
+运行逻辑：<br>
+OAT 文件作为 ART DEX AOT 编译产物，存储优化机器码、方法元数据、vtable 等。运行时按需映射到内存直接执行。</li>
+</ol>
+<p>关键算法：</p>
+<p>机器码布局优化、热路径排序。</p>
+<p>优化点：</p>
+<p>合理分区提升热代码命中率。</p>
+<p>支持增量 patch 与兼容校验。</p>
+<ol start="25">
+<li>JNI（art/runtime/jni/、libcore/ojluni/src/main/native/include/jni.h）<br>
+运行逻辑：<br>
+Java/Native 层交互桥梁，实现方法互调、对象传递、native 注册、数据交换。</li>
+</ol>
+<p>关键算法：</p>
+<p>本地引用管理、线程 attach/detach。</p>
+<p>优化点：</p>
+<p>避免跨 JNI 边界高频调用。</p>
+<p>用 DeleteLocalRef 管理大批量局部引用。</p>
+<ol start="26">
+<li>libnativebridge（art/libnativebridge/）<br>
+运行逻辑：<br>
+Native Bridge 机制，支持不同 ABI native so 的仿真/兼容运行（如 ARM64 跑 x86 so），供厂商（如 Intel Houdini）扩展。</li>
+</ol>
+<p>关键算法：</p>
+<p>ABI 转换、符号重定位、函数转发。</p>
+<p>优化点：</p>
+<p>提升仿真性能，减少兼容层 overhead。</p>
+<p>限制高危系统调用，增强安全性。</p>
+<ol start="27">
+<li>libnativeloader（art/libnativeloader/）<br>
+运行逻辑：<br>
+Native so 动态加载和 namespace 隔离，支撑 System.loadLibrary、ClassLoader 加载和多用户分区安全。</li>
+</ol>
+<p>关键算法：</p>
+<p>so 路径搜索、dlopen 隔离、命名空间映射。</p>
+<p>优化点：</p>
+<p>防 so 劫持与依赖冲突，优化加载路径和缓存策略。</p>
+<h3>三星在 ART 层的主要修改/扩展点</h3>
+<ol>
+<li>安全/加固与 Knox 集成<br>
+hidden_api、verifier、JNI</li>
+</ol>
+<p>增强隐藏 API 管控：为 Knox/企业/系统 App 加白名单、实现更细粒度的 API 权限。</p>
+<p>DEX 校验/反作弊：可能在 verifier 里强化防篡改、反动态注入的校验逻辑。</p>
+<p>native 层安全：JNI 侧接入 Knox 审计、增强 native 调用日志/行为监控。</p>
+<p>libcore</p>
+<p>对核心 Java 类库中的加密、网络、文件系统 API 加入企业定制（如 Knox 审计接口、国密算法兼容）。</p>
+<ol start="2">
+<li>性能与平台适配优化<br>
+GC/JIT/Profile</li>
+</ol>
+<p>优化 GC 策略和参数，适配自家硬件（如大内存、多核、特定 CPU/GPU 组合），可能有自定义的 profile 或特殊内存管理钩子。</p>
+<p>dex2oat / libart-compiler</p>
+<p>编译器参数和优化 pass 调整，兼容三星自研/供应链芯片的最佳运行表现。</p>
+<ol start="3">
+<li>多媒体/显示/硬件协同增强<br>
+JNI/so 加载</li>
+</ol>
+<p>加载自有图形、多媒体、S Pen、显示等 native 扩展库时，引入自有 namespace 隔离或注册流程，防止依赖冲突。</p>
+<p>libnativeloader</p>
+<p>定制 so 加载路径和隔离策略，保证三星自有硬件驱动、Knox 加固库优先/独立加载。</p>
+<ol start="4">
+<li>企业/Knox/特权 App 支持<br>
+hidden_api、monitor、JNI</li>
+</ol>
+<p>特权 App 通过企业白名单直接访问部分隐藏 API，或注入自有 debug/hook 能力。</p>
+<p>可能定制 monitor（锁/同步）行为，实现安全隔离或企业需求（如强隔离/加密对象）。</p>
+<p>signal_catcher/debugger</p>
+<p>增强 crash/anr dump，采集更丰富的日志供企业或 Knox 安全分析。</p>
+<ol start="5">
+<li>自有模块/补丁<br>
+libartbase/自有扩展</li>
+</ol>
+<p>三星可能引入一些自有的 runtime 扩展模块（如企业安全日志、远程管理接口、特殊加密实现等），位于 vendor/samsung/、system/knox/ 或补丁方式 patch 到 ART 目录。</p>
+<p>libnativebridge</p>
+<p>如有异构 CPU 支持、兼容特殊硬件架构（如自研 SoC），会定制 Native Bridge 实现。</p>
+<h3>电视领域厂商在 ART 层的定制与扩展</h3>
+<ol>
+<li>系统资源与性能适配优化<br>
+GC 策略和堆参数调整：</li>
+</ol>
+<p>厂商常针对电视 SoC 的内存配置、分辨率、后台进程数量等，定制垃圾回收（GC）参数，比如增加最大堆大小、调整分代比例、GC 触发阈值，使得 TV App/Launcher/UI 流畅不卡顿。</p>
+<p>有的电视（如索尼、TCL）会 patch ART 启动参数，设置更高的“Large Heap”模式，支持长时间大分辨率视频流与多 App 共存。</p>
+<p>JIT/AOT/编译策略：</p>
+<p>某些厂商根据开机速度、冷启动/热启动体验，动态调整 dex2oat/JIT 策略，如优先 Profile Guided Compilation，或仅对 Launcher、媒体解码等核心 App 采用全编译，非核心应用用解释/JIT，降低系统负担。</p>
+<p>odrefresh 增量编译/后台静默优化：</p>
+<p>电视厂商常在“待机/屏保”时段后台触发 OAT 优化，利用空闲时间减少对用户体验的影响。</p>
+<p>部分定制电视固件还会 patch odrefresh，支持低温、休眠后自动增量刷新。</p>
+<ol start="2">
+<li>多媒体/显示/输入扩展支持<br>
+JNI/Native so 加载机制定制：</li>
+</ol>
+<p>电视厂商会在 libnativeloader 层 patch，使自有媒体/显示/解码/输入等 native 库优先在特定 namespace/路径加载，确保自家定制的解码器、PQ（Picture Quality）算法、遥控/输入驱动、CI+ 智能卡接口不会被第三方 so 劫持或冲突。</p>
+<p>如 TCL/海信/长虹会把自有 PQ/AQ、图像处理、HDMI/CEC/遥控等 so 作为“厂商专用库”，由 ART 动态加载机制单独隔离。</p>
+<p>JNI/hidden_api 放宽/灰名单：</p>
+<p>厂商会给自有 Launcher、设置、遥控、PQ/AQ 等核心 App 开放部分隐藏 API 访问权，常通过 patch hidden_api、JNI 注册逻辑实现。</p>
+<ol start="3">
+<li>专有硬件/外设支持<br>
+JNI、libnativebridge 扩展：</li>
+</ol>
+<p>支持如 CI+ 智能卡、DVB/ATSC 调谐器、远场麦克风、语音芯片等专有硬件，厂商通过 JNI 和 native bridge 支持跨架构 native so 加载（如 x86 电视/仿真器上跑 arm so）。</p>
+<p>信号捕捉、trace、debugger 定制：</p>
+<p>为了更好地支持电视专有输入设备、音视频同步和大屏交互，厂商会 patch trace/debugger 模块，加入遥控/HDMI/CEC/按键等特有事件和统计。</p>
+<ol start="4">
+<li>安全与 DRM/认证集成<br>
+libcore、hidden_api、JNI 定制：</li>
+</ol>
+<p>各大 TV 厂商对 DRM、CA（Conditional Access）、智能卡认证等做扩展，会 patch libcore 的加密/SSL/CA 相关实现，或在 JNI 桥接厂商自有 DRM/解密库。</p>
+<p>DRM 安全机制会在 ART、JNI 层加黑/白名单、完整性校验和日志采集接口，防止内容泄漏和逆向。</p>
+<ol start="5">
+<li>厂商专有模块/补丁<br>
+代码结构：</li>
+</ol>
+<p>多数 patch、扩展会以 patch/overlay 方式作用于 art/、libcore/、frameworks/base/ 等主目录，或以专有模块（如 vendor//、hardware//）方式注入。</p>
+<p>部分“Launcher/PQ/遥控/音效”等会有独立的厂商 runtime 扩展库或 so。</p>
+<p>具体实现通常闭源，仅有部分开源或文档（如索尼、TCL 海外版部分开源，AOSP Gerrit 有相关记录）。</p>
+<ol start="6">
+<li>实际应用场景举例<br>
+索尼 BRAVIA：为其自研图像增强（X-Reality Pro）、多分区 Launcher、Voice Control 提供专用 so 隔离加载，JNI 直接桥接自有硬件。</li>
+</ol>
+<p>TCL/海信/长虹：专有 PQ/AQ、CI+、遥控/AI 语音、输入法、图像增强全部在 ART 层打 patch、JNI 桥接，并控制 so 加载命名空间。</p>
+<p>小米电视：Launcher、PatchWall、大屏互动专有功能，通过 hidden API 灰名单和 JNI、Profile 优化 ART 执行。</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://lhmax2010.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","lhmax2010/lhmax2010.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+
+
+</html>
