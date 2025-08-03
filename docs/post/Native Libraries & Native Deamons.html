@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="一、Native Libraries 详解
+Bionic libc
+功能/用途：Android 专用 C 标准库，实现系统调用、字符串/内存/文件操作、动态链接等，是所有 native 层应用与守护的基础。">
+<meta property="og:title" content="Native Libraries & Native Deamons">
+<meta property="og:description" content="一、Native Libraries 详解
+Bionic libc
+功能/用途：Android 专用 C 标准库，实现系统调用、字符串/内存/文件操作、动态链接等，是所有 native 层应用与守护的基础。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lhmax2010.github.io/post/Native%20Libraries%20%26%20Native%20Deamons.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>Native Libraries & Native Deamons</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Native Libraries & Native Deamons</h1>
+<div class="title-right">
+    <a href="https://lhmax2010.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/lhmax2010/lhmax2010.github.io/issues/4" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>一、Native Libraries 详解<br>
+Bionic libc<br>
+功能/用途：Android 专用 C 标准库，实现系统调用、字符串/内存/文件操作、动态链接等，是所有 native 层应用与守护的基础。</p>
+<p>原理/算法：</p>
+<p>采用更轻量、嵌入式友好的实现，部分接口有针对 ARM 架构的高度优化（如 memcpy、strlen 用 NEON/SIMD 实现）。</p>
+<p>syscall 封装兼容性好，极少动态链接依赖，便于精简。</p>
+<p>代码路径：bionic/</p>
+<p>优化与安全：</p>
+<p>针对常见 API（如内存拷贝、字符串查找等）用汇编重写提升性能。</p>
+<p>加强边界检查，避免越界/溢出。</p>
+<p>随主线升级 CVE 修复，关注格式化字符串漏洞、环境变量处理安全。</p>
+<p>libc++<br>
+功能/用途：C++ 标准库，提供 STL 容器、算法、智能指针等现代 C++ 特性。</p>
+<p>原理/算法：</p>
+<p>高度泛型与模板，所有算法和容器都兼容 C++11/14/17，保证类型安全。</p>
+<p>支持异常机制和多线程模型。</p>
+<p>代码路径：external/libcxx/</p>
+<p>优化与安全：</p>
+<p>避免不必要的动态内存分配（容器预分配/移动语义）。</p>
+<p>优化多线程下容器/算法效率，减少锁冲突和 false sharing。</p>
+<p>避免 iterator 失效和越界访问。</p>
+<p>libm<br>
+功能/用途：数学库，提供浮点、三角、对数、指数等基本数学运算。</p>
+<p>原理/算法：</p>
+<p>部分常用函数（如 sin/cos/exp/log）采用表查找+近似多项式分段逼近。</p>
+<p>针对 ARM/NEON/SIMD 提供加速路径。</p>
+<p>代码路径：bionic/libm/</p>
+<p>优化与安全：</p>
+<p>确保精度和极值输入下的稳定性。</p>
+<p>持续用测试集校验数学边界条件。</p>
+<p>liblog<br>
+功能/用途：系统 native 层日志输出，支持分级别、打标签和多目标输出（如 logcat、文件、kernel log）。</p>
+<p>原理/算法：</p>
+<p>日志采用环形缓冲区，按优先级和标签过滤写入，保证高并发低延迟。</p>
+<p>日志轮转策略防止刷爆存储。</p>
+<p>代码路径：system/core/liblog/</p>
+<p>优化与安全：</p>
+<p>避免日志刷屏影响性能，重要服务用合适的日志级别。</p>
+<p>日志内容脱敏，防止敏感数据泄漏。</p>
+<p>libbinder<br>
+功能/用途：Binder IPC 用户空间库，支撑 Android 跨进程高效通信。</p>
+<p>原理/算法：</p>
+<p>基于句柄/引用计数/事务队列，实现对象引用跨进程、自动生命周期管理、零拷贝内存传递（mmap 共享内存）。</p>
+<p>使用主-从线程池避免阻塞，提高并发能力。</p>
+<p>代码路径：frameworks/native/libs/binder/</p>
+<p>优化与安全：</p>
+<p>合理拆分事务，避免大对象传递造成内存膨胀。</p>
+<p>严格权限校验，避免攻击者发起未授权 binder 调用。</p>
+<p>防范 DOS：服务端要对请求频率、数据大小设限。</p>
+<p>libutils<br>
+功能/用途：提供基础数据结构（字符串、List、强/弱引用）、线程同步、时间、文件操作等工具。</p>
+<p>原理/算法：</p>
+<p>多用模板和 RAII 保证类型安全与自动资源管理。</p>
+<p>Mutex/Condition 等同步机制用原子指令和 futex 优化。</p>
+<p>代码路径：system/core/libutils/</p>
+<p>优化与安全：</p>
+<p>尽量用智能指针和容器，防止内存泄漏。</p>
+<p>多线程安全性和死锁检测。</p>
+<p>libandroid<br>
+功能/用途：Native 和 Java 层桥接（如 sensor、surface、audio），底层向上提供统一接口。</p>
+<p>原理/算法：</p>
+<p>JNI 封装、参数类型安全检查。</p>
+<p>事件回调机制异步传递。</p>
+<p>代码路径：frameworks/native/libs/android/</p>
+<p>优化与安全：</p>
+<p>合理使用弱引用，避免对象泄漏。</p>
+<p>防止 JNI 参数不合法造成 native 崩溃。</p>
+<p>libnativehelper<br>
+功能/用途：简化 JNI 注册、异常捕获、参数转换。</p>
+<p>原理/算法：</p>
+<p>基于宏和模板，快速自动注册 native 方法。</p>
+<p>代码路径：frameworks/native/libs/nativehelper/</p>
+<p>优化与安全：</p>
+<p>保证注册表和函数签名对应一致，避免类型混乱。</p>
+<p>libselinux<br>
+功能/用途：SELinux 策略解析、决策、日志和上下文切换。</p>
+<p>原理/算法：</p>
+<p>访问控制基于强制策略（MAC），RBAC/MLS/类型安全结合。</p>
+<p>代码路径：external/selinux/libselinux/</p>
+<p>优化与安全：</p>
+<p>持续强化策略粒度和隔离范围，防止权限滥用。</p>
+<p>策略加载和解析需校验完整性。</p>
+<p>libcrypto / libssl<br>
+功能/用途：OpenSSL 实现，涵盖 TLS/SSL 协议、RSA/ECC/SM4 等加解密、证书、HMAC、随机数生成。</p>
+<p>原理/算法：</p>
+<p>多数核心算法采用高性能汇编实现，结合硬件加速。</p>
+<p>证书链验证、加密套件协商。</p>
+<p>代码路径：external/openssl/</p>
+<p>优化与安全：</p>
+<p>定期升级 OpenSSL，防御已知 CVE（如 Heartbleed）。</p>
+<p>禁用过时加密套件，强制使用 PFS。</p>
+<p>libz<br>
+功能/用途：zlib 数据压缩/解压缩，广泛用于传输和存储。</p>
+<p>原理/算法：</p>
+<p>基于 DEFLATE 算法（LZ77 + Huffman 编码）。</p>
+<p>代码路径：external/zlib/</p>
+<p>优化与安全：</p>
+<p>防 zip bomb（巨大压缩比攻击），对解压输入设上限。</p>
+<p>libjpeg / libpng / libwebp<br>
+功能/用途：图片编解码（JPEG：DCT 压缩，PNG：LZ77+哈夫曼，WebP：VP8 + 预测编码）。</p>
+<p>原理/算法：</p>
+<p>高效块级压缩、错误恢复能力强。</p>
+<p>代码路径：</p>
+<p>external/libjpeg-turbo/、external/libpng/、external/libwebp/</p>
+<p>优化与安全：</p>
+<p>图片文件大小/分辨率校验，避免内存耗尽攻击。</p>
+<p>定期升级解码库，补安全漏洞。</p>
+<p>libskia<br>
+功能/用途：2D 图形渲染引擎，支持矢量/位图绘制、滤镜、抗锯齿。</p>
+<p>原理/算法：</p>
+<p>采用管线化绘图、GPU 加速和缓存合成技术。</p>
+<p>代码路径：external/skia/</p>
+<p>优化与安全：</p>
+<p>绘图指令校验防止 crash。</p>
+<p>GPU 资源分配和 buffer 回收机制优化。</p>
+<p>libEGL / libGLES / libvulkan<br>
+功能/用途：标准图形 API（OpenGL ES/Vulkan），调用 GPU 加速 2D/3D 渲染。</p>
+<p>原理/算法：</p>
+<p>封装底层驱动，管理 context、shader、buffer、同步等。</p>
+<p>Vulkan 采用异步 command buffer，减少驱动调用次数。</p>
+<p>代码路径：</p>
+<p>frameworks/native/opengl/、external/vulkan/</p>
+<p>优化与安全：</p>
+<p>管理 context 资源，防止内存泄漏和死锁。</p>
+<p>异常路径及时回收 GPU buffer。</p>
+<p>libcamera<br>
+功能/用途：摄像头 HAL 通用接口，支持多硬件、多传感器适配。</p>
+<p>原理/算法：</p>
+<p>pipeline 架构，分层处理采集、ISP、输出 buffer。</p>
+<p>代码路径：external/libcamera/</p>
+<p>优化与安全：</p>
+<p>并发 buffer 管理、异常恢复。</p>
+<p>权限校验和隐私保护。</p>
+<p>libinput<br>
+功能/用途：输入设备管理库，处理事件采集、队列、过滤、坐标转换。</p>
+<p>原理/算法：</p>
+<p>事件驱动、异步处理，减少延迟。</p>
+<p>代码路径：system/core/libinput/</p>
+<p>优化与安全：</p>
+<p>事件去抖动，防止误触。</p>
+<p>合理上报速率，避免 DoS。</p>
+<p>libstagefright / libmediandk<br>
+功能/用途：多媒体编解码、采集、同步、流式传输。</p>
+<p>原理/算法：</p>
+<p>pipeline 架构，零拷贝、异步解码、硬件编解码协同。</p>
+<p>代码路径：frameworks/av/media/libstagefright/、frameworks/av/media/ndk/</p>
+<p>优化与安全：</p>
+<p>合理缓存帧，防止延迟和丢帧。</p>
+<p>输入合法性校验，防止溢出攻击。</p>
+<p>libprotobuf<br>
+功能/用途：Protocol Buffers 高效序列化与反序列化。</p>
+<p>原理/算法：</p>
+<p>TLV 编码，高性能解析，类型安全。</p>
+<p>代码路径：external/protobuf/</p>
+<p>优化与安全：</p>
+<p>严格 schema 校验，防止类型混淆和反序列化攻击。</p>
+<p>libdexfile / libart<br>
+功能/用途：DEX 字节码解析与 ART 虚拟机运行时支持。</p>
+<p>原理/算法：</p>
+<p>DEX 文件结构校验、即时编译（JIT/AOT）、GC 管理、线程/栈隔离。</p>
+<p>代码路径：art/libdexfile/、art/runtime/</p>
+<p>优化与安全：</p>
+<p>及时 GC、逃逸分析减少内存消耗。</p>
+<p>代码完整性校验、加固反作弊。</p>
+<p>二、Native Daemons 详解<br>
+init<br>
+功能/用途：系统第一个进程，解析 .rc 文件，拉起并维护所有守护与系统服务。</p>
+<p>原理/算法：</p>
+<p>基于事件驱动状态机，分阶段初始化服务。</p>
+<p>服务依赖树自动重启。</p>
+<p>代码路径：system/core/init/</p>
+<p>优化与安全：</p>
+<p>精简 rc 配置，缩短启动链路。</p>
+<p>严格权限限制，防止 rc 被篡改注册恶意服务。</p>
+<p>adbd<br>
+功能/用途：ADB 调试守护，支持开发调试/文件传输/远控。</p>
+<p>原理/算法：</p>
+<p>使用认证密钥和 ADB protocol。</p>
+<p>代码路径：system/core/adb/</p>
+<p>优化与安全：</p>
+<p>用户版本关闭 root ADB，限制敏感命令。</p>
+<p>传输速率优化，减少内存拷贝。</p>
+<p>vold<br>
+功能/用途：存储设备挂载、加密、分区、OTG 管理。</p>
+<p>原理/算法：</p>
+<p>Uevent 监听+多线程 IO 管理。</p>
+<p>代码路径：system/vold/</p>
+<p>优化与安全：</p>
+<p>只允许 system 权限操作关键挂载。</p>
+<p>分区加密/解密流程加完整性校验。</p>
+<p>netd<br>
+功能/用途：网络接口、DNS、防火墙、NAT 配置。</p>
+<p>原理/算法：</p>
+<p>内部有 event loop，socket/nat/firewall 规则动态加载。</p>
+<p>代码路径：system/netd/</p>
+<p>优化与安全：</p>
+<p>校验下发规则，防止本地提权。</p>
+<p>网络接口变化同步机制优化。</p>
+<p>logd<br>
+功能/用途：日志采集与管理，支持多通道/级别/tag 筛选。</p>
+<p>原理/算法：</p>
+<p>多进程安全的环形缓冲队列。</p>
+<p>代码路径：system/core/logd/</p>
+<p>优化与安全：</p>
+<p>日志回收机制，避免刷爆存储。</p>
+<p>日志加密/访问鉴权。</p>
+<p>servicemanager<br>
+功能/用途：Binder 服务注册和发现，负责服务生命周期调度。</p>
+<p>原理/算法：</p>
+<p>用 hashmap 存储服务名和 binder handle，线程安全访问。</p>
+<p>代码路径：frameworks/native/cmds/servicemanager/</p>
+<p>优化与安全：</p>
+<p>限制注册服务权限，防止劫持。</p>
+<p>自动重启异常服务。</p>
+<p>zygote<br>
+功能/用途：Java 进程孵化器，预加载资源和 Framework，fork 高效启动新进程。</p>
+<p>原理/算法：</p>
+<p>Copy-on-write（COW）优化 fork 性能。</p>
+<p>代码路径：frameworks/base/cmds/zygote/</p>
+<p>优化与安全：</p>
+<p>内存预分配，减少 fork 时资源浪费。</p>
+<p>fork 子进程隔离，防止权限逃逸。</p>
+<p>surfaceflinger<br>
+功能/用途：合成所有应用 Surface，输出到屏幕，是 Android UI 显示核心。</p>
+<p>原理/算法：</p>
+<p>多层 buffer，hardware composer 协同。</p>
+<p>Triple buffering、VSYNC、DMA-buf 优化延迟。</p>
+<p>代码路径：frameworks/native/services/surfaceflinger/</p>
+<p>优化与安全：</p>
+<p>Buffer 及时释放，防止内存泄漏。</p>
+<p>校验输入合法性，防崩溃。</p>
+<p>lmkd<br>
+功能/用途：Low Memory Killer Daemon，监控内存压力并杀死低优先级进程。</p>
+<p>原理/算法：</p>
+<p>事件驱动（kernel memory pressure notification），LRU、OOM_adj 算法动态决定回收对象。</p>
+<p>代码路径：system/memory/lmkd/</p>
+<p>优化与安全：</p>
+<p>配置优先级和阈值防止误杀重要进程。</p>
+<p>防止恶意进程诱导内存回收。</p>
+<p>rild<br>
+功能/用途：Radio Interface Layer Daemon，和基带通信，管理电话、短信、蜂窝数据。</p>
+<p>原理/算法：</p>
+<p>与 modem 通信协议栈，状态机驱动 SIM 卡管理。</p>
+<p>代码路径：hardware/ril/</p>
+<p>优化与安全：</p>
+<p>强化 SIM 卡指令校验，防止注入攻击。</p>
+<p>限制敏感接口访问权限。</p>
+<p>healthd<br>
+功能/用途：电池和健康监控，采集并上传健康数据。</p>
+<p>原理/算法：</p>
+<p>监听电池和热传感器 Uevent。</p>
+<p>代码路径：system/core/healthd/</p>
+<p>优化与安全：</p>
+<p>数据采集频率合理配置。</p>
+<p>严格权限管理，防止数据泄漏。</p>
+<p>keystore<br>
+功能/用途：密钥/证书安全存储与加解密服务。</p>
+<p>原理/算法：</p>
+<p>TEE 或 SE 安全存储密钥，采用硬件加密。</p>
+<p>代码路径：system/security/keystore/</p>
+<p>优化与安全：</p>
+<p>所有密钥操作在安全区执行。</p>
+<p>操作全流程记录审计。</p>
+<p>installd<br>
+功能/用途：APK 安装、数据分区创建、权限分配。</p>
+<p>原理/算法：</p>
+<p>批量 IO、并发目录管理、签名校验。</p>
+<p>代码路径：system/extras/installd/</p>
+<p>优化与安全：</p>
+<p>检查包体完整性和权限，防止恶意植入。</p>
+<p>安装/卸载流程异常回滚。</p>
+<p>drmserver<br>
+功能/用途：DRM 协议实现，管理内容加密与解密，保护内容不被盗用。</p>
+<p>原理/算法：</p>
+<p>支持多种主流 DRM（Widevine、PlayReady、FairPlay），实现密钥分发和内容授权。</p>
+<p>代码路径：frameworks/av/drm/drmserver/</p>
+<p>优化与安全：</p>
+<p>密钥分发全流程加密。</p>
+<p>输出链防止“裸流”窃取。</p>
+<p>gatekeeperd<br>
+功能/用途：负责设备解锁（PIN/指纹/人脸）认证。</p>
+<p>原理/算法：</p>
+<p>哈希+挑战/响应，防暴力破解，所有密钥保存在安全区。</p>
+<p>代码路径：system/gatekeeperd/</p>
+<p>优化与安全：</p>
+<p>鉴权失败加指数回退延迟。</p>
+<p>防止特征重放和硬件旁路攻击。</p>
+<p>statsd<br>
+功能/用途：系统状态、性能与异常统计采集。</p>
+<p>原理/算法：</p>
+<p>事件流+阈值告警，采集日志和健康数据上传分析。</p>
+<p>代码路径：frameworks/base/cmds/statsd/</p>
+<p>优化与安全：</p>
+<p>数据脱敏采集，严控上报频率，保护用户隐私。</p>
+<p>一、三星在 Native Daemons 层的修正与定制</p>
+<ol>
+<li>典型修正/定制（深度 patch 或替换）<br>
+lmkd</li>
+</ol>
+<p>三星有自己的 SLMKD（SwapLowMemoryKiller Daemon），内存回收算法和策略做了大幅定制，增强内存回收能力，适配自家硬件。</p>
+<p>rild</p>
+<p>三星基本会用自己实现的 SecRIL 或定制 RILD，深度适配自家基带、通信芯片及业务，和 AOSP 版本有本质差异。</p>
+<p>surfaceflinger</p>
+<p>三星会 patch 支持自家显示刷新率自适应、HDR、Always-On Display、Foldable 等特性。</p>
+<p>vold</p>
+<p>支持自家存储方案（如 exFAT、UFS）、OTG、加密与分区，patch 较多。</p>
+<p>keystore/gatekeeperd/healthd/statsd</p>
+<p>深度集成 Knox/TIMA/Samsung Secure Element，强化安全与健康管理，与 Knox 安全区、三星企业管理和硬件加密模块结合。</p>
+<p>init</p>
+<p>增加启动自家守护进程、支持 Knox/Samsung Service、自定义安全/性能启动流程。</p>
+<p>logd/adbd</p>
+<p>patch 日志采集、加密、调试通道的权限、安全机制。</p>
+<ol start="2">
+<li>新增自家守护进程（完全自研）<br>
+Knox、TIMA 守护进程（如 tima_daemon、sepd、sksd 等）</li>
+</ol>
+<p>Bixby、Samsung Health、SecCamera/SecAudio/SecDisplay 等</p>
+<p>Samsung Pass/biometrics 等生物识别守护</p>
+<p>二、三星在 Native Libraries 层的修正与定制</p>
+<ol>
+<li>典型修正/定制点<br>
+libart/libdexfile</li>
+</ol>
+<p>Patch 优化 ART 性能和兼容性，适配自家硬件调度、AI 加速，部分安全特性与 Knox 集成。</p>
+<p>libcamera/libjpeg/libskia</p>
+<p>自研 SecCamera/SLSI Camera HAL 和图像算法，扩展 libcamera、libjpeg、libskia，满足三星自家相机和相册功能（如夜景、HDR、AR Emoji、笔记/涂鸦等）。</p>
+<p>libinput</p>
+<p>Note/S Pen 手写笔、手势等输入设备支持，三星定制 input 库和驱动层。</p>
+<p>libcrypto/libssl/libselinux</p>
+<p>增强加密算法、国密算法、硬件安全模块（SE、TIMA、TEE）加速支持。</p>
+<p>liblog/libutils</p>
+<p>日志采集、格式、安全策略有 patch。</p>
+<p>libstagefright/libmediandk</p>
+<p>定制媒体加速接口，优化自家解码/编码器和音视频硬件管线。</p>
+<ol start="2">
+<li>增加自家专用 native libs<br>
+Knox/Security/SE API</li>
+</ol>
+<p>实现硬件安全、企业级安全、数据加密、设备管理等，供自家系统和 App 使用。</p>
+<p>S Pen、S Voice、Samsung Health、Bixby、AI、图像增强专用库等</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://lhmax2010.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","lhmax2010/lhmax2010.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+
+
+</html>
