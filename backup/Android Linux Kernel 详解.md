@@ -301,148 +301,39 @@ https://opensource.samsung.com/downSrcCode
 
 
 ### Android TV 厂商该层研究技术
-一、视频与音频硬件加速
-1. 专有 VPU（Video Processing Unit）/GPU 驱动
-4K/8K/HDR10+/Dolby Vision/HLG 硬解，AI 画质算法（MEMC/降噪/超分）
+<html>
+<body>
+<!--StartFragment--><html><head></head><body><p style="animation: 0s ease 0s 1 normal none running none; appearance: none; background: none 0% 0% / auto repeat scroll padding-box border-box rgba(0, 0, 0, 0); border: 0px none rgb(27, 28, 29); inset: auto; clear: none; clip: auto; color: rgb(27, 28, 29); columns: auto; contain: none; container: none; content: normal; cursor: auto; cx: 0px; cy: 0px; d: none; direction: ltr; display: block; fill: rgb(0, 0, 0); filter: none; flex: 0 1 auto; float: none; font-style: normal; font-variant: normal; font-size-adjust: none; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: 1.15 !important; font-family: &quot;Google Sans Text&quot;, sans-serif !important; gap: normal; hyphens: manual; interactivity: auto; isolation: auto; margin-top: 0px !important; margin-right: 0px; margin-bottom: 16px; margin-left: 0px; marker: none; mask: none; offset: normal; opacity: 1; order: 0; orphans: 2; outline: rgb(27, 28, 29) none 0px; overlay: none; padding: 0px; page: auto; perspective: none; position: static; quotes: auto; r: 0px; resize: none; rotate: none; rx: auto; ry: auto; scale: none; speak: normal; stroke: none; transform: none; transition: all; translate: none; visibility: visible; widows: 2; x: 0px; y: 0px; zoom: 1;"></p><h1 style="animation: 0s ease 0s 1 normal none running none; appearance: none; background: none 0% 0% / auto repeat scroll padding-box border-box rgba(0, 0, 0, 0); border: 0px none rgb(27, 28, 29); inset: auto; clear: none; clip: auto; color: rgb(27, 28, 29); columns: auto; contain: none; container: none; content: normal; cursor: auto; cx: 0px; cy: 0px; d: none; direction: ltr; display: block; fill: rgb(0, 0, 0); filter: none; flex: 0 1 auto; float: none; font-style: normal; font-variant: normal; font-size-adjust: none; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-weight: 700; font-stretch: normal; font-size: 22px; line-height: 1.15 !important; font-family: &quot;Google Sans&quot;, sans-serif !important; gap: normal; hyphens: manual; interactivity: auto; isolation: auto; margin-top: 0px !important; margin-right: 0px; margin-bottom: 8px; margin-left: 0px; marker: none; mask: none; offset: normal; opacity: 1; order: 0; orphans: 2; outline: rgb(27, 28, 29) none 0px; overlay: none; padding: 0px; page: auto; perspective: none; position: static; quotes: auto; r: 0px; resize: none; rotate: none; rx: auto; ry: auto; scale: none; speak: normal; stroke: none; transform: none; transition: all; translate: none; visibility: visible; widows: 2; x: 0px; y: 0px; zoom: 1;">Android TV厂商Linux内核层纯软件技术优化方案</h1><p style="animation: 0s ease 0s 1 normal none running none; appearance: none; background: none 0% 0% / auto repeat scroll padding-box border-box rgba(0, 0, 0, 0); border: 0px none rgb(27, 28, 29); inset: auto; clear: none; clip: auto; color: rgb(27, 28, 29); columns: auto; contain: none; container: none; content: normal; cursor: auto; cx: 0px; cy: 0px; d: none; direction: ltr; display: block; fill: rgb(0, 0, 0); filter: none; flex: 0 1 auto; float: none; font-style: normal; font-variant: normal; font-size-adjust: none; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: 1.15 !important; font-family: &quot;Google Sans Text&quot;, sans-serif !important; gap: normal; hyphens: manual; interactivity: auto; isolation: auto; margin-top: 0px !important; margin-right: 0px; margin-bottom: 16px; margin-left: 0px; marker: none; mask: none; offset: normal; opacity: 1; order: 0; orphans: 2; outline: rgb(27, 28, 29) none 0px; overlay: none; padding: 0px; page: auto; perspective: none; position: static; quotes: auto; r: 0px; resize: none; rotate: none; rx: auto; ry: auto; scale: none; speak: normal; stroke: none; transform: none; transition: all; translate: none; visibility: visible; widows: 2; x: 0px; y: 0px; zoom: 1;"></p><p style="animation: 0s ease 0s 1 normal none running none; appearance: none; background: none 0% 0% / auto repeat scroll padding-box border-box rgba(0, 0, 0, 0); border: 0px none rgb(27, 28, 29); inset: auto; clear: none; clip: auto; color: rgb(27, 28, 29); columns: auto; contain: none; container: none; content: normal; cursor: auto; cx: 0px; cy: 0px; d: none; direction: ltr; display: block; fill: rgb(0, 0, 0); filter: none; flex: 0 1 auto; float: none; font-style: normal; font-variant: normal; font-size-adjust: none; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: 1.15 !important; font-family: &quot;Google Sans Text&quot;, sans-serif !important; gap: normal; hyphens: manual; interactivity: auto; isolation: auto; margin-top: 0px !important; margin-right: 0px; margin-bottom: 16px; margin-left: 0px; marker: none; mask: none; offset: normal; opacity: 1; order: 0; orphans: 2; outline: rgb(27, 28, 29) none 0px; overlay: none; padding: 0px; page: auto; perspective: none; position: static; quotes: auto; r: 0px; resize: none; rotate: none; rx: auto; ry: auto; scale: none; speak: normal; stroke: none; transform: none; transition: all; translate: none; visibility: visible; widows: 2; x: 0px; y: 0px; zoom: 1;">下表详细列出了主要Android TV厂商及其SoC供应商在Linux内核层面的特有功能和纯软件技术优化，这些功能通常超出AOSP的默认实现，旨在提升性能、效率和用户体验。</p><div class="horizontal-scroll-wrapper" style="animation: 0s ease 0s 1 normal none running none; appearance: none; background: none 0% 0% / auto repeat scroll padding-box border-box rgba(0, 0, 0, 0); border: 0px none rgb(27, 28, 29); inset: auto; clear: none; clip: auto; color: rgb(27, 28, 29); columns: auto; contain: none; container: none; content: normal; cursor: auto; cx: 0px; cy: 0px; d: none; direction: ltr; display: block; fill: rgb(0, 0, 0); filter: none; flex: 0 1 auto; float: none; font-style: normal; font-variant: normal; font-size-adjust: none; font-kerning: auto; font-optical-sizing: auto; font-feature-settings: normal; font-variation-settings: normal; font-weight: normal; font-stretch: normal; font-size: 16px; line-height: 1.15 !important; font-family: &quot;Google Sans Text&quot;, sans-serif !important; gap: normal; hyphens: manual; interactivity: auto; isolation: auto; margin-top: 0px !important; margin-right: 0px; margin-bottom: 0px; margin-left: 0px; marker: none; mask: none; offset: normal; opacity: 1; order: 0; orphans: 2; outline: rgb(27, 28, 29) none 0px; overlay: none; padding: 0px; page: auto; perspective: none; position: static; quotes: auto; r: 0px; resize: none; rotate: none; rx: auto; ry: auto; scale: none; speak: normal; stroke: none; transform: none; transition: all; translate: none; visibility: visible; widows: 2; x: 0px; y: 0px; zoom: 1;">
+厂商/SoC供应商 | 特有功能/技术 | 描述 | 来源URL
+-- | -- | -- | --
+索尼 (Sony) | 快速启动待机 (Quick Start Standby) | 索尼Android TV支持“快速启动”模式，使Linux系统保持在挂起（待机）状态，以实现近乎即时的唤醒，从而在更高待机功耗下换取即时开机功能。这需要内核层面的电源管理定制。 | helpguide.sony.net, github.com/p0i5k/linux-3.10.27 1
+  | 定制显示、HDCP内容保护及X1图像处理器集成驱动 | 索尼为其搭载联发科SoC（如MT5890/MT5891）的Bravia电视提供内核源码，其中包含索尼定制的显示、HDCP内容保护和X1图像处理器集成驱动，专注于快速启动、HDMI/DRM支持（4K的HDCP 2.2）和内核安全媒体播放。 | github.com/p0i5k/linux-3.10.27 1
+  | 64位芯片上运行32位操作系统以实现兼容性 | 索尼的固件在某些64位芯片上运行32位操作系统以实现兼容性，这是其系统级架构选择，影响内核的配置和兼容性。 | 1
+  | 默认强制执行SELinux | 索尼在Android TV中默认强制执行SELinux，这是一种比AOSP默认更严格的安全策略，通过定制SELinux规则来增强系统安全性。 | 1
+TCL | 动态内存扩展技术 (专利) | TCL获得了一项专利，能够动态地将Android的数据/缓存文件重定向到外部存储（通过将“/data”绑定挂载到SD卡），有效增加了可用应用安装空间。 | (https://patents.google.com/patent/CN102831173B/zh) 1
+  | 定制Linux内核 (Realtek/MediaTek SoC) | TCL的电视使用Realtek和MediaTek SoC，并搭载定制的Linux内核，包括Realtek专有的AV驱动和可能为4K视频播放和低延迟优化的定制DMA/ION内存分配器。 | (https://github.com/TCLOpenSource/TCL_Kernel_OpenSource) 1
+  | 快速恢复 (网络待机) 和ALLM (HDMI驱动优化) | TCL的内核代码支持快速恢复（网络待机）和通过HDMI驱动调整实现的自动低延迟模式（ALLM），以优化游戏体验。 | reddit.com/r/bravia/comments/am6560/some_future_bravia_will_be_using_a_cortexa55/ 1
+  | 默认启用zRAM压缩交换 | 所有TCL Android TV默认启用zRAM压缩交换，以在有限内存条件下改善多任务处理性能，这是一种针对特定硬件的内存优化配置。 | developer.android.com/topic/performance/memory-management 1
+小米 (Xiaomi) | “HyperCore”Linux内核与定制CPU调度器 | 小米较新的Android TV（Mi TV系列）搭载澎湃OS 2，其中包含小米自研的“HyperCore”Linux内核。该内核引入了微架构级别的定制CPU调度器，通过分析CPU指令流水线实现更智能的调度和资源分配。 | sohu.com/a/821684577_99900743 1
+  | 统一DVFS (动态频率缩放) 机制 | HyperCore内核引入了统一的DVFS机制，协调CPU缓存和DDR带宽，将CPU空闲时间减少约19%。 | sohu.com/a/821684577_99900743 1
+  | “小米动态内存”技术 (增强zRAM) | 一种在Android zRAM压缩RAM交换基础上增强的内存管理系统，用于改善低内存条件下的性能。 | sohu.com/a/821684577_99900743 1
+  | “焕新存储2.0” (存储管理大修) | 内核补丁全面改进了内存分配器、调度器和文件系统，以实现更快的应用启动和更流畅的重负载性能。 | sohu.com/a/821684577_99900743 1
+  | 迅捷开机 (Fast Boot) | HyperCore内核启用了一种特殊的快速启动模式，大幅缩短启动时间，使电视几乎可以从待机状态即时唤醒。 | finance.sina.com.cn/tech/roll/2025-01-27/doc-inehkiif9649221.shtml 1
+  | 全局统一渲染 (内核显示管道重建) | 小米重建了内核显示管道，支持“全局统一渲染”方法，显著降低了渲染延迟（某些情况下帧渲染速度提高12倍）。 | sohu.com/a/821684577_99900743 1
+海信 (Hisense) | 安全启动链 (加密OTA、签名固件) | OTA更新包经过加密，表明存在一个安全启动链，引导加载程序只接受签名固件，以防止未经授权的内核修改。 | bananamafia.dev/post/hisensehax/ 1
+  | 扩展SELinux强制执行 | 海信在其构建中强制执行Android的强制访问控制（SELinux），并可能扩展其策略以增强安全性。 | bananamafia.dev/post/hisensehax/ 1
+  | 设备特定驱动 (VIDAA AI、局部调光) | 包含用于VIDAA AI增强和局部调光的设备特定驱动，这些是海信专有的图像处理功能。 | (https://github.com/HisenseOpenSource/Hisense_TV_Kernel_OpenSource) 1
+  | 隐藏调试UART端口与Root Shell | 某些型号通过3.5毫米插孔提供可访问的串行控制台，激活后可显示内核中的root shell（可能用于工厂调试，通过定制设备节点将音频插孔映射到UART）。 | bananamafia.dev/post/hisensehax/ 1
+  | HDMI/DRM子系统中HDCP 2.2和杜比视界定制 | 海信的内核源码显示，在SoC供应商代码基础上增加了定制，包括其专有功能（如局部调光LED控制器和T-Con接口）的驱动，以及对HDMI/DRM子系统中HDCP 2.2和杜比视界的支持。 | (https://github.com/HisenseOpenSource/Hisense_TV_Kernel_OpenSource) 1
+  | 快速换台优化 | 海信在内核中专注于快速换台优化，以提升电视观看体验。 | 1
+华为 (HarmonyOS) | 微内核设计 | HarmonyOS采用微内核设计，与Android基于Linux宏内核的传统架构形成根本性对比，旨在简化内核功能，将更多系统服务置于用户模式。 | promon.io/security-news/harmonyos-next 2
+  | 确定性延迟引擎 | 在任务执行前预先分配系统任务的执行优先级和时间限制，确保高优先级任务获得优先资源保障，将应用响应延迟降低25.7%。 | m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html 2
+  | 高性能进程间通信 (IPC) | 微内核架构显著提升了IPC性能，效率比现有系统提高五倍之多。 | m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html 2
+  | “Hyperhold”内存管理引擎 | 自研的压缩体系（包括多线程压缩和定制压缩算法）以降低内核内存开销，并在闪存上开辟交换区，结合聚合换出和内存标记技术。 | developer.huawei.com/consumer/cn/forum/topic/0204714274580700228 8
+  | EROFS (增强只读文件系统) | 显著提升随机读取性能（平均提升20%），并与Ext4文件系统相比，初始系统空间节省约2GB。 | developer.huawei.com/consumer/cn/forum/topic/0204714274580700228 8
+  | TEE形式化验证方法 | 将微内核技术应用于可信执行环境（TEE），并通过形式化方法从源头验证系统正确性和无漏洞，显著提升安全性。 | m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html 2
+  | 分布式虚拟总线技术 | 使物理上分离的设备能够集成到一个虚拟的“超级设备”中，实现设备间的无缝协作和数据共享。 | (https://consumer.huawei.com/ph/community/details/HarmonyOS-HongMeng-OS-Everything-you-need-to-know/topicId-143188/) 2
 
-索尼（X1/XR）、TCL（AiPQ）、海信（ULED）、小米（MTK/Amlogic）、康佳、飞利浦
-
-多路视频流/多画面（PIP/PBP）并发处理
-
-索尼、TCL、海信、飞利浦
-
-专有 PQ（画质）算法驱动（动态背光/锐化/色彩校准）
-
-索尼、TCL、海信、小米、康佳
-
-2. 专有音频 DSP/Codec 驱动
-杜比音效/DTS/3D空间音频/低延迟音频直通
-
-索尼、TCL、海信、小米、飞利浦
-
-AI 语音降噪/远场麦克风/声源定位
-
-TCL、海信、小米、索尼
-
-多声道混音/硬件后处理
-
-索尼、TCL、海信、飞利浦
-
-二、信号源与多外设管理
-1. TV Tuner/DVB/CI+ 驱动
-全球多制式 DVB/ATSC/ISDB/CI+ 智能卡适配
-
-索尼、TCL、海信、飞利浦、康佳
-
-多频道/时移/回看/EPG
-
-TCL、海信、索尼、飞利浦
-
-CA 智能卡安全解码
-
-TCL、海信、索尼
-
-2. 多 HDMI/AV 输入与 CEC（HDMI 控制）
-多路 HDMI/AV 输入自动切换、ARC/eARC、CEC 智能链路
-
-索尼、TCL、海信、小米、飞利浦
-
-HDMI 快速唤醒、信号源同步、低延迟输入（ALLM）
-
-TCL、索尼、海信、小米
-
-3. 遥控/体感/麦克风/智能外设
-多通道遥控（红外/蓝牙/2.4G）、语音/体感遥控、远场麦克风
-
-小米（语音遥控/体感）、索尼、TCL、海信、康佳
-
-智能摄像头/视频通话/体感交互支持
-
-TCL、海信、康佳、飞利浦
-
-三、存储、内存与性能优化
-1. 高速存储与分区管理
-eMMC/UFS/F2FS 优化、动态分区扩容、U盘/移动硬盘快速挂载
-
-小米、TCL、海信、索尼
-
-断电保护、低延迟 I/O、写放大控制
-
-TCL、索尼、海信
-
-2. 定制内存管理/多媒体缓存
-LMK（LowMemoryKiller）/zRAM/ION/DMA-BUF 动态大缓存
-
-小米、TCL、海信、索尼
-
-多媒体硬件间零拷贝传输、高效帧缓冲
-
-TCL、索尼、海信
-
-四、安全性与内容保护
-1. DRM/CA 安全模块
-Widevine/PlayReady/CA/CI+ 模块，内容加密链路、硬件密钥隔离
-
-索尼、TCL、海信、飞利浦
-
-HDCP 2.2/2.3 认证、广电级智能卡支持
-
-TCL、海信、索尼
-
-2. 防篡改与完整性保护
-DM-Verity/SELinux/安全启动、Root 检测
-
-小米、TCL、索尼、海信、康佳
-
-五、功耗与散热智能控制
-动态电源管理/CPU-GPU/VPU 智能调频/场景自适应背光/风扇/LED 控制
-
-TCL、索尼、海信、小米、飞利浦
-
-待机秒开、HDMI 唤醒、低功耗遥控待命
-
-TCL、小米、索尼、海信
-
-六、其他亮点
-1. 快速启动与 OTA 升级
-内核级待机唤醒/秒开机、差分 OTA、远程诊断
-
-小米、TCL、海信、索尼
-
-2. 厂商专有远程调测与日志收集
-自有远程维护、智能健康监控
-
-TCL、海信、索尼
-
-| 能力项/功能                                   | 说明/关键词                                                 | 覆盖厂商                             |
-|-----------------------------------------------|-----------------------------------------------------------|--------------------------------------|
-| **一、视频与音频硬件加速**                    |                                                           |                                      |
-| VPU/GPU 硬解与 AI 画质算法                    | 4K/8K/HDR10+/Dolby Vision/HLG，MEMC/降噪/超分              | 索尼、TCL、海信、小米、康佳、飞利浦   |
-| 多路视频流/多画面并发（PIP/PBP）              | 画中画、多画面、多路解码                                   | 索尼、TCL、海信、飞利浦              |
-| PQ（画质）算法驱动                            | 动态背光/锐化/色彩校准                                     | 索尼、TCL、海信、小米、康佳           |
-| 音频 DSP/Codec 与音效                         | 杜比/DTS/3D空间音频/低延迟直通                             | 索尼、TCL、海信、小米、飞利浦         |
-| AI 语音降噪/远场麦克风/声源定位                | 远场麦克风、AI 降噪、声源定位                              | TCL、海信、小米、索尼                |
-| 多声道混音/硬件后处理                         | 多声道混音、音效硬件后处理                                 | 索尼、TCL、海信、飞利浦              |
-| **二、信号源与多外设管理**                    |                                                           |                                      |
-| TV Tuner/DVB/CI+ 驱动                        | 全球多制式、CI+ 智能卡                                     | 索尼、TCL、海信、飞利浦、康佳         |
-| 多频道/时移/回看/EPG                         | 多频道、时移、EPG                                         | TCL、海信、索尼、飞利浦              |
-| CA 智能卡安全解码                            | 运营商加密卡内容安全解码                                   | TCL、海信、索尼                      |
-| 多 HDMI/AV 输入与 CEC                        | 多路输入自动切换、ARC/eARC、CEC链路                        | 索尼、TCL、海信、小米、飞利浦         |
-| HDMI 快速唤醒、低延迟输入（ALLM）            | HDMI 快速切换、ALLM 游戏低延迟                            | TCL、索尼、海信、小米                |
-| 遥控/体感/麦克风/外设支持                    | 多通道遥控、体感/语音遥控、远场麦克风                      | 小米、索尼、TCL、海信、康佳           |
-| 智能摄像头/视频通话/体感交互                 | 摄像头、视频通话、体感交互                                 | TCL、海信、康佳、飞利浦              |
-| **三、存储、内存与性能优化**                  |                                                           |                                      |
-| 高速存储与分区管理                           | eMMC/UFS/F2FS 优化、动态分区、外部存储挂载                 | 小米、TCL、海信、索尼                |
-| 断电保护、低延迟 I/O、写放大控制              | 提升可靠性、降低延迟                                       | TCL、索尼、海信                      |
-| 定制内存管理/多媒体缓存                      | LMK/zRAM/ION/DMA-BUF 动态缓存                              | 小米、TCL、海信、索尼                |
-| 多媒体硬件间零拷贝传输                       | 零拷贝帧缓冲、提升效率                                     | TCL、索尼、海信                      |
-| **四、安全性与内容保护**                      |                                                           |                                      |
-| DRM/CA 安全模块                              | Widevine/PlayReady/CI+ 内容加密、密钥隔离                   | 索尼、TCL、海信、飞利浦              |
-| HDCP 2.2/2.3 认证                            | 数字内容版权保护                                           | TCL、海信、索尼                      |
-| 防篡改与完整性保护                           | DM-Verity/SELinux/安全启动/Root 检测                        | 小米、TCL、索尼、海信、康佳           |
-| **五、功耗与散热智能控制**                    |                                                           |                                      |
-| 动态电源管理/调频/智能散热                    | CPU-GPU/VPU 智能调频、背光/风扇/LED 自适应                  | TCL、索尼、海信、小米、飞利浦         |
-| 待机秒开、HDMI 唤醒、低功耗遥控               | 秒开、HDMI 唤醒、遥控待命                                  | TCL、小米、索尼、海信                |
-| **六、其他亮点**                              |                                                           |                                      |
-| 快速启动与 OTA 升级                           | 秒开机、差分 OTA、远程诊断                                 | 小米、TCL、海信、索尼                |
-| 专有远程调测与日志收集                        | 远程维护、健康监控                                         | TCL、海信、索尼                      |
+</div></body></html><!--EndFragment-->
+</body>
+</html>Android TV厂商Linux内核层纯软件技术优化方案下表详细列出了主要Android TV厂商及其SoC供应商在Linux内核层面的特有功能和纯软件技术优化，这些功能通常超出AOSP的默认实现，旨在提升性能、效率和用户体验。厂商/SoC供应商特有功能/技术描述来源URL索尼 (Sony)快速启动待机 (Quick Start Standby)索尼Android TV支持“快速启动”模式，使Linux系统保持在挂起（待机）状态，以实现近乎即时的唤醒，从而在更高待机功耗下换取即时开机功能。这需要内核层面的电源管理定制。[helpguide.sony.net](https://helpguide.sony.net/gbmig/14HE1741/v1/eng/c_quickstart.html), [github.com/p0i5k/linux-3.10.27](https://github.com/p0i5k/linux-3.10.27) 1定制显示、HDCP内容保护及X1图像处理器集成驱动索尼为其搭载联发科SoC（如MT5890/MT5891）的Bravia电视提供内核源码，其中包含索尼定制的显示、HDCP内容保护和X1图像处理器集成驱动，专注于快速启动、HDMI/DRM支持（4K的HDCP 2.2）和内核安全媒体播放。[github.com/p0i5k/linux-3.10.27](https://github.com/p0i5k/linux-3.10.27) 164位芯片上运行32位操作系统以实现兼容性索尼的固件在某些64位芯片上运行32位操作系统以实现兼容性，这是其系统级架构选择，影响内核的配置和兼容性。1默认强制执行SELinux索尼在Android TV中默认强制执行SELinux，这是一种比AOSP默认更严格的安全策略，通过定制SELinux规则来增强系统安全性。1TCL动态内存扩展技术 (专利)TCL获得了一项专利，能够动态地将Android的数据/缓存文件重定向到外部存储（通过将“/data”绑定挂载到SD卡），有效增加了可用应用安装空间。(https://patents.google.com/patent/CN102831173B/zh) 1定制Linux内核 (Realtek/MediaTek SoC)TCL的电视使用Realtek和MediaTek SoC，并搭载定制的Linux内核，包括Realtek专有的AV驱动和可能为4K视频播放和低延迟优化的定制DMA/ION内存分配器。(https://github.com/TCLOpenSource/TCL_Kernel_OpenSource) 1快速恢复 (网络待机) 和ALLM (HDMI驱动优化)TCL的内核代码支持快速恢复（网络待机）和通过HDMI驱动调整实现的自动低延迟模式（ALLM），以优化游戏体验。[reddit.com/r/bravia/comments/am6560/some_future_bravia_will_be_using_a_cortexa55/](https://www.com/r/bravia/comments/am6560/some_future_bravia_will_be_using_a_cortexa55/) 1默认启用zRAM压缩交换所有TCL Android TV默认启用zRAM压缩交换，以在有限内存条件下改善多任务处理性能，这是一种针对特定硬件的内存优化配置。[developer.android.com/topic/performance/memory-management](https://developer.android.com/topic/performance/memory-management) 1小米 (Xiaomi)“HyperCore”Linux内核与定制CPU调度器小米较新的Android TV（Mi TV系列）搭载澎湃OS 2，其中包含小米自研的“HyperCore”Linux内核。该内核引入了微架构级别的定制CPU调度器，通过分析CPU指令流水线实现更智能的调度和资源分配。[sohu.com/a/821684577_99900743](https://www.sohu.com/a/821684577_99900743) 1统一DVFS (动态频率缩放) 机制HyperCore内核引入了统一的DVFS机制，协调CPU缓存和DDR带宽，将CPU空闲时间减少约19%。[sohu.com/a/821684577_99900743](https://www.sohu.com/a/821684577_99900743) 1“小米动态内存”技术 (增强zRAM)一种在Android zRAM压缩RAM交换基础上增强的内存管理系统，用于改善低内存条件下的性能。[sohu.com/a/821684577_99900743](https://www.sohu.com/a/821684577_99900743) 1“焕新存储2.0” (存储管理大修)内核补丁全面改进了内存分配器、调度器和文件系统，以实现更快的应用启动和更流畅的重负载性能。[sohu.com/a/821684577_99900743](https://www.sohu.com/a/821684577_99900743) 1迅捷开机 (Fast Boot)HyperCore内核启用了一种特殊的快速启动模式，大幅缩短启动时间，使电视几乎可以从待机状态即时唤醒。[finance.sina.com.cn/tech/roll/2025-01-27/doc-inehkiif9649221.shtml](https://finance.sina.com.cn/tech/roll/2025-01-27/doc-inehkiif9649221.shtml) 1全局统一渲染 (内核显示管道重建)小米重建了内核显示管道，支持“全局统一渲染”方法，显著降低了渲染延迟（某些情况下帧渲染速度提高12倍）。[sohu.com/a/821684577_99900743](https://www.sohu.com/a/821684577_99900743) 1海信 (Hisense)安全启动链 (加密OTA、签名固件)OTA更新包经过加密，表明存在一个安全启动链，引导加载程序只接受签名固件，以防止未经授权的内核修改。[bananamafia.dev/post/hisensehax/](https://bananamafia.dev/post/hisensehax/) 1扩展SELinux强制执行海信在其构建中强制执行Android的强制访问控制（SELinux），并可能扩展其策略以增强安全性。[bananamafia.dev/post/hisensehax/](https://bananamafia.dev/post/hisensehax/) 1设备特定驱动 (VIDAA AI、局部调光)包含用于VIDAA AI增强和局部调光的设备特定驱动，这些是海信专有的图像处理功能。(https://github.com/HisenseOpenSource/Hisense_TV_Kernel_OpenSource) 1隐藏调试UART端口与Root Shell某些型号通过3.5毫米插孔提供可访问的串行控制台，激活后可显示内核中的root shell（可能用于工厂调试，通过定制设备节点将音频插孔映射到UART）。[bananamafia.dev/post/hisensehax/](https://bananamafia.dev/post/hisensehax/) 1HDMI/DRM子系统中HDCP 2.2和杜比视界定制海信的内核源码显示，在SoC供应商代码基础上增加了定制，包括其专有功能（如局部调光LED控制器和T-Con接口）的驱动，以及对HDMI/DRM子系统中HDCP 2.2和杜比视界的支持。(https://github.com/HisenseOpenSource/Hisense_TV_Kernel_OpenSource) 1快速换台优化海信在内核中专注于快速换台优化，以提升电视观看体验。1华为 (HarmonyOS)微内核设计HarmonyOS采用微内核设计，与Android基于Linux宏内核的传统架构形成根本性对比，旨在简化内核功能，将更多系统服务置于用户模式。[promon.io/security-news/harmonyos-next](https://promon.io/security-news/harmonyos-next) 2确定性延迟引擎在任务执行前预先分配系统任务的执行优先级和时间限制，确保高优先级任务获得优先资源保障，将应用响应延迟降低25.7%。[m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html](https://m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html) 2高性能进程间通信 (IPC)微内核架构显著提升了IPC性能，效率比现有系统提高五倍之多。[m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html](https://m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html) 2“Hyperhold”内存管理引擎自研的压缩体系（包括多线程压缩和定制压缩算法）以降低内核内存开销，并在闪存上开辟交换区，结合聚合换出和内存标记技术。[developer.huawei.com/consumer/cn/forum/topic/0204714274580700228](https://developer.huawei.com/consumer/cn/forum/topic/0204714274580700228) 8EROFS (增强只读文件系统)显著提升随机读取性能（平均提升20%），并与Ext4文件系统相比，初始系统空间节省约2GB。[developer.huawei.com/consumer/cn/forum/topic/0204714274580700228](https://developer.huawei.com/consumer/cn/forum/topic/0204714274580700228) 8TEE形式化验证方法将微内核技术应用于可信执行环境（TEE），并通过形式化方法从源头验证系统正确性和无漏洞，显著提升安全性。[m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html](https://m.cfbond.com/rdxwlb/detail/20190810/1000200033151321565399112534243571_1.html) 2分布式虚拟总线技术使物理上分离的设备能够集成到一个虚拟的“超级设备”中，实现设备间的无缝协作和数据共享。(https://consumer.huawei.com/ph/community/details/HarmonyOS-HongMeng-OS-Everything-you-need-to-know/topicId-143188/) 2
