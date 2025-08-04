@@ -25,3 +25,40 @@
 | toolchain         | 工具链源码与构建工具                                      | 工具链/开发工具                    |
 | tools             | 构建/开发/调试/模拟器/分析等通用工具集                   | 开发/构建/调试/测试工具            |
 | vendor            | 各芯片/厂商专用驱动、闭源库、系统扩展                    | 厂商扩展/硬件适配                  |
+
+adbconnection
+artd
+benchmark
+build
+cmdline
+compiler
+dalvikvm
+dex2oat
+dexdump
+dexlayout
+dexlist
+dexoptanalyzer
+disassembler
+dt_fd_forward
+imgdiag
+libartbase
+libartpalette
+libartservice
+libarttools
+libdexfile
+libelffile
+libnativebridge
+libnativeloader
+libprofile
+NOTICE
+oatdump
+odrefresh
+openjdkjvm
+openjdkjvmti
+perfetto_hprof
+profman
+runtime
+sigchainlib
+simulator
+test
+tools
