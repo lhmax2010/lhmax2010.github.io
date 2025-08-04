@@ -269,6 +269,92 @@ Android 内核中有大量硬件相关的驱动和模块，确保硬件资源的
 路径：drivers/net/wireless/samsung/、drivers/bluetooth/samsung/、drivers/gnss/samsung/</li>
 </ol>
 <p>说明：无线协议/射频链路/热点共享等多项私有增强，提升连接稳定性和速度。</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>机制/模块</th>
+<th>路径示例</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SLMK / SLMKD</td>
+<td>drivers/android/lowmemorykiller.c<br>drivers/android/swap_lowmemorykiller.c</td>
+<td>自研内存回收/冻结机制，细粒度管理内存，提升多任务体验</td>
+</tr>
+<tr>
+<td>SPM / PM QoS</td>
+<td>drivers/samsung/pm_qos/<br>drivers/soc/samsung/pm_qos/</td>
+<td>电源性能 QoS 策略，动态调整 CPU/GPU 频率与带宽，减少卡顿与功耗</td>
+</tr>
+<tr>
+<td>EXYNOS SoC 相关驱动</td>
+<td>drivers/soc/samsung/<br>drivers/soc/exynos/<br>arch/arm64/boot/dts/samsung/</td>
+<td>SoC 全套控制，包括电源域、调度、温控、DVFS、ISP/NPU 控制等</td>
+</tr>
+<tr>
+<td>Seclog / SELinux 扩展</td>
+<td>security/samsung/<br>security/selinux/（有定制 patch）</td>
+<td>安全日志、动态安全策略、Root 检测、Knox 支持</td>
+</tr>
+<tr>
+<td>Knox / TIMA</td>
+<td>drivers/samsung/tima/<br>drivers/samsung/knox/</td>
+<td>安全启动、加密、容器、防 root、数据保护、企业级安全（含 TEE）</td>
+</tr>
+<tr>
+<td>SecCamera / SecAudio / SecDisplay</td>
+<td>drivers/media/platform/samsung/<br>drivers/sound/samsung/<br>drivers/video/fbdev/exynos/</td>
+<td>摄像头/音频/显示等硬件安全与专有优化（HDR、多摄、水印等）</td>
+</tr>
+<tr>
+<td>Samsung MMC/Storage 定制驱动</td>
+<td>drivers/mmc/host/<br>fs/f2fs/（有定制补丁）<br>drivers/scsi/ufs/</td>
+<td>定制 eMMC/UFS，健康管理、碎片整理、动态调度等</td>
+</tr>
+<tr>
+<td>Samsung Debug/Diag/Log</td>
+<td>drivers/samsung/debug/<br>drivers/samsung/log/<br>drivers/samsung/diag/</td>
+<td>厂测、日志抓取、在线诊断，异常监控和信息回溯</td>
+</tr>
+<tr>
+<td>Battery/Powershare/Charger 定制</td>
+<td>drivers/power/samsung/<br>drivers/power/supply/</td>
+<td>电池健康、充电协议、反向充电、快充等多电池管理及安全策略</td>
+</tr>
+<tr>
+<td>SecComp/SecKmsg/Procfs 扩展</td>
+<td>security/samsung/<br>fs/proc/（含 patch）<br>kernel/sec/</td>
+<td>内核安全、系统监控增强、日志接口拓展、进程隔离等</td>
+</tr>
+<tr>
+<td>冷启动/热重启/系统恢复/Watchdog</td>
+<td>drivers/samsung/recovery/<br>drivers/watchdog/</td>
+<td>异常重启、OTA恢复、看门狗、镜像校验等</td>
+</tr>
+<tr>
+<td>Haptic/Display/Touch Driver</td>
+<td>drivers/input/touchscreen/samsung/<br>drivers/video/fbdev/exynos/</td>
+<td>触控、振动、指纹、AMOLED 显示优化与私有特性</td>
+</tr>
+<tr>
+<td>调度/隔离/优先级机制</td>
+<td>kernel/sched/<br>kernel/cgroup/<br>drivers/samsung/sched/</td>
+<td>场景/AI/进程特征动态调度，优先级调整，前后台切换等</td>
+</tr>
+<tr>
+<td>ZRAM/Zswap/Swap 扩展</td>
+<td>drivers/block/zram/<br>mm/zswap.c（含 patch）</td>
+<td>压缩内存，动态 swap 策略，提升低内存设备流畅度</td>
+</tr>
+<tr>
+<td>无线/射频/定位增强</td>
+<td>drivers/net/wireless/samsung/<br>drivers/bluetooth/samsung/<br>drivers/gnss/samsung/</td>
+<td>无线协议/射频/定位专有增强，提升连接与定位性能</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
 <h3>Android TV 厂商该层研究技术</h3>
 <p>一、视频与音频硬件加速</p>
 <ol>

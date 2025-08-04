@@ -281,6 +281,25 @@ https://opensource.samsung.com/downSrcCode
 
 说明：无线协议/射频链路/热点共享等多项私有增强，提升连接稳定性和速度。
 
+| 机制/模块                       | 路径示例                                                      | 说明                                                         |
+|----------------------------------|--------------------------------------------------------------|--------------------------------------------------------------|
+| SLMK / SLMKD                     | drivers/android/lowmemorykiller.c<br>drivers/android/swap_lowmemorykiller.c | 自研内存回收/冻结机制，细粒度管理内存，提升多任务体验            |
+| SPM / PM QoS                     | drivers/samsung/pm_qos/<br>drivers/soc/samsung/pm_qos/        | 电源性能 QoS 策略，动态调整 CPU/GPU 频率与带宽，减少卡顿与功耗   |
+| EXYNOS SoC 相关驱动              | drivers/soc/samsung/<br>drivers/soc/exynos/<br>arch/arm64/boot/dts/samsung/ | SoC 全套控制，包括电源域、调度、温控、DVFS、ISP/NPU 控制等        |
+| Seclog / SELinux 扩展            | security/samsung/<br>security/selinux/（有定制 patch）         | 安全日志、动态安全策略、Root 检测、Knox 支持                   |
+| Knox / TIMA                      | drivers/samsung/tima/<br>drivers/samsung/knox/                | 安全启动、加密、容器、防 root、数据保护、企业级安全（含 TEE）     |
+| SecCamera / SecAudio / SecDisplay| drivers/media/platform/samsung/<br>drivers/sound/samsung/<br>drivers/video/fbdev/exynos/ | 摄像头/音频/显示等硬件安全与专有优化（HDR、多摄、水印等）        |
+| Samsung MMC/Storage 定制驱动     | drivers/mmc/host/<br>fs/f2fs/（有定制补丁）<br>drivers/scsi/ufs/ | 定制 eMMC/UFS，健康管理、碎片整理、动态调度等                    |
+| Samsung Debug/Diag/Log           | drivers/samsung/debug/<br>drivers/samsung/log/<br>drivers/samsung/diag/ | 厂测、日志抓取、在线诊断，异常监控和信息回溯                    |
+| Battery/Powershare/Charger 定制  | drivers/power/samsung/<br>drivers/power/supply/                | 电池健康、充电协议、反向充电、快充等多电池管理及安全策略          |
+| SecComp/SecKmsg/Procfs 扩展      | security/samsung/<br>fs/proc/（含 patch）<br>kernel/sec/       | 内核安全、系统监控增强、日志接口拓展、进程隔离等                  |
+| 冷启动/热重启/系统恢复/Watchdog  | drivers/samsung/recovery/<br>drivers/watchdog/                 | 异常重启、OTA恢复、看门狗、镜像校验等                            |
+| Haptic/Display/Touch Driver      | drivers/input/touchscreen/samsung/<br>drivers/video/fbdev/exynos/ | 触控、振动、指纹、AMOLED 显示优化与私有特性                      |
+| 调度/隔离/优先级机制             | kernel/sched/<br>kernel/cgroup/<br>drivers/samsung/sched/      | 场景/AI/进程特征动态调度，优先级调整，前后台切换等                |
+| ZRAM/Zswap/Swap 扩展             | drivers/block/zram/<br>mm/zswap.c（含 patch）                  | 压缩内存，动态 swap 策略，提升低内存设备流畅度                   |
+| 无线/射频/定位增强               | drivers/net/wireless/samsung/<br>drivers/bluetooth/samsung/<br>drivers/gnss/samsung/ | 无线协议/射频/定位专有增强，提升连接与定位性能                   |
+
+
 ### Android TV 厂商该层研究技术
 一、视频与音频硬件加速
 1. 专有 VPU（Video Processing Unit）/GPU 驱动
