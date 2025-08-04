@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="art    Android Runtime (ART) 虚拟机和编译、解释、GC等相关实现  
+  -- benchmark    ART 性能基准测试  
+  -- cmdline    ART 命令行工具  
+  -- compiler    AOT/JIT 编译器实现  
+  -- dalvik    Dalvik 兼容支持  
+  -- dex2oat    DEX 到 OAT 转换工具  
+  -- dexlayout    DEX 文件布局优化  
+  -- dexlist    DEX 内容浏览工具  
+  -- dexoptanalyzer    DEX 优化分析工具  
+  -- imgdiag    OAT/Image 文件诊断工具  
+  -- libartbase    ART 基础库  
+  -- libartpalette    平台相关抽象接口  
+  -- libdexfile    DEX 解析与操作库  
+  -- libprofile    运行时分析配置与管理  
+  -- oatdump    OAT 文件查看与反汇编  
+  -- odrefresh    OAT/DEX 刷新维护工具  
+  -- openjdkjvmti    JVM TI 实现  
+  -- patchoat    OAT 文件补丁升级  
+  -- profile    运行时分析配置/处理  
+  -- runtime    ART 运行时核心  
+  -- sigchainlib    信号链库  
+  -- test    单元与集成测试  
+  -- tools    辅助开发工具  
+
+bionic    Android C 标准库和运行时库（libc、libm、libdl等）  
+  -- android    平台相关实现  
+  -- benchmarks    libc 性能测试  
+  -- bionic    libc 主体源码  
+  -- docs    文档  
+  -- dynamic_linker    动态链接器  
+  -- gtest    Google Test 集成  
+  -- include    头文件  
+  -- libc    libc 实现  
+  -- libdl    动态库加载器  
+  -- libm    数学库  
+  -- libstdc++    C++ 标准库兼容实现  
+  -- linker    链接器源码  
+  -- locale    本地化实现  
+  -- scripts    构建脚本  
+  -- tests    测试用例  
+  -- tools    辅助工具  
+  -- upstream    上游兼容代码  
+
+bootable    各类启动加载程序与恢复相关实现  
+  -- bootloader    旧版 bootloader  
+  -- bootloader_lk    Little Kernel (LK)  
+  -- bootloader_message    bootloader 与 Android 间消息协议  
+  -- diskinstaller    磁盘安装器  
+  -- dovetail    Dovetail 启动流程  
+  -- dtbo_img_utils    DTBO 镜像工具  
+  -- edk2    UEFI 启动相关  
+  -- fastboot    fastboot 工具及协议  
+  -- mkbootimg    Boot 镜像打包  
+  -- recovery    Recovery 恢复模式实现  
+  -- second_stage    Recovery 二阶段  
+  -- tools    启动辅助工具  
+
+build    构建系统相关  
+  -- blueprint    Blueprint 构建系统模块  
+  -- make    Makefile、通用构建规则  
+  -- soong    Soong 构建系统主引擎  
+  -- tools    构建辅助工具  
+  -- kati    Kati 构建工具  
+  -- support    构建辅助脚本  
+
+cts    兼容性测试套件（CTS）  
+  -- apps    测试App  
+  -- common    公共基类、工具  
+  -- development    CTS 开发辅助  
+  -- docs    文档  
+  -- hostsidetests    主机端测试  
+  -- lib    公共库  
+  -- tests    各类测试项  
+  -- tools    测试工具  
+  -- verifier    CTS Verifier  
+
+dalvik    早期 Dalvik VM 相关遗留代码  
+  -- dexgen    DEX 生成工具  
+  -- doc    文档  
+  -- libdex    DEX 操作库  
+  -- tools    工具  
+  -- vm    Dalvik VM 核心  
+
+developers    面向开发者的文档、工具及演示（部分 AOSP 版本有）  
+
+development    各类开发辅助工具和示例  
+  -- apps    演示App和测试App  
+  -- build    构建工具  
+  -- cmdline    命令行工具  
+  -- host    主机端工具  
+  -- ide    IDE 插件/支持  
+  -- samples    示例代码  
+  -- scripts    辅助脚本  
+  -- tools    辅助开发工具  
+
+device    各设备/芯片/厂商适配与配置  
+  -- google    Google 设备（Pixel等）适配  
+  -- mediatek    MTK 设备适配  
+  -- sony    索尼设备适配  
+  -- samsung    三星设备适配  
+  -- ...    其他设备/厂商适配  
+
+external    第三方开源库与外部项目集合  
+  -- ...    各类第三方依赖库（如 openssl、skia、libpng、zlib 等）  
+
+frameworks    Android 框架层代码（Java与Native）  
+  -- av    多媒体框架与服务  
+  -- base    Java 框架主干，系统服务/核心API  
+  -- ml    机器学习相关（NNAPI等）  
+  -- native    Native服务层  
+  -- opt    可选优化/实验性模块  
+
+hardware    硬件抽象层与通用硬件库  
+  -- interfaces    HAL 层接口（AIDL/HIDL）  
+  -- libhardware    HAL 兼容库  
+  -- libhardware_legacy    旧版 HAL 兼容库  
+  -- ...    其他硬件适配  
+
+kernel    内核源码（一般仅补丁/配置，完整内核需单独获取）  
+  -- ...    内核补丁、配置、参考实现等  
+
+libcore    Java 基础类库实现（如 java.lang, java.util等）  
+  -- dalvik/src    Dalvik VM 相关基础类  
+  -- dex/src    DEX 相关基础类  
+  -- dom/src    DOM 相关基础类  
+  -- luni/src    java.lang/java.util实现  
+  -- xml/src    XML 相关基础类  
+
+libnativehelper    Native 层与 Java 层桥接辅助库  
+  -- include    头文件  
+  -- JNIHelp    JNI 辅助实现  
+  -- ...  
+
+packages    各类系统应用与服务  
+  -- apps    系统应用（如 Settings、Launcher 等）  
+  -- providers    各类 ContentProvider  
+  -- services    系统服务App  
+  -- experimental    实验性/演示 App  
+  -- inputmethods    输入法相关App  
+
+pdk    平台开发套件相关资源  
+
+platform_testing    平台级测试工具集  
+
+prebuilts    预编译三方库/SDK/工具链  
+  -- clang    Clang 预编译工具链  
+  -- sdk    预编译SDK  
+  -- tools    预编译工具  
+  -- ...    其他预编译库  
+
+sdk    Android SDK 工具、API、文档生成等  
+
+system    系统服务、守护进程与核心库  
+  -- core    init、vold、healthd等守护进程  
+  -- libhidl    HIDL 支持库  
+  -- sepolicy    SELinux 策略  
+  -- netd    网络守护进程  
+  -- suspend    电源管理  
+  -- timezone    时区数据  
+  -- ...  
+
+test    各类通用测试用例与框架  
+
+toolchain    工具链源码与构建工具  
+
+tools    构建、开发、调试、模拟器、API、静态分析、分区等通用工具集
+
+  -- apicheck           API 变更检查工具（API 兼容性审查）
+  -- apkzlib            APK 压缩与解压相关工具
+  -- appbundle          Android App Bundle 构建与分析工具
+  -- art                ART 相关开发和测试工具
+  -- bugreport          bugreport 文件生成和分析工具
+  -- build              各类构建辅助工具和脚本
+  -- checkapi           检查 API 兼容性和变化
+  -- codecoverage       代码覆盖率统计工具
+  -- customlint         自定义 Lint 检查工具
+  -- dalvik             Dalvik 相关开发工具
+  -- emulator           Android 模拟器核心及相关工具
+  -- lint               Java/Kotlin 源码静态检查工具
+  -- loganalysis        日志分析工具
+  -- lunch              lunch/build 相关脚本
+  -- profman            ART 性能分析工具
+  -- repo               AOSP 多仓库源码管理工具（repo 脚本）
+  -- testutils          单元测试/集成测试辅助工具
+  -- treble             Treble 相关工具（分区、接口稳定性等）
+  -- vndk               VNDK（Vendor Native Development Kit）相关工具
+  -- apksig             APK 签名验证与生成工具
+  -- apkanalyzer        APK 结构和资源分析工具
+  -- droiddoc           Android API 文档生成工具
+  -- external           外部依赖库及工具
+  -- layoutlib          布局渲染与分析库（Android Studio 预览用）
+  -- libcore_stubdoc    libcore API 文档工具
+  -- lint-checks        Lint 检查规则集合
+  -- metalava           Android 官方 API 生成与文档工具
+  -- proguard           ProGuard 代码混淆与优化工具
+  -- signapk            APK/ZIP 签名工具
+  -- tradefed           测试框架 Trade Federation
+  -- aapt               Android Asset Packaging Tool (AAPT)
+  -- aapt2              AAPT 新一代资源打包工具
+  -- dexdeps            DEX 依赖分析工具
+  -- dx                 DEX 文件生成工具
+  -- hprof-conv         Java Heap Profile 转换工具
+  -- systrace           系统级 trace/性能追踪工具
+  -- sqlite3            sqlite3 命令行工具
+  -- mkbootfs           boot.img 打包辅助工具
+  -- mkyaffs2image      YAFFS2 镜像生成工具
+  -- mksquashfs         squashfs 镜像打包工具
+  -- mklinuxramdisk     Linux ramdisk 生成工具
+  -- fs_config_generator  文件系统权限配置生成器
+  -- dumpkey            公钥导出工具
+  -- etc1tool           ETC1 纹理压缩与解压
+  -- mkdtboimg          DTBO 镜像打包工具
+  -- minijail           容器化与安全隔离工具
+  -- microdroid         Microdroid 相关工具和脚本
+  -- perfprofd          性能分析守护进程
+  -- selinux            SELinux 策略工具和分析器
+  -- simg2img           sparse image 转 raw image 工具
+  -- simg2simg          raw image 转 sparse image 工具
+  -- split-select       资源拆分与选择工具
+  -- test_apks          用于测试的 APK 包集合
+  -- vendor_hook        厂商自定义构建钩子脚本/工具
+
+vendor    各芯片/厂商专用驱动、闭源库、系统扩展  
+  -- ...    具体厂商定制目录  
+。">
+<meta property="og:title" content="Android 代码路径分析">
+<meta property="og:description" content="art    Android Runtime (ART) 虚拟机和编译、解释、GC等相关实现  
+  -- benchmark    ART 性能基准测试  
+  -- cmdline    ART 命令行工具  
+  -- compiler    AOT/JIT 编译器实现  
+  -- dalvik    Dalvik 兼容支持  
+  -- dex2oat    DEX 到 OAT 转换工具  
+  -- dexlayout    DEX 文件布局优化  
+  -- dexlist    DEX 内容浏览工具  
+  -- dexoptanalyzer    DEX 优化分析工具  
+  -- imgdiag    OAT/Image 文件诊断工具  
+  -- libartbase    ART 基础库  
+  -- libartpalette    平台相关抽象接口  
+  -- libdexfile    DEX 解析与操作库  
+  -- libprofile    运行时分析配置与管理  
+  -- oatdump    OAT 文件查看与反汇编  
+  -- odrefresh    OAT/DEX 刷新维护工具  
+  -- openjdkjvmti    JVM TI 实现  
+  -- patchoat    OAT 文件补丁升级  
+  -- profile    运行时分析配置/处理  
+  -- runtime    ART 运行时核心  
+  -- sigchainlib    信号链库  
+  -- test    单元与集成测试  
+  -- tools    辅助开发工具  
+
+bionic    Android C 标准库和运行时库（libc、libm、libdl等）  
+  -- android    平台相关实现  
+  -- benchmarks    libc 性能测试  
+  -- bionic    libc 主体源码  
+  -- docs    文档  
+  -- dynamic_linker    动态链接器  
+  -- gtest    Google Test 集成  
+  -- include    头文件  
+  -- libc    libc 实现  
+  -- libdl    动态库加载器  
+  -- libm    数学库  
+  -- libstdc++    C++ 标准库兼容实现  
+  -- linker    链接器源码  
+  -- locale    本地化实现  
+  -- scripts    构建脚本  
+  -- tests    测试用例  
+  -- tools    辅助工具  
+  -- upstream    上游兼容代码  
+
+bootable    各类启动加载程序与恢复相关实现  
+  -- bootloader    旧版 bootloader  
+  -- bootloader_lk    Little Kernel (LK)  
+  -- bootloader_message    bootloader 与 Android 间消息协议  
+  -- diskinstaller    磁盘安装器  
+  -- dovetail    Dovetail 启动流程  
+  -- dtbo_img_utils    DTBO 镜像工具  
+  -- edk2    UEFI 启动相关  
+  -- fastboot    fastboot 工具及协议  
+  -- mkbootimg    Boot 镜像打包  
+  -- recovery    Recovery 恢复模式实现  
+  -- second_stage    Recovery 二阶段  
+  -- tools    启动辅助工具  
+
+build    构建系统相关  
+  -- blueprint    Blueprint 构建系统模块  
+  -- make    Makefile、通用构建规则  
+  -- soong    Soong 构建系统主引擎  
+  -- tools    构建辅助工具  
+  -- kati    Kati 构建工具  
+  -- support    构建辅助脚本  
+
+cts    兼容性测试套件（CTS）  
+  -- apps    测试App  
+  -- common    公共基类、工具  
+  -- development    CTS 开发辅助  
+  -- docs    文档  
+  -- hostsidetests    主机端测试  
+  -- lib    公共库  
+  -- tests    各类测试项  
+  -- tools    测试工具  
+  -- verifier    CTS Verifier  
+
+dalvik    早期 Dalvik VM 相关遗留代码  
+  -- dexgen    DEX 生成工具  
+  -- doc    文档  
+  -- libdex    DEX 操作库  
+  -- tools    工具  
+  -- vm    Dalvik VM 核心  
+
+developers    面向开发者的文档、工具及演示（部分 AOSP 版本有）  
+
+development    各类开发辅助工具和示例  
+  -- apps    演示App和测试App  
+  -- build    构建工具  
+  -- cmdline    命令行工具  
+  -- host    主机端工具  
+  -- ide    IDE 插件/支持  
+  -- samples    示例代码  
+  -- scripts    辅助脚本  
+  -- tools    辅助开发工具  
+
+device    各设备/芯片/厂商适配与配置  
+  -- google    Google 设备（Pixel等）适配  
+  -- mediatek    MTK 设备适配  
+  -- sony    索尼设备适配  
+  -- samsung    三星设备适配  
+  -- ...    其他设备/厂商适配  
+
+external    第三方开源库与外部项目集合  
+  -- ...    各类第三方依赖库（如 openssl、skia、libpng、zlib 等）  
+
+frameworks    Android 框架层代码（Java与Native）  
+  -- av    多媒体框架与服务  
+  -- base    Java 框架主干，系统服务/核心API  
+  -- ml    机器学习相关（NNAPI等）  
+  -- native    Native服务层  
+  -- opt    可选优化/实验性模块  
+
+hardware    硬件抽象层与通用硬件库  
+  -- interfaces    HAL 层接口（AIDL/HIDL）  
+  -- libhardware    HAL 兼容库  
+  -- libhardware_legacy    旧版 HAL 兼容库  
+  -- ...    其他硬件适配  
+
+kernel    内核源码（一般仅补丁/配置，完整内核需单独获取）  
+  -- ...    内核补丁、配置、参考实现等  
+
+libcore    Java 基础类库实现（如 java.lang, java.util等）  
+  -- dalvik/src    Dalvik VM 相关基础类  
+  -- dex/src    DEX 相关基础类  
+  -- dom/src    DOM 相关基础类  
+  -- luni/src    java.lang/java.util实现  
+  -- xml/src    XML 相关基础类  
+
+libnativehelper    Native 层与 Java 层桥接辅助库  
+  -- include    头文件  
+  -- JNIHelp    JNI 辅助实现  
+  -- ...  
+
+packages    各类系统应用与服务  
+  -- apps    系统应用（如 Settings、Launcher 等）  
+  -- providers    各类 ContentProvider  
+  -- services    系统服务App  
+  -- experimental    实验性/演示 App  
+  -- inputmethods    输入法相关App  
+
+pdk    平台开发套件相关资源  
+
+platform_testing    平台级测试工具集  
+
+prebuilts    预编译三方库/SDK/工具链  
+  -- clang    Clang 预编译工具链  
+  -- sdk    预编译SDK  
+  -- tools    预编译工具  
+  -- ...    其他预编译库  
+
+sdk    Android SDK 工具、API、文档生成等  
+
+system    系统服务、守护进程与核心库  
+  -- core    init、vold、healthd等守护进程  
+  -- libhidl    HIDL 支持库  
+  -- sepolicy    SELinux 策略  
+  -- netd    网络守护进程  
+  -- suspend    电源管理  
+  -- timezone    时区数据  
+  -- ...  
+
+test    各类通用测试用例与框架  
+
+toolchain    工具链源码与构建工具  
+
+tools    构建、开发、调试、模拟器、API、静态分析、分区等通用工具集
+
+  -- apicheck           API 变更检查工具（API 兼容性审查）
+  -- apkzlib            APK 压缩与解压相关工具
+  -- appbundle          Android App Bundle 构建与分析工具
+  -- art                ART 相关开发和测试工具
+  -- bugreport          bugreport 文件生成和分析工具
+  -- build              各类构建辅助工具和脚本
+  -- checkapi           检查 API 兼容性和变化
+  -- codecoverage       代码覆盖率统计工具
+  -- customlint         自定义 Lint 检查工具
+  -- dalvik             Dalvik 相关开发工具
+  -- emulator           Android 模拟器核心及相关工具
+  -- lint               Java/Kotlin 源码静态检查工具
+  -- loganalysis        日志分析工具
+  -- lunch              lunch/build 相关脚本
+  -- profman            ART 性能分析工具
+  -- repo               AOSP 多仓库源码管理工具（repo 脚本）
+  -- testutils          单元测试/集成测试辅助工具
+  -- treble             Treble 相关工具（分区、接口稳定性等）
+  -- vndk               VNDK（Vendor Native Development Kit）相关工具
+  -- apksig             APK 签名验证与生成工具
+  -- apkanalyzer        APK 结构和资源分析工具
+  -- droiddoc           Android API 文档生成工具
+  -- external           外部依赖库及工具
+  -- layoutlib          布局渲染与分析库（Android Studio 预览用）
+  -- libcore_stubdoc    libcore API 文档工具
+  -- lint-checks        Lint 检查规则集合
+  -- metalava           Android 官方 API 生成与文档工具
+  -- proguard           ProGuard 代码混淆与优化工具
+  -- signapk            APK/ZIP 签名工具
+  -- tradefed           测试框架 Trade Federation
+  -- aapt               Android Asset Packaging Tool (AAPT)
+  -- aapt2              AAPT 新一代资源打包工具
+  -- dexdeps            DEX 依赖分析工具
+  -- dx                 DEX 文件生成工具
+  -- hprof-conv         Java Heap Profile 转换工具
+  -- systrace           系统级 trace/性能追踪工具
+  -- sqlite3            sqlite3 命令行工具
+  -- mkbootfs           boot.img 打包辅助工具
+  -- mkyaffs2image      YAFFS2 镜像生成工具
+  -- mksquashfs         squashfs 镜像打包工具
+  -- mklinuxramdisk     Linux ramdisk 生成工具
+  -- fs_config_generator  文件系统权限配置生成器
+  -- dumpkey            公钥导出工具
+  -- etc1tool           ETC1 纹理压缩与解压
+  -- mkdtboimg          DTBO 镜像打包工具
+  -- minijail           容器化与安全隔离工具
+  -- microdroid         Microdroid 相关工具和脚本
+  -- perfprofd          性能分析守护进程
+  -- selinux            SELinux 策略工具和分析器
+  -- simg2img           sparse image 转 raw image 工具
+  -- simg2simg          raw image 转 sparse image 工具
+  -- split-select       资源拆分与选择工具
+  -- test_apks          用于测试的 APK 包集合
+  -- vendor_hook        厂商自定义构建钩子脚本/工具
+
+vendor    各芯片/厂商专用驱动、闭源库、系统扩展  
+  -- ...    具体厂商定制目录  
+。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lhmax2010.github.io/post/Android%20-dai-ma-lu-jing-fen-xi.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>Android 代码路径分析</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">Android 代码路径分析</h1>
+<div class="title-right">
+    <a href="https://lhmax2010.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/lhmax2010/lhmax2010.github.io/issues/10" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>art    Android Runtime (ART) 虚拟机和编译、解释、GC等相关实现<br>
+-- benchmark    ART 性能基准测试<br>
+-- cmdline    ART 命令行工具<br>
+-- compiler    AOT/JIT 编译器实现<br>
+-- dalvik    Dalvik 兼容支持<br>
+-- dex2oat    DEX 到 OAT 转换工具<br>
+-- dexlayout    DEX 文件布局优化<br>
+-- dexlist    DEX 内容浏览工具<br>
+-- dexoptanalyzer    DEX 优化分析工具<br>
+-- imgdiag    OAT/Image 文件诊断工具<br>
+-- libartbase    ART 基础库<br>
+-- libartpalette    平台相关抽象接口<br>
+-- libdexfile    DEX 解析与操作库<br>
+-- libprofile    运行时分析配置与管理<br>
+-- oatdump    OAT 文件查看与反汇编<br>
+-- odrefresh    OAT/DEX 刷新维护工具<br>
+-- openjdkjvmti    JVM TI 实现<br>
+-- patchoat    OAT 文件补丁升级<br>
+-- profile    运行时分析配置/处理<br>
+-- runtime    ART 运行时核心<br>
+-- sigchainlib    信号链库<br>
+-- test    单元与集成测试<br>
+-- tools    辅助开发工具</p>
+<p>bionic    Android C 标准库和运行时库（libc、libm、libdl等）<br>
+-- android    平台相关实现<br>
+-- benchmarks    libc 性能测试<br>
+-- bionic    libc 主体源码<br>
+-- docs    文档<br>
+-- dynamic_linker    动态链接器<br>
+-- gtest    Google Test 集成<br>
+-- include    头文件<br>
+-- libc    libc 实现<br>
+-- libdl    动态库加载器<br>
+-- libm    数学库<br>
+-- libstdc++    C++ 标准库兼容实现<br>
+-- linker    链接器源码<br>
+-- locale    本地化实现<br>
+-- scripts    构建脚本<br>
+-- tests    测试用例<br>
+-- tools    辅助工具<br>
+-- upstream    上游兼容代码</p>
+<p>bootable    各类启动加载程序与恢复相关实现<br>
+-- bootloader    旧版 bootloader<br>
+-- bootloader_lk    Little Kernel (LK)<br>
+-- bootloader_message    bootloader 与 Android 间消息协议<br>
+-- diskinstaller    磁盘安装器<br>
+-- dovetail    Dovetail 启动流程<br>
+-- dtbo_img_utils    DTBO 镜像工具<br>
+-- edk2    UEFI 启动相关<br>
+-- fastboot    fastboot 工具及协议<br>
+-- mkbootimg    Boot 镜像打包<br>
+-- recovery    Recovery 恢复模式实现<br>
+-- second_stage    Recovery 二阶段<br>
+-- tools    启动辅助工具</p>
+<p>build    构建系统相关<br>
+-- blueprint    Blueprint 构建系统模块<br>
+-- make    Makefile、通用构建规则<br>
+-- soong    Soong 构建系统主引擎<br>
+-- tools    构建辅助工具<br>
+-- kati    Kati 构建工具<br>
+-- support    构建辅助脚本</p>
+<p>cts    兼容性测试套件（CTS）<br>
+-- apps    测试App<br>
+-- common    公共基类、工具<br>
+-- development    CTS 开发辅助<br>
+-- docs    文档<br>
+-- hostsidetests    主机端测试<br>
+-- lib    公共库<br>
+-- tests    各类测试项<br>
+-- tools    测试工具<br>
+-- verifier    CTS Verifier</p>
+<p>dalvik    早期 Dalvik VM 相关遗留代码<br>
+-- dexgen    DEX 生成工具<br>
+-- doc    文档<br>
+-- libdex    DEX 操作库<br>
+-- tools    工具<br>
+-- vm    Dalvik VM 核心</p>
+<p>developers    面向开发者的文档、工具及演示（部分 AOSP 版本有）</p>
+<p>development    各类开发辅助工具和示例<br>
+-- apps    演示App和测试App<br>
+-- build    构建工具<br>
+-- cmdline    命令行工具<br>
+-- host    主机端工具<br>
+-- ide    IDE 插件/支持<br>
+-- samples    示例代码<br>
+-- scripts    辅助脚本<br>
+-- tools    辅助开发工具</p>
+<p>device    各设备/芯片/厂商适配与配置<br>
+-- google    Google 设备（Pixel等）适配<br>
+-- mediatek    MTK 设备适配<br>
+-- sony    索尼设备适配<br>
+-- samsung    三星设备适配<br>
+-- ...    其他设备/厂商适配</p>
+<p>external    第三方开源库与外部项目集合<br>
+-- ...    各类第三方依赖库（如 openssl、skia、libpng、zlib 等）</p>
+<p>frameworks    Android 框架层代码（Java与Native）<br>
+-- av    多媒体框架与服务<br>
+-- base    Java 框架主干，系统服务/核心API<br>
+-- ml    机器学习相关（NNAPI等）<br>
+-- native    Native服务层<br>
+-- opt    可选优化/实验性模块</p>
+<p>hardware    硬件抽象层与通用硬件库<br>
+-- interfaces    HAL 层接口（AIDL/HIDL）<br>
+-- libhardware    HAL 兼容库<br>
+-- libhardware_legacy    旧版 HAL 兼容库<br>
+-- ...    其他硬件适配</p>
+<p>kernel    内核源码（一般仅补丁/配置，完整内核需单独获取）<br>
+-- ...    内核补丁、配置、参考实现等</p>
+<p>libcore    Java 基础类库实现（如 java.lang, java.util等）<br>
+-- dalvik/src    Dalvik VM 相关基础类<br>
+-- dex/src    DEX 相关基础类<br>
+-- dom/src    DOM 相关基础类<br>
+-- luni/src    java.lang/java.util实现<br>
+-- xml/src    XML 相关基础类</p>
+<p>libnativehelper    Native 层与 Java 层桥接辅助库<br>
+-- include    头文件<br>
+-- JNIHelp    JNI 辅助实现<br>
+-- ...</p>
+<p>packages    各类系统应用与服务<br>
+-- apps    系统应用（如 Settings、Launcher 等）<br>
+-- providers    各类 ContentProvider<br>
+-- services    系统服务App<br>
+-- experimental    实验性/演示 App<br>
+-- inputmethods    输入法相关App</p>
+<p>pdk    平台开发套件相关资源</p>
+<p>platform_testing    平台级测试工具集</p>
+<p>prebuilts    预编译三方库/SDK/工具链<br>
+-- clang    Clang 预编译工具链<br>
+-- sdk    预编译SDK<br>
+-- tools    预编译工具<br>
+-- ...    其他预编译库</p>
+<p>sdk    Android SDK 工具、API、文档生成等</p>
+<p>system    系统服务、守护进程与核心库<br>
+-- core    init、vold、healthd等守护进程<br>
+-- libhidl    HIDL 支持库<br>
+-- sepolicy    SELinux 策略<br>
+-- netd    网络守护进程<br>
+-- suspend    电源管理<br>
+-- timezone    时区数据<br>
+-- ...</p>
+<p>test    各类通用测试用例与框架</p>
+<p>toolchain    工具链源码与构建工具</p>
+<p>tools    构建、开发、调试、模拟器、API、静态分析、分区等通用工具集</p>
+<p>-- apicheck           API 变更检查工具（API 兼容性审查）<br>
+-- apkzlib            APK 压缩与解压相关工具<br>
+-- appbundle          Android App Bundle 构建与分析工具<br>
+-- art                ART 相关开发和测试工具<br>
+-- bugreport          bugreport 文件生成和分析工具<br>
+-- build              各类构建辅助工具和脚本<br>
+-- checkapi           检查 API 兼容性和变化<br>
+-- codecoverage       代码覆盖率统计工具<br>
+-- customlint         自定义 Lint 检查工具<br>
+-- dalvik             Dalvik 相关开发工具<br>
+-- emulator           Android 模拟器核心及相关工具<br>
+-- lint               Java/Kotlin 源码静态检查工具<br>
+-- loganalysis        日志分析工具<br>
+-- lunch              lunch/build 相关脚本<br>
+-- profman            ART 性能分析工具<br>
+-- repo               AOSP 多仓库源码管理工具（repo 脚本）<br>
+-- testutils          单元测试/集成测试辅助工具<br>
+-- treble             Treble 相关工具（分区、接口稳定性等）<br>
+-- vndk               VNDK（Vendor Native Development Kit）相关工具<br>
+-- apksig             APK 签名验证与生成工具<br>
+-- apkanalyzer        APK 结构和资源分析工具<br>
+-- droiddoc           Android API 文档生成工具<br>
+-- external           外部依赖库及工具<br>
+-- layoutlib          布局渲染与分析库（Android Studio 预览用）<br>
+-- libcore_stubdoc    libcore API 文档工具<br>
+-- lint-checks        Lint 检查规则集合<br>
+-- metalava           Android 官方 API 生成与文档工具<br>
+-- proguard           ProGuard 代码混淆与优化工具<br>
+-- signapk            APK/ZIP 签名工具<br>
+-- tradefed           测试框架 Trade Federation<br>
+-- aapt               Android Asset Packaging Tool (AAPT)<br>
+-- aapt2              AAPT 新一代资源打包工具<br>
+-- dexdeps            DEX 依赖分析工具<br>
+-- dx                 DEX 文件生成工具<br>
+-- hprof-conv         Java Heap Profile 转换工具<br>
+-- systrace           系统级 trace/性能追踪工具<br>
+-- sqlite3            sqlite3 命令行工具<br>
+-- mkbootfs           boot.img 打包辅助工具<br>
+-- mkyaffs2image      YAFFS2 镜像生成工具<br>
+-- mksquashfs         squashfs 镜像打包工具<br>
+-- mklinuxramdisk     Linux ramdisk 生成工具<br>
+-- fs_config_generator  文件系统权限配置生成器<br>
+-- dumpkey            公钥导出工具<br>
+-- etc1tool           ETC1 纹理压缩与解压<br>
+-- mkdtboimg          DTBO 镜像打包工具<br>
+-- minijail           容器化与安全隔离工具<br>
+-- microdroid         Microdroid 相关工具和脚本<br>
+-- perfprofd          性能分析守护进程<br>
+-- selinux            SELinux 策略工具和分析器<br>
+-- simg2img           sparse image 转 raw image 工具<br>
+-- simg2simg          raw image 转 sparse image 工具<br>
+-- split-select       资源拆分与选择工具<br>
+-- test_apks          用于测试的 APK 包集合<br>
+-- vendor_hook        厂商自定义构建钩子脚本/工具</p>
+<p>vendor    各芯片/厂商专用驱动、闭源库、系统扩展<br>
+-- ...    具体厂商定制目录</p></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://lhmax2010.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","lhmax2010/lhmax2010.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+
+
+</html>
