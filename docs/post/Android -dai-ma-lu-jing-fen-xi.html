@@ -38,42 +38,43 @@
 | tools             | 构建/开发/调试/模拟器/分析等通用工具集                   | 开发/构建/调试/测试工具            |
 | vendor            | 各芯片/厂商专用驱动、闭源库、系统扩展                    | 厂商扩展/硬件适配                  |
 
-adbconnection
-artd
-benchmark
-build
-cmdline
-compiler
-dalvikvm
-dex2oat
-dexdump
-dexlayout
-dexlist
-dexoptanalyzer
-disassembler
-dt_fd_forward
-imgdiag
-libartbase
-libartpalette
-libartservice
-libarttools
-libdexfile
-libelffile
-libnativebridge
-libnativeloader
-libprofile
-NOTICE
-oatdump
-odrefresh
-openjdkjvm
-openjdkjvmti
-perfetto_hprof
-profman
-runtime
-sigchainlib
-simulator
-test
-tools。">
+ART
+adbconnection            | ART 远程调试/连接相关实现（ARTD/调试器配合）
+artd                     | ART Daemon，ART 专用守护进程（如后台编译等）
+benchmark                | 性能基准测试/性能评估用例
+build                    | 构建脚本和配置
+cmdline                  | 命令行工具实现（如 profman、dex2oat 入口等）
+**compiler**             | ART AOT/JIT 编译器核心（前端、优化、后端、SSA、寄存器分配等）
+dalvikvm                 | 兼容早期 dalvikvm 启动器/模拟器
+**dex2oat**              | DEX 到 OAT 编译工具主程序与流程
+dexdump                  | DEX 文件内容反汇编/可视化工具
+dexlayout                | DEX 文件布局优化工具
+dexlist                  | DEX 文件内容列举工具
+dexoptanalyzer           | DEX 优化分析工具
+disassembler             | 汇编/反汇编相关实现
+dt_fd_forward            | 文件描述符转发工具（调试、远程相关）
+imgdiag                  | OAT/Image 文件诊断工具
+**libartbase**           | ART 基础工具库
+libartpalette            | 平台抽象库（线程、内存、时钟等接口封装）
+libartservice            | ART 服务端组件（ART-D 专用服务）
+libarttools              | ART 工具集合库
+**libdexfile**           | DEX 文件解析/操作库
+libelffile               | ELF 文件解析相关库
+**libnativebridge**      | Native Bridge（支持跨ABI运行本地代码）
+**libnativeloader**      | Native 库加载桥接库（JNI 动态加载）
+**libprofile**           | 运行时性能分析与配置数据管理
+**oatdump**              | OAT 文件内容查看与反汇编工具
+odrefresh                | OAT/DEX 刷新维护工具
+openjdkjvm               | OpenJDK JVM 相关实现
+openjdkjvmti             | JVM TI（调试接口）实现
+perfetto_hprof           | Perfetto HPROF 支持工具（内存分析）
+**profman**              | ART Profile 管理/优化分析工具
+**runtime**              | ART 运行时核心（解释器、GC、线程管理、JNI、类加载等）
+sigchainlib              | 信号链库（信号处理相关）
+simulator                | ART 虚拟机模拟器/测试平台
+**test**                 | 单元测试、集成测试和回归测试
+**tools**                | 辅助开发/编译/调试工具集合
+。">
 <meta property="og:title" content="Android 代码路径分析">
 <meta property="og:description" content="| 目录              | 主要功能/内容                                            | 隶属框架/层级                    |
 |-------------------|---------------------------------------------------------|-----------------------------------|
@@ -103,42 +104,43 @@ tools。">
 | tools             | 构建/开发/调试/模拟器/分析等通用工具集                   | 开发/构建/调试/测试工具            |
 | vendor            | 各芯片/厂商专用驱动、闭源库、系统扩展                    | 厂商扩展/硬件适配                  |
 
-adbconnection
-artd
-benchmark
-build
-cmdline
-compiler
-dalvikvm
-dex2oat
-dexdump
-dexlayout
-dexlist
-dexoptanalyzer
-disassembler
-dt_fd_forward
-imgdiag
-libartbase
-libartpalette
-libartservice
-libarttools
-libdexfile
-libelffile
-libnativebridge
-libnativeloader
-libprofile
-NOTICE
-oatdump
-odrefresh
-openjdkjvm
-openjdkjvmti
-perfetto_hprof
-profman
-runtime
-sigchainlib
-simulator
-test
-tools。">
+ART
+adbconnection            | ART 远程调试/连接相关实现（ARTD/调试器配合）
+artd                     | ART Daemon，ART 专用守护进程（如后台编译等）
+benchmark                | 性能基准测试/性能评估用例
+build                    | 构建脚本和配置
+cmdline                  | 命令行工具实现（如 profman、dex2oat 入口等）
+**compiler**             | ART AOT/JIT 编译器核心（前端、优化、后端、SSA、寄存器分配等）
+dalvikvm                 | 兼容早期 dalvikvm 启动器/模拟器
+**dex2oat**              | DEX 到 OAT 编译工具主程序与流程
+dexdump                  | DEX 文件内容反汇编/可视化工具
+dexlayout                | DEX 文件布局优化工具
+dexlist                  | DEX 文件内容列举工具
+dexoptanalyzer           | DEX 优化分析工具
+disassembler             | 汇编/反汇编相关实现
+dt_fd_forward            | 文件描述符转发工具（调试、远程相关）
+imgdiag                  | OAT/Image 文件诊断工具
+**libartbase**           | ART 基础工具库
+libartpalette            | 平台抽象库（线程、内存、时钟等接口封装）
+libartservice            | ART 服务端组件（ART-D 专用服务）
+libarttools              | ART 工具集合库
+**libdexfile**           | DEX 文件解析/操作库
+libelffile               | ELF 文件解析相关库
+**libnativebridge**      | Native Bridge（支持跨ABI运行本地代码）
+**libnativeloader**      | Native 库加载桥接库（JNI 动态加载）
+**libprofile**           | 运行时性能分析与配置数据管理
+**oatdump**              | OAT 文件内容查看与反汇编工具
+odrefresh                | OAT/DEX 刷新维护工具
+openjdkjvm               | OpenJDK JVM 相关实现
+openjdkjvmti             | JVM TI（调试接口）实现
+perfetto_hprof           | Perfetto HPROF 支持工具（内存分析）
+**profman**              | ART Profile 管理/优化分析工具
+**runtime**              | ART 运行时核心（解释器、GC、线程管理、JNI、类加载等）
+sigchainlib              | 信号链库（信号处理相关）
+simulator                | ART 虚拟机模拟器/测试平台
+**test**                 | 单元测试、集成测试和回归测试
+**tools**                | 辅助开发/编译/调试工具集合
+。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://lhmax2010.github.io/post/Android%20-dai-ma-lu-jing-fen-xi.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
@@ -335,42 +337,42 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 </tr>
 </tbody>
 </table></markdown-accessiblity-table>
-<p>adbconnection<br>
-artd<br>
-benchmark<br>
-build<br>
-cmdline<br>
-compiler<br>
-dalvikvm<br>
-dex2oat<br>
-dexdump<br>
-dexlayout<br>
-dexlist<br>
-dexoptanalyzer<br>
-disassembler<br>
-dt_fd_forward<br>
-imgdiag<br>
-libartbase<br>
-libartpalette<br>
-libartservice<br>
-libarttools<br>
-libdexfile<br>
-libelffile<br>
-libnativebridge<br>
-libnativeloader<br>
-libprofile<br>
-NOTICE<br>
-oatdump<br>
-odrefresh<br>
-openjdkjvm<br>
-openjdkjvmti<br>
-perfetto_hprof<br>
-profman<br>
-runtime<br>
-sigchainlib<br>
-simulator<br>
-test<br>
-tools</p></div>
+<p>ART<br>
+adbconnection            | ART 远程调试/连接相关实现（ARTD/调试器配合）<br>
+artd                     | ART Daemon，ART 专用守护进程（如后台编译等）<br>
+benchmark                | 性能基准测试/性能评估用例<br>
+build                    | 构建脚本和配置<br>
+cmdline                  | 命令行工具实现（如 profman、dex2oat 入口等）<br>
+<strong>compiler</strong>             | ART AOT/JIT 编译器核心（前端、优化、后端、SSA、寄存器分配等）<br>
+dalvikvm                 | 兼容早期 dalvikvm 启动器/模拟器<br>
+<strong>dex2oat</strong>              | DEX 到 OAT 编译工具主程序与流程<br>
+dexdump                  | DEX 文件内容反汇编/可视化工具<br>
+dexlayout                | DEX 文件布局优化工具<br>
+dexlist                  | DEX 文件内容列举工具<br>
+dexoptanalyzer           | DEX 优化分析工具<br>
+disassembler             | 汇编/反汇编相关实现<br>
+dt_fd_forward            | 文件描述符转发工具（调试、远程相关）<br>
+imgdiag                  | OAT/Image 文件诊断工具<br>
+<strong>libartbase</strong>           | ART 基础工具库<br>
+libartpalette            | 平台抽象库（线程、内存、时钟等接口封装）<br>
+libartservice            | ART 服务端组件（ART-D 专用服务）<br>
+libarttools              | ART 工具集合库<br>
+<strong>libdexfile</strong>           | DEX 文件解析/操作库<br>
+libelffile               | ELF 文件解析相关库<br>
+<strong>libnativebridge</strong>      | Native Bridge（支持跨ABI运行本地代码）<br>
+<strong>libnativeloader</strong>      | Native 库加载桥接库（JNI 动态加载）<br>
+<strong>libprofile</strong>           | 运行时性能分析与配置数据管理<br>
+<strong>oatdump</strong>              | OAT 文件内容查看与反汇编工具<br>
+odrefresh                | OAT/DEX 刷新维护工具<br>
+openjdkjvm               | OpenJDK JVM 相关实现<br>
+openjdkjvmti             | JVM TI（调试接口）实现<br>
+perfetto_hprof           | Perfetto HPROF 支持工具（内存分析）<br>
+<strong>profman</strong>              | ART Profile 管理/优化分析工具<br>
+<strong>runtime</strong>              | ART 运行时核心（解释器、GC、线程管理、JNI、类加载等）<br>
+sigchainlib              | 信号链库（信号处理相关）<br>
+simulator                | ART 虚拟机模拟器/测试平台<br>
+<strong>test</strong>                 | 单元测试、集成测试和回归测试<br>
+<strong>tools</strong>                | 辅助开发/编译/调试工具集合</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
