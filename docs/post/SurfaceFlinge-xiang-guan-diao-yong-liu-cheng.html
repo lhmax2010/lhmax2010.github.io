@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="端到端
+graph TD
+  subgraph App_Producer['App / Producer']
+    A1['App / MediaCodec: 写入 GraphicBuffer']
+    A2['IGraphicBufferProducer.queueBuffer()\nframeworks/native/libs/gui/IGraphicBufferProducer.cpp']
+    A1 --> A2
+  end
+
+  subgraph SurfaceFlinger
+    S0['Frame dispatch / vsync 驱动\nframeworks/native/services/surfaceflinger/Scheduler/']
+    S1['Layer/Buffer latch 流程\nframeworks/native/services/surfaceflinger/SurfaceFlinger.cpp']
+    S2['OutputLayer::writeStateToHWC()\n.../CompositionEngine/src/OutputLayer.cpp']
+    S0 --> S1 --> S2
+  end
+
+  subgraph HWComposer['HWComposer / Composer HAL']
+    H1['Composer::validateDisplay()\n.../DisplayHardware/ComposerHal.h']
+    H2['getChangedCompositionTypes()/acceptDisplayChanges()\n.../DisplayHardware/ComposerHal.h']
+    H3['setClientTarget() (GPU 合成时)\n.../DisplayHardware/ComposerHal.h']
+    H4['presentDisplay()/presentOrValidateDisplay()\n.../DisplayHardware/ComposerHal.h']
+    H5['getReleaseFences()/getPresentFence()\n.../DisplayHardware/HWComposer.h']
+    H1 --> H2 --> H3 --> H4 --> H5
+  end
+
+  subgraph Display['显示硬件']
+    D1['硬件合成 & 扫描输出\n(hardware/interfaces/graphics/composer/aidl)']
+  end
+
+  A2 --> S0
+  S2 --> H1
+  H5 --> D1
+
+逐帧提交
+flowchart TD
+  F0['Vsync/调度触发\nframeworks/native/services/surfaceflinger/Scheduler/']
+  F1['遍历可见 Layer\nSurfaceFlinger::doComposition()\n.../SurfaceFlinger.cpp']
+  F2['OutputLayer::writeStateToHWC()\n设置 per-layer 属性\n.../CompositionEngine/src/OutputLayer.cpp\n调用 ComposerHal 接口']
+  F3['Composer::validateDisplay()\n.../DisplayHardware/ComposerHal.h']
+  F4['getChangedCompositionTypes()/acceptDisplayChanges()\n.../DisplayHardware/ComposerHal.h']
+  F5{'是否存在 CLIENT 合成?'}
+  F6['RenderEngine::drawLayers()\n.../services/surfaceflinger/RenderEngine/']
+  F7['Composer::setClientTarget()\n.../DisplayHardware/ComposerHal.h']
+  F8['presentDisplay()/presentOrValidateDisplay()\n.../DisplayHardware/ComposerHal.h']
+  F9['getReleaseFences()/getPresentFence()\n.../DisplayHardware/HWComposer.h']
+  F10['最终合成提交到面板\nhardware/interfaces/graphics/composer/aidl/']
+
+  F0 --> F1 --> F2 --> F3 --> F4 --> F5
+  F5 -- 是 --> F6 --> F7 --> F8
+  F5 -- 否 --> F8
+  F8 --> F9 --> F10
+
+VIdeo Surface创建流程
+**Traditional Mode**
+sequenceDiagram
+    autonumber
+    participant App as App 线程
+    participant VRI as ViewRootImpl（App）
+    participant WMS as WindowManagerService（system_server）
+    participant SV as SurfaceView（App）
+    participant SC as SurfaceControl + BLAST（App/SF）
+    participant SF as SurfaceFlinger（native）
+    participant BQ as BufferQueue IGBP/IGBC（native）
+
+    App->>VRI: setContentView / addView
+    VRI->>VRI: setView → requestLayout → performTraversals
+    VRI->>WMS: relayoutWindow 首次
+    Note right of VRI: ViewRootImpl.relayoutWindow<br/>frameworks/base/core/java/android/view/ViewRootImpl.java
+    Note right of WMS: WindowManagerService.relayoutWindow<br/>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java
+
+    VRI-->>SV: 调用 SurfaceView.updateSurface
+    SV->>SC: SurfaceControl.Builder.build（创建子层 + 设置属性）
+    Note right of SV: SurfaceView.updateSurface / getSurfaceControl<br/>frameworks/base/core/java/android/view/SurfaceView.java
+    Note right of SC: SurfaceControl.Builder.build<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+
+    SC->>SC: nativeCreate
+    Note right of SC: android_view_SurfaceControl.cpp nativeCreate<br/>frameworks/base/core/jni/android_view_SurfaceControl.cpp
+
+    SC->>SF: SurfaceComposerClient.createSurface（Binder）
+    Note right of SF: SurfaceComposerClient.cpp createSurface<br/>frameworks/native/libs/gui/SurfaceComposerClient.cpp
+
+    SF->>SF: SurfaceFlinger.createLayer（建立 Layer 实体）
+    Note right of SF: SurfaceFlinger.createLayer<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF->>BQ: BufferQueue.createBufferQueue（配对 IGBP/IGBC）
+    Note right of BQ: BufferQueue.cpp createBufferQueue<br/>frameworks/native/libs/gui/BufferQueue.cpp
+
+    SC->>SC: SurfaceControl.Transaction.apply
+    SC->>SF: setTransactionState 提交事务（Z 顺序 透明度 裁剪等）
+    Note right of SC: SurfaceControl.Transaction.apply<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+    Note right of SF: SurfaceFlinger.setTransactionState<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF-->>SC: 返回 SurfaceControl 引用（子层就绪）
+    SV-->>App: SurfaceHolder.Callback.surfaceCreated / changed（拿到 Surface）
+    Note right of SV: SurfaceHolder 回调发出可用 Surface<br/>frameworks/base/core/java/android/view/SurfaceHolder.java
+
+    App-->>App: 至此 Video Surface 已创建（可供后续绑定解码器）
+
+**TV Tunnel Mode**
+sequenceDiagram
+    autonumber
+    participant App as App 线程
+    participant VRI as ViewRootImpl（App）
+    participant WMS as WindowManagerService（system_server）
+    participant SV as SurfaceView（App）
+    participant SC as SurfaceControl + Transaction
+    participant SF as SurfaceFlinger（native）
+
+    App->>VRI: setContentView / addView
+    VRI->>VRI: setView → requestLayout → performTraversals
+    VRI->>WMS: relayoutWindow 首次
+    Note right of VRI: ViewRootImpl.relayoutWindow<br/>frameworks/base/core/java/android/view/ViewRootImpl.java
+    Note right of WMS: WindowManagerService.relayoutWindow<br/>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java
+
+    VRI-->>SV: 调用 SurfaceView.updateSurface
+    SV->>SC: SurfaceControl.Builder.build（创建可见子层）
+    Note right of SV: SurfaceView.updateSurface / getSurfaceControl<br/>frameworks/base/core/java/android/view/SurfaceView.java
+    Note right of SC: SurfaceControl.Builder.build<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+
+    SC->>SC: nativeCreate（JNI）
+    Note right of SC: android_view_SurfaceControl.cpp nativeCreate<br/>frameworks/base/core/jni/android_view_SurfaceControl.cpp
+
+    SC->>SF: SurfaceComposerClient.createSurface（Binder）
+    Note right of SF: SurfaceComposerClient.cpp createSurface<br/>frameworks/native/libs/gui/SurfaceComposerClient.cpp
+
+    SF->>SF: SurfaceFlinger.createLayer（创建 Layer 支持 sideband）
+    Note right of SF: SurfaceFlinger.createLayer<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SC->>SC: SurfaceControl.Transaction.apply
+    SC->>SF: setTransactionState 提交事务（Z 顺序 透明度 裁剪等）
+    Note right of SC: SurfaceControl.Transaction.apply<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+    Note right of SF: SurfaceFlinger.setTransactionState<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF-->>SC: 返回 SurfaceControl 引用（子层就绪）
+    SV-->>App: SurfaceHolder.Callback.surfaceCreated / changed（拿到 Surface）
+    Note right of SV: SurfaceHolder 回调发出可用 Surface<br/>frameworks/base/core/java/android/view/SurfaceHolder.java
+
+    App-->>App: 至此 Tunnel Mode 的 Video Surface 已创建
+
+**Traditional的视频+UI渲染流程**
+sequenceDiagram
+    autonumber
+    participant HWUI as HWUI RenderThread（App）
+    participant MC as MediaCodec（App 或 mediaserver）
+    participant BQ as BufferQueue IGBP IGBC（native）
+    participant SF as SurfaceFlinger（native）
+    participant RE as RenderEngine（SF 内）
+    participant HWC as Composer HAL（AIDL）
+    participant DISP as 显示控制器 Panel
+
+    %% ---------- UI 路径：绘制并投递 ----------
+    HWUI->>BQ: Surface::queueBuffer
+    Note right of BQ: 将当前 UI 帧 GraphicBuffer 提交到队列<br/>输入 buffer acquireFence dataspace damage timestamp<br/>输出 releaseFence 供上层复用<br/>frameworks/native/libs/gui/Surface.cpp
+
+    %% ---------- Video 路径：解码并投递 ----------
+    MC->>BQ: MediaCodec releaseOutputBuffer render → queueBuffer
+    Note right of MC: 标记渲染并将解码输出投递到目标 Surface 的 IGBP<br/>底层走 ANativeWindow queueBuffer<br/>frameworks/av/media/libstagefright/MediaCodec.cpp
+    Note right of BQ: BufferQueueProducer::queueBuffer 将帧入队并唤醒消费者<br/>维护帧序号 time 等元数据<br/>frameworks/native/libs/gui/BufferQueueProducer.cpp
+
+    %% ---------- SF 消费与闩取 ----------
+    BQ-->>SF: onFrameAvailable
+    Note right of SF: Consumer 侧通知有新帧可取 触发合成调度
+
+    SF->>SF: SurfaceFlinger handleMessageRefresh
+    Note right of SF: Vsync 周期内聚合待更新 Layer 并驱动一次合成<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF->>SF: Layer::latchBuffer
+    Note right of SF: 等待并消费 acquireFence 选取本帧 buffer<br/>解析 transform crop dataspace surfaceDamage 等<br/>决定是否丢弃过期帧 并生成合成脏区<br/>frameworks/native/services/surfaceflinger/Layer.cpp
+
+    %% ---------- 写入 HWC 层属性 ----------
+    SF->>HWC: setLayer* 系列
+    Note right of HWC: 写每层静态与每帧属性 到 HWC<br/>setLayerZOrder 叠放次序<br/>setLayerDisplayFrame 目标显示矩形 dst 空间 影响缩放与位置<br/>setLayerSourceCrop 源裁剪 src 空间 指定采样区域<br/>setLayerBlendMode 无 预乘 覆盖 等<br/>setLayerPlaneAlpha 层透明度 0..1<br/>setLayerDataspace 色域与传输曲线 SRGB DisplayP3 BT2020PQ 等<br/>setLayerSurfaceDamage 局部更新 region 便于增量合成<br/>setLayerBuffer 绑定本层 buffer 与其 acquireFence<br/>frameworks/native/services/surfaceflinger/DisplayHardware/ComposerHal.h
+
+    %% ---------- HWC 决策：Device vs Client ----------
+    SF->>HWC: validateDisplay
+    Note right of HWC: 预校验资源与能力 评估每层是否可硬件合成<br/>返回需要改为 CLIENT 的层集合
+
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    Note right of HWC: 读取被要求切换到 CLIENT 的层类型变化<br/>acceptDisplayChanges 确认变更 进入最终路径
+
+    alt 需要 Client 合成（混合模式）
+      SF->>RE: RenderEngine::drawLayers
+      Note right of RE: 在 GPU 侧按 Z 序 混合 过滤 颜色管理合成一张输出图<br/>输入为 CLIENT 层 以及其属性 输出为 ClientTarget buffer 与 fence<br/>frameworks/native/libs/renderengine/*
+      SF->>HWC: setClientTarget buffer fence dataspace damage
+      Note right of HWC: 将客户端合成结果作为一层提交给 HWC<br/>HWC 将其与其余 Device 层一起合成<br/>ComposerHal.h
+    else 全部 Device 合成
+      SF-->>HWC: 不需要 RenderEngine 与 setClientTarget<br/>全部层由 HWC 直接合成
+    end
+
+    %% ---------- 提交与呈现 ----------
+    SF->>HWC: presentOrValidateDisplay 或 presentDisplay
+    Note right of HWC: 最终提交 布局平面 进行缩放 CSC 设定时序<br/>presentOrValidate 可在一次调用内完成校验与提交
+
+    HWC-->>SF: getReleaseFences per-layer / getPresentFence
+    Note right of HWC: 每层 releaseFence 告知何时可复用该 buffer<br/>presentFence 表示整帧进入显示管线的时序点<br/>frameworks/native/services/surfaceflinger/DisplayHardware/HWComposer.h
+
+    HWC->>DISP: 配置硬件平面 缩放 CSC 光标等
+    DISP-->>DISP: 扫描出屏 完成显示
+
+**TV Tunnel Mode的视频+UI渲染流程**
+sequenceDiagram
+    autonumber
+    participant HWUI as HWUI RenderThread（App）
+    participant MC as MediaCodec 隧道模式（App 或 mediaserver）
+    participant SF as SurfaceFlinger（native）
+    participant RE as RenderEngine（SF 内）
+    participant HWC as Composer HAL（AIDL）
+    participant DISP as 显示控制器 Panel
+
+    %% ---------- UI 路径（仍走 BQ，到此图只展示从 SF 开始） ----------
+    HWUI->>SF: Surface::queueBuffer → BufferQueue → SF 取帧
+    SF->>SF: Layer::latchBuffer（UI 层）
+    Note right of SF: Layer.cpp latchBuffer<br/>消费 UI acquireFence, 解析 transform/crop/dataspace, 计算 damage
+
+    %% ---------- 视频路径：隧道直通 ----------
+    MC->>MC: ACodec configureTunneledVideoPlayback
+    Note right of MC: ACodec.cpp 配置隧道和音频会话，解码 HAL 返回 sideband 句柄
+    MC->>SF: SurfaceControl.Transaction.setSidebandStream（视频层）
+    Note right of SF: 将 sideband 流挂到视频 Layer 的 Surface
+
+    %% ---------- 写入 HWC 层属性 ----------
+    SF->>HWC: setLayer*（UI 层属性：Z、DisplayFrame、SourceCrop、Blend、Alpha、Dataspace 等）
+    SF->>HWC: setLayerSidebandStream（视频层）
+    Note right of HWC: ComposerHal.h<br/>UI 层常规 setLayer*；视频层用 setLayerSidebandStream 不绑定 layer buffer
+
+    %% ---------- HWC 决策：UI 层可能走 CLIENT ----------
+    SF->>HWC: validateDisplay
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    Note right of HWC: 若 UI/字幕等层含 HWC 不支持特性或资源不足 → 标为 CLIENT；视频 sideband 保持 Device
+
+    alt UI 存在 CLIENT 层（混合模式）
+      SF->>RE: RenderEngine::drawLayers（只合成 CLIENT 层）
+      Note right of RE: libs/renderengine/*<br/>按 Z 序 混合 颜色管理 GPU 合成出 ClientTarget
+      SF->>HWC: setClientTarget（buffer, fence, dataspace, damage）
+      Note right of HWC: ClientTarget 与视频 sideband + 其余 Device 层一起由 HWC 合成
+    else UI 全部 Device 合成
+      SF-->>HWC: 无需 RenderEngine 与 setClientTarget<br/>HWC 直接合成 sideband + UI 设备层
+    end
+
+    %% ---------- 提交与呈现 ----------
+    SF->>HWC: presentOrValidateDisplay 或 presentDisplay
+    HWC-->>SF: getReleaseFences（UI 层）/ getPresentFence（整帧）
+    Note right of HWC: UI 有 per-layer releaseFence；视频 sideband 一般无 BQ fence 由硬件时序驱动
+
+    HWC->>DISP: 叠加 sideband 视频 与 UI 平面（必要时缩放/CSC）
+    DISP-->>DISP: 扫描出屏
+
+**Traditional AV同步流程**
+sequenceDiagram
+    autonumber
+    participant P as NuPlayerRenderer / MediaSync（播放器渲染器）
+    participant AT as AudioTrack（音频主时钟）
+    participant MC as MediaCodec Video（解码）
+    participant BQ as BufferQueue（IGBP/IGBC）
+    participant SF as SurfaceFlinger
+    participant RE as RenderEngine
+    participant HWC as Composer HAL
+    participant DISP as 显示控制器 Panel
+
+    %% 音频主时钟 & 持续对时循环
+    P->>AT: AudioTrack::start / write
+    Note right of AT: frameworks/av/media/libaudioclient/AudioTrack.cpp<br/>启动并持续写入音频数据
+
+    loop 持续对时（主循环）
+      AT-->>P: AudioTrack::getTimestamp / getPosition
+      Note right of AT: 获取播放头位置或系统时钟对齐的时间戳<br/>用于推导媒体当前时间 t_now
+
+      P->>P: MediaClock::updateAnchor / setPlaybackRate / getMediaTimeUs
+      Note right of P: frameworks/av/media/libstagefright/MediaClock.cpp<br/>updateAnchor 用音频锚点校正时间轴<br/>setPlaybackRate 处理倍速/不变调<br/>getMediaTimeUs 生成当前媒体时间 t_now
+
+      P->>P: NuPlayerRenderer::onDrainVideo_l（调度视频）
+      Note right of P: frameworks/av/media/libmediaplayerservice/nuplayer/NuPlayerRenderer.cpp<br/>比较帧 PTS 与 t_now：早等→等待；晚到→丢帧；准点→发渲染
+    end
+
+    %% 视频按 PTS 投递
+    P-->>MC: MediaCodec::releaseOutputBuffer(render=true, ts)
+    Note right of MC: frameworks/av/media/libstagefright/MediaCodec.cpp<br/>要求在 ts 附近呈现该帧（底层走 ANativeWindow::queueBuffer）
+
+    MC->>BQ: Surface::queueBuffer
+    Note right of BQ: frameworks/native/libs/gui/Surface.cpp / BufferQueueProducer.cpp<br/>提交解码帧（携带 timestamp/dataspace/surfaceDamage/HDR）
+
+    %% SF 消费 & 对齐 vsync
+    BQ-->>SF: onFrameAvailable
+    SF->>SF: SurfaceFlinger::handleMessageRefresh（vsync 驱动）
+    SF->>SF: Layer::latchBuffer
+    Note right of SF: frameworks/native/services/surfaceflinger/Layer.cpp<br/>等待 acquire fence；选最接近显示窗口的帧；必要时丢弃迟到帧
+
+    %% 写入 HWC 层属性
+    SF->>HWC: setLayerZOrder / setLayerDisplayFrame / setLayerSourceCrop
+    SF->>HWC: setLayerBlendMode / setLayerPlaneAlpha / setLayerDataspace
+    SF->>HWC: setLayerPerFrameMetadata(Blobs) / setLayerSurfaceDamage / setLayerBuffer
+    Note right of HWC: frameworks/native/services/surfaceflinger/DisplayHardware/ComposerHal.h<br/>把几何/混合/色彩/HDR 与 buffer+fence 写入 HWC
+
+    %% 决策：Device vs Client
+    SF->>HWC: validateDisplay
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    alt 存在 CLIENT 层
+      SF->>RE: RenderEngine::drawLayers
+      Note right of RE: frameworks/native/libs/renderengine/*<br/>GPU 合成 CLIENT 层 → 产出 ClientTarget
+      SF->>HWC: setClientTarget(buffer, fence, dataspace, damage)
+    else 全部 Device 合成
+      SF-->>HWC: 无需 RenderEngine / setClientTarget
+    end
+
+    %% 提交 & 栅栏
+    SF->>HWC: presentOrValidateDisplay / presentDisplay
+    HWC-->>SF: getReleaseFences（per-layer） / getPresentFence（per-frame）
+    HWC->>DISP: 平面分配 / 缩放 / CSC
+    DISP-->>DISP: 按 vsync 扫描出屏（贴近 PTS）
+
+**TV Tunnel Mode AV同步流程**
+sequenceDiagram
+    autonumber
+    participant P as NuPlayerRenderer / MediaSync（播放器渲染器）
+    participant AT as AudioTrack（音频主时钟）
+    participant MC as MediaCodec 隧道
+    participant SF as SurfaceFlinger
+    participant RE as RenderEngine
+    participant HWC as Composer HAL
+    participant DISP as 显示控制器 Panel
+
+    %% 音频主时钟 & 持续对时循环（硬件对时为主）
+    P->>AT: AudioTrack::start / write
+    loop 持续对时（用于快进/校正）
+      AT-->>P: AudioTrack::getTimestamp / getPosition
+      P->>P: MediaClock::updateAnchor / setPlaybackRate / getMediaTimeUs
+      Note right of P: 仍维护全局媒体时间；但视频对时由硬件完成
+    end
+
+    %% 隧道配置 & sideband
+    P->>MC: ACodec::configureTunneledVideoPlayback(audioSessionId)
+    Note right of MC: frameworks/av/media/libstagefright/ACodec.cpp<br/>请求解码 HAL 返回 sideband 句柄 与音频会话对齐
+    MC-->>SF: SurfaceControl::Transaction::setSidebandStream（视频层）
+    Note right of SF: frameworks/native/libs/gui/SurfaceComposerClient.cpp 等<br/>将 sideband 挂到视频 Layer；视频不走 BQ
+
+    %% UI 层（如有）仍走常规路径（此处从 SF 往下）
+    SF->>HWC: setLayer*（UI 层）
+    SF->>HWC: setLayerSidebandStream（视频层）
+    Note right of HWC: ComposerHal.h<br/>视频层使用 sideband 源；HDR 元数据由硬件管线处理
+
+    %% 决策：UI 可能 CLIENT，视频固定 Device
+    SF->>HWC: validateDisplay
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    alt UI 存在 CLIENT 层
+      SF->>RE: RenderEngine::drawLayers（仅 UI/字幕等 CLIENT 层）
+      SF->>HWC: setClientTarget（与 sideband 叠加）
+    else UI 全部 Device 合成
+      SF-->>HWC: 直接合成 sideband + UI 设备层
+    end
+
+    %% 提交 & 硬件对时
+    SF->>HWC: present*
+    HWC-->>SF: getReleaseFences（UI 层） / getPresentFence
+    HWC->>DISP: 叠加 sideband 视频 + UI；缩放 / CSC
+    Note right of DISP: 以音频会话为基准在硬件中对时视频输出（更稳）
+。">
+<meta property="og:title" content="SurfaceFlinge相关调用流程">
+<meta property="og:description" content="端到端
+graph TD
+  subgraph App_Producer['App / Producer']
+    A1['App / MediaCodec: 写入 GraphicBuffer']
+    A2['IGraphicBufferProducer.queueBuffer()\nframeworks/native/libs/gui/IGraphicBufferProducer.cpp']
+    A1 --> A2
+  end
+
+  subgraph SurfaceFlinger
+    S0['Frame dispatch / vsync 驱动\nframeworks/native/services/surfaceflinger/Scheduler/']
+    S1['Layer/Buffer latch 流程\nframeworks/native/services/surfaceflinger/SurfaceFlinger.cpp']
+    S2['OutputLayer::writeStateToHWC()\n.../CompositionEngine/src/OutputLayer.cpp']
+    S0 --> S1 --> S2
+  end
+
+  subgraph HWComposer['HWComposer / Composer HAL']
+    H1['Composer::validateDisplay()\n.../DisplayHardware/ComposerHal.h']
+    H2['getChangedCompositionTypes()/acceptDisplayChanges()\n.../DisplayHardware/ComposerHal.h']
+    H3['setClientTarget() (GPU 合成时)\n.../DisplayHardware/ComposerHal.h']
+    H4['presentDisplay()/presentOrValidateDisplay()\n.../DisplayHardware/ComposerHal.h']
+    H5['getReleaseFences()/getPresentFence()\n.../DisplayHardware/HWComposer.h']
+    H1 --> H2 --> H3 --> H4 --> H5
+  end
+
+  subgraph Display['显示硬件']
+    D1['硬件合成 & 扫描输出\n(hardware/interfaces/graphics/composer/aidl)']
+  end
+
+  A2 --> S0
+  S2 --> H1
+  H5 --> D1
+
+逐帧提交
+flowchart TD
+  F0['Vsync/调度触发\nframeworks/native/services/surfaceflinger/Scheduler/']
+  F1['遍历可见 Layer\nSurfaceFlinger::doComposition()\n.../SurfaceFlinger.cpp']
+  F2['OutputLayer::writeStateToHWC()\n设置 per-layer 属性\n.../CompositionEngine/src/OutputLayer.cpp\n调用 ComposerHal 接口']
+  F3['Composer::validateDisplay()\n.../DisplayHardware/ComposerHal.h']
+  F4['getChangedCompositionTypes()/acceptDisplayChanges()\n.../DisplayHardware/ComposerHal.h']
+  F5{'是否存在 CLIENT 合成?'}
+  F6['RenderEngine::drawLayers()\n.../services/surfaceflinger/RenderEngine/']
+  F7['Composer::setClientTarget()\n.../DisplayHardware/ComposerHal.h']
+  F8['presentDisplay()/presentOrValidateDisplay()\n.../DisplayHardware/ComposerHal.h']
+  F9['getReleaseFences()/getPresentFence()\n.../DisplayHardware/HWComposer.h']
+  F10['最终合成提交到面板\nhardware/interfaces/graphics/composer/aidl/']
+
+  F0 --> F1 --> F2 --> F3 --> F4 --> F5
+  F5 -- 是 --> F6 --> F7 --> F8
+  F5 -- 否 --> F8
+  F8 --> F9 --> F10
+
+VIdeo Surface创建流程
+**Traditional Mode**
+sequenceDiagram
+    autonumber
+    participant App as App 线程
+    participant VRI as ViewRootImpl（App）
+    participant WMS as WindowManagerService（system_server）
+    participant SV as SurfaceView（App）
+    participant SC as SurfaceControl + BLAST（App/SF）
+    participant SF as SurfaceFlinger（native）
+    participant BQ as BufferQueue IGBP/IGBC（native）
+
+    App->>VRI: setContentView / addView
+    VRI->>VRI: setView → requestLayout → performTraversals
+    VRI->>WMS: relayoutWindow 首次
+    Note right of VRI: ViewRootImpl.relayoutWindow<br/>frameworks/base/core/java/android/view/ViewRootImpl.java
+    Note right of WMS: WindowManagerService.relayoutWindow<br/>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java
+
+    VRI-->>SV: 调用 SurfaceView.updateSurface
+    SV->>SC: SurfaceControl.Builder.build（创建子层 + 设置属性）
+    Note right of SV: SurfaceView.updateSurface / getSurfaceControl<br/>frameworks/base/core/java/android/view/SurfaceView.java
+    Note right of SC: SurfaceControl.Builder.build<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+
+    SC->>SC: nativeCreate
+    Note right of SC: android_view_SurfaceControl.cpp nativeCreate<br/>frameworks/base/core/jni/android_view_SurfaceControl.cpp
+
+    SC->>SF: SurfaceComposerClient.createSurface（Binder）
+    Note right of SF: SurfaceComposerClient.cpp createSurface<br/>frameworks/native/libs/gui/SurfaceComposerClient.cpp
+
+    SF->>SF: SurfaceFlinger.createLayer（建立 Layer 实体）
+    Note right of SF: SurfaceFlinger.createLayer<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF->>BQ: BufferQueue.createBufferQueue（配对 IGBP/IGBC）
+    Note right of BQ: BufferQueue.cpp createBufferQueue<br/>frameworks/native/libs/gui/BufferQueue.cpp
+
+    SC->>SC: SurfaceControl.Transaction.apply
+    SC->>SF: setTransactionState 提交事务（Z 顺序 透明度 裁剪等）
+    Note right of SC: SurfaceControl.Transaction.apply<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+    Note right of SF: SurfaceFlinger.setTransactionState<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF-->>SC: 返回 SurfaceControl 引用（子层就绪）
+    SV-->>App: SurfaceHolder.Callback.surfaceCreated / changed（拿到 Surface）
+    Note right of SV: SurfaceHolder 回调发出可用 Surface<br/>frameworks/base/core/java/android/view/SurfaceHolder.java
+
+    App-->>App: 至此 Video Surface 已创建（可供后续绑定解码器）
+
+**TV Tunnel Mode**
+sequenceDiagram
+    autonumber
+    participant App as App 线程
+    participant VRI as ViewRootImpl（App）
+    participant WMS as WindowManagerService（system_server）
+    participant SV as SurfaceView（App）
+    participant SC as SurfaceControl + Transaction
+    participant SF as SurfaceFlinger（native）
+
+    App->>VRI: setContentView / addView
+    VRI->>VRI: setView → requestLayout → performTraversals
+    VRI->>WMS: relayoutWindow 首次
+    Note right of VRI: ViewRootImpl.relayoutWindow<br/>frameworks/base/core/java/android/view/ViewRootImpl.java
+    Note right of WMS: WindowManagerService.relayoutWindow<br/>frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java
+
+    VRI-->>SV: 调用 SurfaceView.updateSurface
+    SV->>SC: SurfaceControl.Builder.build（创建可见子层）
+    Note right of SV: SurfaceView.updateSurface / getSurfaceControl<br/>frameworks/base/core/java/android/view/SurfaceView.java
+    Note right of SC: SurfaceControl.Builder.build<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+
+    SC->>SC: nativeCreate（JNI）
+    Note right of SC: android_view_SurfaceControl.cpp nativeCreate<br/>frameworks/base/core/jni/android_view_SurfaceControl.cpp
+
+    SC->>SF: SurfaceComposerClient.createSurface（Binder）
+    Note right of SF: SurfaceComposerClient.cpp createSurface<br/>frameworks/native/libs/gui/SurfaceComposerClient.cpp
+
+    SF->>SF: SurfaceFlinger.createLayer（创建 Layer 支持 sideband）
+    Note right of SF: SurfaceFlinger.createLayer<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SC->>SC: SurfaceControl.Transaction.apply
+    SC->>SF: setTransactionState 提交事务（Z 顺序 透明度 裁剪等）
+    Note right of SC: SurfaceControl.Transaction.apply<br/>frameworks/base/core/java/android/view/SurfaceControl.java
+    Note right of SF: SurfaceFlinger.setTransactionState<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF-->>SC: 返回 SurfaceControl 引用（子层就绪）
+    SV-->>App: SurfaceHolder.Callback.surfaceCreated / changed（拿到 Surface）
+    Note right of SV: SurfaceHolder 回调发出可用 Surface<br/>frameworks/base/core/java/android/view/SurfaceHolder.java
+
+    App-->>App: 至此 Tunnel Mode 的 Video Surface 已创建
+
+**Traditional的视频+UI渲染流程**
+sequenceDiagram
+    autonumber
+    participant HWUI as HWUI RenderThread（App）
+    participant MC as MediaCodec（App 或 mediaserver）
+    participant BQ as BufferQueue IGBP IGBC（native）
+    participant SF as SurfaceFlinger（native）
+    participant RE as RenderEngine（SF 内）
+    participant HWC as Composer HAL（AIDL）
+    participant DISP as 显示控制器 Panel
+
+    %% ---------- UI 路径：绘制并投递 ----------
+    HWUI->>BQ: Surface::queueBuffer
+    Note right of BQ: 将当前 UI 帧 GraphicBuffer 提交到队列<br/>输入 buffer acquireFence dataspace damage timestamp<br/>输出 releaseFence 供上层复用<br/>frameworks/native/libs/gui/Surface.cpp
+
+    %% ---------- Video 路径：解码并投递 ----------
+    MC->>BQ: MediaCodec releaseOutputBuffer render → queueBuffer
+    Note right of MC: 标记渲染并将解码输出投递到目标 Surface 的 IGBP<br/>底层走 ANativeWindow queueBuffer<br/>frameworks/av/media/libstagefright/MediaCodec.cpp
+    Note right of BQ: BufferQueueProducer::queueBuffer 将帧入队并唤醒消费者<br/>维护帧序号 time 等元数据<br/>frameworks/native/libs/gui/BufferQueueProducer.cpp
+
+    %% ---------- SF 消费与闩取 ----------
+    BQ-->>SF: onFrameAvailable
+    Note right of SF: Consumer 侧通知有新帧可取 触发合成调度
+
+    SF->>SF: SurfaceFlinger handleMessageRefresh
+    Note right of SF: Vsync 周期内聚合待更新 Layer 并驱动一次合成<br/>frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+    SF->>SF: Layer::latchBuffer
+    Note right of SF: 等待并消费 acquireFence 选取本帧 buffer<br/>解析 transform crop dataspace surfaceDamage 等<br/>决定是否丢弃过期帧 并生成合成脏区<br/>frameworks/native/services/surfaceflinger/Layer.cpp
+
+    %% ---------- 写入 HWC 层属性 ----------
+    SF->>HWC: setLayer* 系列
+    Note right of HWC: 写每层静态与每帧属性 到 HWC<br/>setLayerZOrder 叠放次序<br/>setLayerDisplayFrame 目标显示矩形 dst 空间 影响缩放与位置<br/>setLayerSourceCrop 源裁剪 src 空间 指定采样区域<br/>setLayerBlendMode 无 预乘 覆盖 等<br/>setLayerPlaneAlpha 层透明度 0..1<br/>setLayerDataspace 色域与传输曲线 SRGB DisplayP3 BT2020PQ 等<br/>setLayerSurfaceDamage 局部更新 region 便于增量合成<br/>setLayerBuffer 绑定本层 buffer 与其 acquireFence<br/>frameworks/native/services/surfaceflinger/DisplayHardware/ComposerHal.h
+
+    %% ---------- HWC 决策：Device vs Client ----------
+    SF->>HWC: validateDisplay
+    Note right of HWC: 预校验资源与能力 评估每层是否可硬件合成<br/>返回需要改为 CLIENT 的层集合
+
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    Note right of HWC: 读取被要求切换到 CLIENT 的层类型变化<br/>acceptDisplayChanges 确认变更 进入最终路径
+
+    alt 需要 Client 合成（混合模式）
+      SF->>RE: RenderEngine::drawLayers
+      Note right of RE: 在 GPU 侧按 Z 序 混合 过滤 颜色管理合成一张输出图<br/>输入为 CLIENT 层 以及其属性 输出为 ClientTarget buffer 与 fence<br/>frameworks/native/libs/renderengine/*
+      SF->>HWC: setClientTarget buffer fence dataspace damage
+      Note right of HWC: 将客户端合成结果作为一层提交给 HWC<br/>HWC 将其与其余 Device 层一起合成<br/>ComposerHal.h
+    else 全部 Device 合成
+      SF-->>HWC: 不需要 RenderEngine 与 setClientTarget<br/>全部层由 HWC 直接合成
+    end
+
+    %% ---------- 提交与呈现 ----------
+    SF->>HWC: presentOrValidateDisplay 或 presentDisplay
+    Note right of HWC: 最终提交 布局平面 进行缩放 CSC 设定时序<br/>presentOrValidate 可在一次调用内完成校验与提交
+
+    HWC-->>SF: getReleaseFences per-layer / getPresentFence
+    Note right of HWC: 每层 releaseFence 告知何时可复用该 buffer<br/>presentFence 表示整帧进入显示管线的时序点<br/>frameworks/native/services/surfaceflinger/DisplayHardware/HWComposer.h
+
+    HWC->>DISP: 配置硬件平面 缩放 CSC 光标等
+    DISP-->>DISP: 扫描出屏 完成显示
+
+**TV Tunnel Mode的视频+UI渲染流程**
+sequenceDiagram
+    autonumber
+    participant HWUI as HWUI RenderThread（App）
+    participant MC as MediaCodec 隧道模式（App 或 mediaserver）
+    participant SF as SurfaceFlinger（native）
+    participant RE as RenderEngine（SF 内）
+    participant HWC as Composer HAL（AIDL）
+    participant DISP as 显示控制器 Panel
+
+    %% ---------- UI 路径（仍走 BQ，到此图只展示从 SF 开始） ----------
+    HWUI->>SF: Surface::queueBuffer → BufferQueue → SF 取帧
+    SF->>SF: Layer::latchBuffer（UI 层）
+    Note right of SF: Layer.cpp latchBuffer<br/>消费 UI acquireFence, 解析 transform/crop/dataspace, 计算 damage
+
+    %% ---------- 视频路径：隧道直通 ----------
+    MC->>MC: ACodec configureTunneledVideoPlayback
+    Note right of MC: ACodec.cpp 配置隧道和音频会话，解码 HAL 返回 sideband 句柄
+    MC->>SF: SurfaceControl.Transaction.setSidebandStream（视频层）
+    Note right of SF: 将 sideband 流挂到视频 Layer 的 Surface
+
+    %% ---------- 写入 HWC 层属性 ----------
+    SF->>HWC: setLayer*（UI 层属性：Z、DisplayFrame、SourceCrop、Blend、Alpha、Dataspace 等）
+    SF->>HWC: setLayerSidebandStream（视频层）
+    Note right of HWC: ComposerHal.h<br/>UI 层常规 setLayer*；视频层用 setLayerSidebandStream 不绑定 layer buffer
+
+    %% ---------- HWC 决策：UI 层可能走 CLIENT ----------
+    SF->>HWC: validateDisplay
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    Note right of HWC: 若 UI/字幕等层含 HWC 不支持特性或资源不足 → 标为 CLIENT；视频 sideband 保持 Device
+
+    alt UI 存在 CLIENT 层（混合模式）
+      SF->>RE: RenderEngine::drawLayers（只合成 CLIENT 层）
+      Note right of RE: libs/renderengine/*<br/>按 Z 序 混合 颜色管理 GPU 合成出 ClientTarget
+      SF->>HWC: setClientTarget（buffer, fence, dataspace, damage）
+      Note right of HWC: ClientTarget 与视频 sideband + 其余 Device 层一起由 HWC 合成
+    else UI 全部 Device 合成
+      SF-->>HWC: 无需 RenderEngine 与 setClientTarget<br/>HWC 直接合成 sideband + UI 设备层
+    end
+
+    %% ---------- 提交与呈现 ----------
+    SF->>HWC: presentOrValidateDisplay 或 presentDisplay
+    HWC-->>SF: getReleaseFences（UI 层）/ getPresentFence（整帧）
+    Note right of HWC: UI 有 per-layer releaseFence；视频 sideband 一般无 BQ fence 由硬件时序驱动
+
+    HWC->>DISP: 叠加 sideband 视频 与 UI 平面（必要时缩放/CSC）
+    DISP-->>DISP: 扫描出屏
+
+**Traditional AV同步流程**
+sequenceDiagram
+    autonumber
+    participant P as NuPlayerRenderer / MediaSync（播放器渲染器）
+    participant AT as AudioTrack（音频主时钟）
+    participant MC as MediaCodec Video（解码）
+    participant BQ as BufferQueue（IGBP/IGBC）
+    participant SF as SurfaceFlinger
+    participant RE as RenderEngine
+    participant HWC as Composer HAL
+    participant DISP as 显示控制器 Panel
+
+    %% 音频主时钟 & 持续对时循环
+    P->>AT: AudioTrack::start / write
+    Note right of AT: frameworks/av/media/libaudioclient/AudioTrack.cpp<br/>启动并持续写入音频数据
+
+    loop 持续对时（主循环）
+      AT-->>P: AudioTrack::getTimestamp / getPosition
+      Note right of AT: 获取播放头位置或系统时钟对齐的时间戳<br/>用于推导媒体当前时间 t_now
+
+      P->>P: MediaClock::updateAnchor / setPlaybackRate / getMediaTimeUs
+      Note right of P: frameworks/av/media/libstagefright/MediaClock.cpp<br/>updateAnchor 用音频锚点校正时间轴<br/>setPlaybackRate 处理倍速/不变调<br/>getMediaTimeUs 生成当前媒体时间 t_now
+
+      P->>P: NuPlayerRenderer::onDrainVideo_l（调度视频）
+      Note right of P: frameworks/av/media/libmediaplayerservice/nuplayer/NuPlayerRenderer.cpp<br/>比较帧 PTS 与 t_now：早等→等待；晚到→丢帧；准点→发渲染
+    end
+
+    %% 视频按 PTS 投递
+    P-->>MC: MediaCodec::releaseOutputBuffer(render=true, ts)
+    Note right of MC: frameworks/av/media/libstagefright/MediaCodec.cpp<br/>要求在 ts 附近呈现该帧（底层走 ANativeWindow::queueBuffer）
+
+    MC->>BQ: Surface::queueBuffer
+    Note right of BQ: frameworks/native/libs/gui/Surface.cpp / BufferQueueProducer.cpp<br/>提交解码帧（携带 timestamp/dataspace/surfaceDamage/HDR）
+
+    %% SF 消费 & 对齐 vsync
+    BQ-->>SF: onFrameAvailable
+    SF->>SF: SurfaceFlinger::handleMessageRefresh（vsync 驱动）
+    SF->>SF: Layer::latchBuffer
+    Note right of SF: frameworks/native/services/surfaceflinger/Layer.cpp<br/>等待 acquire fence；选最接近显示窗口的帧；必要时丢弃迟到帧
+
+    %% 写入 HWC 层属性
+    SF->>HWC: setLayerZOrder / setLayerDisplayFrame / setLayerSourceCrop
+    SF->>HWC: setLayerBlendMode / setLayerPlaneAlpha / setLayerDataspace
+    SF->>HWC: setLayerPerFrameMetadata(Blobs) / setLayerSurfaceDamage / setLayerBuffer
+    Note right of HWC: frameworks/native/services/surfaceflinger/DisplayHardware/ComposerHal.h<br/>把几何/混合/色彩/HDR 与 buffer+fence 写入 HWC
+
+    %% 决策：Device vs Client
+    SF->>HWC: validateDisplay
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    alt 存在 CLIENT 层
+      SF->>RE: RenderEngine::drawLayers
+      Note right of RE: frameworks/native/libs/renderengine/*<br/>GPU 合成 CLIENT 层 → 产出 ClientTarget
+      SF->>HWC: setClientTarget(buffer, fence, dataspace, damage)
+    else 全部 Device 合成
+      SF-->>HWC: 无需 RenderEngine / setClientTarget
+    end
+
+    %% 提交 & 栅栏
+    SF->>HWC: presentOrValidateDisplay / presentDisplay
+    HWC-->>SF: getReleaseFences（per-layer） / getPresentFence（per-frame）
+    HWC->>DISP: 平面分配 / 缩放 / CSC
+    DISP-->>DISP: 按 vsync 扫描出屏（贴近 PTS）
+
+**TV Tunnel Mode AV同步流程**
+sequenceDiagram
+    autonumber
+    participant P as NuPlayerRenderer / MediaSync（播放器渲染器）
+    participant AT as AudioTrack（音频主时钟）
+    participant MC as MediaCodec 隧道
+    participant SF as SurfaceFlinger
+    participant RE as RenderEngine
+    participant HWC as Composer HAL
+    participant DISP as 显示控制器 Panel
+
+    %% 音频主时钟 & 持续对时循环（硬件对时为主）
+    P->>AT: AudioTrack::start / write
+    loop 持续对时（用于快进/校正）
+      AT-->>P: AudioTrack::getTimestamp / getPosition
+      P->>P: MediaClock::updateAnchor / setPlaybackRate / getMediaTimeUs
+      Note right of P: 仍维护全局媒体时间；但视频对时由硬件完成
+    end
+
+    %% 隧道配置 & sideband
+    P->>MC: ACodec::configureTunneledVideoPlayback(audioSessionId)
+    Note right of MC: frameworks/av/media/libstagefright/ACodec.cpp<br/>请求解码 HAL 返回 sideband 句柄 与音频会话对齐
+    MC-->>SF: SurfaceControl::Transaction::setSidebandStream（视频层）
+    Note right of SF: frameworks/native/libs/gui/SurfaceComposerClient.cpp 等<br/>将 sideband 挂到视频 Layer；视频不走 BQ
+
+    %% UI 层（如有）仍走常规路径（此处从 SF 往下）
+    SF->>HWC: setLayer*（UI 层）
+    SF->>HWC: setLayerSidebandStream（视频层）
+    Note right of HWC: ComposerHal.h<br/>视频层使用 sideband 源；HDR 元数据由硬件管线处理
+
+    %% 决策：UI 可能 CLIENT，视频固定 Device
+    SF->>HWC: validateDisplay
+    HWC-->>SF: getChangedCompositionTypes → acceptDisplayChanges
+    alt UI 存在 CLIENT 层
+      SF->>RE: RenderEngine::drawLayers（仅 UI/字幕等 CLIENT 层）
+      SF->>HWC: setClientTarget（与 sideband 叠加）
+    else UI 全部 Device 合成
+      SF-->>HWC: 直接合成 sideband + UI 设备层
+    end
+
+    %% 提交 & 硬件对时
+    SF->>HWC: present*
+    HWC-->>SF: getReleaseFences（UI 层） / getPresentFence
+    HWC->>DISP: 叠加 sideband 视频 + UI；缩放 / CSC
+    Note right of DISP: 以音频会话为基准在硬件中对时视频输出（更稳）
+。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lhmax2010.github.io/post/SurfaceFlinge-xiang-guan-diao-yong-liu-cheng.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>SurfaceFlinge相关调用流程</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+.copy-feedback {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    color: var(--color-fg-on-emphasis);
+    background-color: var(--color-fg-muted);
+    border-radius: 3px;
+    padding: 5px 8px;
+    font-size: 12px;
+}
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">SurfaceFlinge相关调用流程</h1>
+<div class="title-right">
+    <a href="https://lhmax2010.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/lhmax2010/lhmax2010.github.io/issues/11" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>端到端<br>
+graph TD<br>
+subgraph App_Producer["App / Producer"]<br>
+A1["App / MediaCodec: 写入 GraphicBuffer"]<br>
+A2["IGraphicBufferProducer.queueBuffer()\nframeworks/native/libs/gui/IGraphicBufferProducer.cpp"]<br>
+A1 --&gt; A2<br>
+end</p>
+<p>subgraph SurfaceFlinger<br>
+S0["Frame dispatch / vsync 驱动\nframeworks/native/services/surfaceflinger/Scheduler/"]<br>
+S1["Layer/Buffer latch 流程\nframeworks/native/services/surfaceflinger/SurfaceFlinger.cpp"]<br>
+S2["OutputLayer::writeStateToHWC()\n.../CompositionEngine/src/OutputLayer.cpp"]<br>
+S0 --&gt; S1 --&gt; S2<br>
+end</p>
+<p>subgraph HWComposer["HWComposer / Composer HAL"]<br>
+H1["Composer::validateDisplay()\n.../DisplayHardware/ComposerHal.h"]<br>
+H2["getChangedCompositionTypes()/acceptDisplayChanges()\n.../DisplayHardware/ComposerHal.h"]<br>
+H3["setClientTarget() (GPU 合成时)\n.../DisplayHardware/ComposerHal.h"]<br>
+H4["presentDisplay()/presentOrValidateDisplay()\n.../DisplayHardware/ComposerHal.h"]<br>
+H5["getReleaseFences()/getPresentFence()\n.../DisplayHardware/HWComposer.h"]<br>
+H1 --&gt; H2 --&gt; H3 --&gt; H4 --&gt; H5<br>
+end</p>
+<p>subgraph Display["显示硬件"]<br>
+D1["硬件合成 &amp; 扫描输出\n(hardware/interfaces/graphics/composer/aidl)"]<br>
+end</p>
+<p>A2 --&gt; S0<br>
+S2 --&gt; H1<br>
+H5 --&gt; D1</p>
+<p>逐帧提交<br>
+flowchart TD<br>
+F0["Vsync/调度触发\nframeworks/native/services/surfaceflinger/Scheduler/"]<br>
+F1["遍历可见 Layer\nSurfaceFlinger::doComposition()\n.../SurfaceFlinger.cpp"]<br>
+F2["OutputLayer::writeStateToHWC()\n设置 per-layer 属性\n.../CompositionEngine/src/OutputLayer.cpp\n调用 ComposerHal 接口"]<br>
+F3["Composer::validateDisplay()\n.../DisplayHardware/ComposerHal.h"]<br>
+F4["getChangedCompositionTypes()/acceptDisplayChanges()\n.../DisplayHardware/ComposerHal.h"]<br>
+F5{"是否存在 CLIENT 合成?"}<br>
+F6["RenderEngine::drawLayers()\n.../services/surfaceflinger/RenderEngine/"]<br>
+F7["Composer::setClientTarget()\n.../DisplayHardware/ComposerHal.h"]<br>
+F8["presentDisplay()/presentOrValidateDisplay()\n.../DisplayHardware/ComposerHal.h"]<br>
+F9["getReleaseFences()/getPresentFence()\n.../DisplayHardware/HWComposer.h"]<br>
+F10["最终合成提交到面板\nhardware/interfaces/graphics/composer/aidl/"]</p>
+<p>F0 --&gt; F1 --&gt; F2 --&gt; F3 --&gt; F4 --&gt; F5<br>
+F5 -- 是 --&gt; F6 --&gt; F7 --&gt; F8<br>
+F5 -- 否 --&gt; F8<br>
+F8 --&gt; F9 --&gt; F10</p>
+<p>VIdeo Surface创建流程<br>
+<strong>Traditional Mode</strong><br>
+sequenceDiagram<br>
+autonumber<br>
+participant App as App 线程<br>
+participant VRI as ViewRootImpl（App）<br>
+participant WMS as WindowManagerService（system_server）<br>
+participant SV as SurfaceView（App）<br>
+participant SC as SurfaceControl + BLAST（App/SF）<br>
+participant SF as SurfaceFlinger（native）<br>
+participant BQ as BufferQueue IGBP/IGBC（native）</p>
+<pre class="notranslate"><code class="notranslate">App-&gt;&gt;VRI: setContentView / addView
+VRI-&gt;&gt;VRI: setView → requestLayout → performTraversals
+VRI-&gt;&gt;WMS: relayoutWindow 首次
+Note right of VRI: ViewRootImpl.relayoutWindow&lt;br/&gt;frameworks/base/core/java/android/view/ViewRootImpl.java
+Note right of WMS: WindowManagerService.relayoutWindow&lt;br/&gt;frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java
+
+VRI--&gt;&gt;SV: 调用 SurfaceView.updateSurface
+SV-&gt;&gt;SC: SurfaceControl.Builder.build（创建子层 + 设置属性）
+Note right of SV: SurfaceView.updateSurface / getSurfaceControl&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceView.java
+Note right of SC: SurfaceControl.Builder.build&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceControl.java
+
+SC-&gt;&gt;SC: nativeCreate
+Note right of SC: android_view_SurfaceControl.cpp nativeCreate&lt;br/&gt;frameworks/base/core/jni/android_view_SurfaceControl.cpp
+
+SC-&gt;&gt;SF: SurfaceComposerClient.createSurface（Binder）
+Note right of SF: SurfaceComposerClient.cpp createSurface&lt;br/&gt;frameworks/native/libs/gui/SurfaceComposerClient.cpp
+
+SF-&gt;&gt;SF: SurfaceFlinger.createLayer（建立 Layer 实体）
+Note right of SF: SurfaceFlinger.createLayer&lt;br/&gt;frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+SF-&gt;&gt;BQ: BufferQueue.createBufferQueue（配对 IGBP/IGBC）
+Note right of BQ: BufferQueue.cpp createBufferQueue&lt;br/&gt;frameworks/native/libs/gui/BufferQueue.cpp
+
+SC-&gt;&gt;SC: SurfaceControl.Transaction.apply
+SC-&gt;&gt;SF: setTransactionState 提交事务（Z 顺序 透明度 裁剪等）
+Note right of SC: SurfaceControl.Transaction.apply&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceControl.java
+Note right of SF: SurfaceFlinger.setTransactionState&lt;br/&gt;frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+SF--&gt;&gt;SC: 返回 SurfaceControl 引用（子层就绪）
+SV--&gt;&gt;App: SurfaceHolder.Callback.surfaceCreated / changed（拿到 Surface）
+Note right of SV: SurfaceHolder 回调发出可用 Surface&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceHolder.java
+
+App--&gt;&gt;App: 至此 Video Surface 已创建（可供后续绑定解码器）
+</code></pre>
+<p><strong>TV Tunnel Mode</strong><br>
+sequenceDiagram<br>
+autonumber<br>
+participant App as App 线程<br>
+participant VRI as ViewRootImpl（App）<br>
+participant WMS as WindowManagerService（system_server）<br>
+participant SV as SurfaceView（App）<br>
+participant SC as SurfaceControl + Transaction<br>
+participant SF as SurfaceFlinger（native）</p>
+<pre class="notranslate"><code class="notranslate">App-&gt;&gt;VRI: setContentView / addView
+VRI-&gt;&gt;VRI: setView → requestLayout → performTraversals
+VRI-&gt;&gt;WMS: relayoutWindow 首次
+Note right of VRI: ViewRootImpl.relayoutWindow&lt;br/&gt;frameworks/base/core/java/android/view/ViewRootImpl.java
+Note right of WMS: WindowManagerService.relayoutWindow&lt;br/&gt;frameworks/base/services/core/java/com/android/server/wm/WindowManagerService.java
+
+VRI--&gt;&gt;SV: 调用 SurfaceView.updateSurface
+SV-&gt;&gt;SC: SurfaceControl.Builder.build（创建可见子层）
+Note right of SV: SurfaceView.updateSurface / getSurfaceControl&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceView.java
+Note right of SC: SurfaceControl.Builder.build&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceControl.java
+
+SC-&gt;&gt;SC: nativeCreate（JNI）
+Note right of SC: android_view_SurfaceControl.cpp nativeCreate&lt;br/&gt;frameworks/base/core/jni/android_view_SurfaceControl.cpp
+
+SC-&gt;&gt;SF: SurfaceComposerClient.createSurface（Binder）
+Note right of SF: SurfaceComposerClient.cpp createSurface&lt;br/&gt;frameworks/native/libs/gui/SurfaceComposerClient.cpp
+
+SF-&gt;&gt;SF: SurfaceFlinger.createLayer（创建 Layer 支持 sideband）
+Note right of SF: SurfaceFlinger.createLayer&lt;br/&gt;frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+SC-&gt;&gt;SC: SurfaceControl.Transaction.apply
+SC-&gt;&gt;SF: setTransactionState 提交事务（Z 顺序 透明度 裁剪等）
+Note right of SC: SurfaceControl.Transaction.apply&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceControl.java
+Note right of SF: SurfaceFlinger.setTransactionState&lt;br/&gt;frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+SF--&gt;&gt;SC: 返回 SurfaceControl 引用（子层就绪）
+SV--&gt;&gt;App: SurfaceHolder.Callback.surfaceCreated / changed（拿到 Surface）
+Note right of SV: SurfaceHolder 回调发出可用 Surface&lt;br/&gt;frameworks/base/core/java/android/view/SurfaceHolder.java
+
+App--&gt;&gt;App: 至此 Tunnel Mode 的 Video Surface 已创建
+</code></pre>
+<p><strong>Traditional的视频+UI渲染流程</strong><br>
+sequenceDiagram<br>
+autonumber<br>
+participant HWUI as HWUI RenderThread（App）<br>
+participant MC as MediaCodec（App 或 mediaserver）<br>
+participant BQ as BufferQueue IGBP IGBC（native）<br>
+participant SF as SurfaceFlinger（native）<br>
+participant RE as RenderEngine（SF 内）<br>
+participant HWC as Composer HAL（AIDL）<br>
+participant DISP as 显示控制器 Panel</p>
+<pre class="notranslate"><code class="notranslate">%% ---------- UI 路径：绘制并投递 ----------
+HWUI-&gt;&gt;BQ: Surface::queueBuffer
+Note right of BQ: 将当前 UI 帧 GraphicBuffer 提交到队列&lt;br/&gt;输入 buffer acquireFence dataspace damage timestamp&lt;br/&gt;输出 releaseFence 供上层复用&lt;br/&gt;frameworks/native/libs/gui/Surface.cpp
+
+%% ---------- Video 路径：解码并投递 ----------
+MC-&gt;&gt;BQ: MediaCodec releaseOutputBuffer render → queueBuffer
+Note right of MC: 标记渲染并将解码输出投递到目标 Surface 的 IGBP&lt;br/&gt;底层走 ANativeWindow queueBuffer&lt;br/&gt;frameworks/av/media/libstagefright/MediaCodec.cpp
+Note right of BQ: BufferQueueProducer::queueBuffer 将帧入队并唤醒消费者&lt;br/&gt;维护帧序号 time 等元数据&lt;br/&gt;frameworks/native/libs/gui/BufferQueueProducer.cpp
+
+%% ---------- SF 消费与闩取 ----------
+BQ--&gt;&gt;SF: onFrameAvailable
+Note right of SF: Consumer 侧通知有新帧可取 触发合成调度
+
+SF-&gt;&gt;SF: SurfaceFlinger handleMessageRefresh
+Note right of SF: Vsync 周期内聚合待更新 Layer 并驱动一次合成&lt;br/&gt;frameworks/native/services/surfaceflinger/SurfaceFlinger.cpp
+
+SF-&gt;&gt;SF: Layer::latchBuffer
+Note right of SF: 等待并消费 acquireFence 选取本帧 buffer&lt;br/&gt;解析 transform crop dataspace surfaceDamage 等&lt;br/&gt;决定是否丢弃过期帧 并生成合成脏区&lt;br/&gt;frameworks/native/services/surfaceflinger/Layer.cpp
+
+%% ---------- 写入 HWC 层属性 ----------
+SF-&gt;&gt;HWC: setLayer* 系列
+Note right of HWC: 写每层静态与每帧属性 到 HWC&lt;br/&gt;setLayerZOrder 叠放次序&lt;br/&gt;setLayerDisplayFrame 目标显示矩形 dst 空间 影响缩放与位置&lt;br/&gt;setLayerSourceCrop 源裁剪 src 空间 指定采样区域&lt;br/&gt;setLayerBlendMode 无 预乘 覆盖 等&lt;br/&gt;setLayerPlaneAlpha 层透明度 0..1&lt;br/&gt;setLayerDataspace 色域与传输曲线 SRGB DisplayP3 BT2020PQ 等&lt;br/&gt;setLayerSurfaceDamage 局部更新 region 便于增量合成&lt;br/&gt;setLayerBuffer 绑定本层 buffer 与其 acquireFence&lt;br/&gt;frameworks/native/services/surfaceflinger/DisplayHardware/ComposerHal.h
+
+%% ---------- HWC 决策：Device vs Client ----------
+SF-&gt;&gt;HWC: validateDisplay
+Note right of HWC: 预校验资源与能力 评估每层是否可硬件合成&lt;br/&gt;返回需要改为 CLIENT 的层集合
+
+HWC--&gt;&gt;SF: getChangedCompositionTypes → acceptDisplayChanges
+Note right of HWC: 读取被要求切换到 CLIENT 的层类型变化&lt;br/&gt;acceptDisplayChanges 确认变更 进入最终路径
+
+alt 需要 Client 合成（混合模式）
+  SF-&gt;&gt;RE: RenderEngine::drawLayers
+  Note right of RE: 在 GPU 侧按 Z 序 混合 过滤 颜色管理合成一张输出图&lt;br/&gt;输入为 CLIENT 层 以及其属性 输出为 ClientTarget buffer 与 fence&lt;br/&gt;frameworks/native/libs/renderengine/*
+  SF-&gt;&gt;HWC: setClientTarget buffer fence dataspace damage
+  Note right of HWC: 将客户端合成结果作为一层提交给 HWC&lt;br/&gt;HWC 将其与其余 Device 层一起合成&lt;br/&gt;ComposerHal.h
+else 全部 Device 合成
+  SF--&gt;&gt;HWC: 不需要 RenderEngine 与 setClientTarget&lt;br/&gt;全部层由 HWC 直接合成
+end
+
+%% ---------- 提交与呈现 ----------
+SF-&gt;&gt;HWC: presentOrValidateDisplay 或 presentDisplay
+Note right of HWC: 最终提交 布局平面 进行缩放 CSC 设定时序&lt;br/&gt;presentOrValidate 可在一次调用内完成校验与提交
+
+HWC--&gt;&gt;SF: getReleaseFences per-layer / getPresentFence
+Note right of HWC: 每层 releaseFence 告知何时可复用该 buffer&lt;br/&gt;presentFence 表示整帧进入显示管线的时序点&lt;br/&gt;frameworks/native/services/surfaceflinger/DisplayHardware/HWComposer.h
+
+HWC-&gt;&gt;DISP: 配置硬件平面 缩放 CSC 光标等
+DISP--&gt;&gt;DISP: 扫描出屏 完成显示
+</code></pre>
+<p><strong>TV Tunnel Mode的视频+UI渲染流程</strong><br>
+sequenceDiagram<br>
+autonumber<br>
+participant HWUI as HWUI RenderThread（App）<br>
+participant MC as MediaCodec 隧道模式（App 或 mediaserver）<br>
+participant SF as SurfaceFlinger（native）<br>
+participant RE as RenderEngine（SF 内）<br>
+participant HWC as Composer HAL（AIDL）<br>
+participant DISP as 显示控制器 Panel</p>
+<pre class="notranslate"><code class="notranslate">%% ---------- UI 路径（仍走 BQ，到此图只展示从 SF 开始） ----------
+HWUI-&gt;&gt;SF: Surface::queueBuffer → BufferQueue → SF 取帧
+SF-&gt;&gt;SF: Layer::latchBuffer（UI 层）
+Note right of SF: Layer.cpp latchBuffer&lt;br/&gt;消费 UI acquireFence, 解析 transform/crop/dataspace, 计算 damage
+
+%% ---------- 视频路径：隧道直通 ----------
+MC-&gt;&gt;MC: ACodec configureTunneledVideoPlayback
+Note right of MC: ACodec.cpp 配置隧道和音频会话，解码 HAL 返回 sideband 句柄
+MC-&gt;&gt;SF: SurfaceControl.Transaction.setSidebandStream（视频层）
+Note right of SF: 将 sideband 流挂到视频 Layer 的 Surface
+
+%% ---------- 写入 HWC 层属性 ----------
+SF-&gt;&gt;HWC: setLayer*（UI 层属性：Z、DisplayFrame、SourceCrop、Blend、Alpha、Dataspace 等）
+SF-&gt;&gt;HWC: setLayerSidebandStream（视频层）
+Note right of HWC: ComposerHal.h&lt;br/&gt;UI 层常规 setLayer*；视频层用 setLayerSidebandStream 不绑定 layer buffer
+
+%% ---------- HWC 决策：UI 层可能走 CLIENT ----------
+SF-&gt;&gt;HWC: validateDisplay
+HWC--&gt;&gt;SF: getChangedCompositionTypes → acceptDisplayChanges
+Note right of HWC: 若 UI/字幕等层含 HWC 不支持特性或资源不足 → 标为 CLIENT；视频 sideband 保持 Device
+
+alt UI 存在 CLIENT 层（混合模式）
+  SF-&gt;&gt;RE: RenderEngine::drawLayers（只合成 CLIENT 层）
+  Note right of RE: libs/renderengine/*&lt;br/&gt;按 Z 序 混合 颜色管理 GPU 合成出 ClientTarget
+  SF-&gt;&gt;HWC: setClientTarget（buffer, fence, dataspace, damage）
+  Note right of HWC: ClientTarget 与视频 sideband + 其余 Device 层一起由 HWC 合成
+else UI 全部 Device 合成
+  SF--&gt;&gt;HWC: 无需 RenderEngine 与 setClientTarget&lt;br/&gt;HWC 直接合成 sideband + UI 设备层
+end
+
+%% ---------- 提交与呈现 ----------
+SF-&gt;&gt;HWC: presentOrValidateDisplay 或 presentDisplay
+HWC--&gt;&gt;SF: getReleaseFences（UI 层）/ getPresentFence（整帧）
+Note right of HWC: UI 有 per-layer releaseFence；视频 sideband 一般无 BQ fence 由硬件时序驱动
+
+HWC-&gt;&gt;DISP: 叠加 sideband 视频 与 UI 平面（必要时缩放/CSC）
+DISP--&gt;&gt;DISP: 扫描出屏
+</code></pre>
+<p><strong>Traditional AV同步流程</strong><br>
+sequenceDiagram<br>
+autonumber<br>
+participant P as NuPlayerRenderer / MediaSync（播放器渲染器）<br>
+participant AT as AudioTrack（音频主时钟）<br>
+participant MC as MediaCodec Video（解码）<br>
+participant BQ as BufferQueue（IGBP/IGBC）<br>
+participant SF as SurfaceFlinger<br>
+participant RE as RenderEngine<br>
+participant HWC as Composer HAL<br>
+participant DISP as 显示控制器 Panel</p>
+<pre class="notranslate"><code class="notranslate">%% 音频主时钟 &amp; 持续对时循环
+P-&gt;&gt;AT: AudioTrack::start / write
+Note right of AT: frameworks/av/media/libaudioclient/AudioTrack.cpp&lt;br/&gt;启动并持续写入音频数据
+
+loop 持续对时（主循环）
+  AT--&gt;&gt;P: AudioTrack::getTimestamp / getPosition
+  Note right of AT: 获取播放头位置或系统时钟对齐的时间戳&lt;br/&gt;用于推导媒体当前时间 t_now
+
+  P-&gt;&gt;P: MediaClock::updateAnchor / setPlaybackRate / getMediaTimeUs
+  Note right of P: frameworks/av/media/libstagefright/MediaClock.cpp&lt;br/&gt;updateAnchor 用音频锚点校正时间轴&lt;br/&gt;setPlaybackRate 处理倍速/不变调&lt;br/&gt;getMediaTimeUs 生成当前媒体时间 t_now
+
+  P-&gt;&gt;P: NuPlayerRenderer::onDrainVideo_l（调度视频）
+  Note right of P: frameworks/av/media/libmediaplayerservice/nuplayer/NuPlayerRenderer.cpp&lt;br/&gt;比较帧 PTS 与 t_now：早等→等待；晚到→丢帧；准点→发渲染
+end
+
+%% 视频按 PTS 投递
+P--&gt;&gt;MC: MediaCodec::releaseOutputBuffer(render=true, ts)
+Note right of MC: frameworks/av/media/libstagefright/MediaCodec.cpp&lt;br/&gt;要求在 ts 附近呈现该帧（底层走 ANativeWindow::queueBuffer）
+
+MC-&gt;&gt;BQ: Surface::queueBuffer
+Note right of BQ: frameworks/native/libs/gui/Surface.cpp / BufferQueueProducer.cpp&lt;br/&gt;提交解码帧（携带 timestamp/dataspace/surfaceDamage/HDR）
+
+%% SF 消费 &amp; 对齐 vsync
+BQ--&gt;&gt;SF: onFrameAvailable
+SF-&gt;&gt;SF: SurfaceFlinger::handleMessageRefresh（vsync 驱动）
+SF-&gt;&gt;SF: Layer::latchBuffer
+Note right of SF: frameworks/native/services/surfaceflinger/Layer.cpp&lt;br/&gt;等待 acquire fence；选最接近显示窗口的帧；必要时丢弃迟到帧
+
+%% 写入 HWC 层属性
+SF-&gt;&gt;HWC: setLayerZOrder / setLayerDisplayFrame / setLayerSourceCrop
+SF-&gt;&gt;HWC: setLayerBlendMode / setLayerPlaneAlpha / setLayerDataspace
+SF-&gt;&gt;HWC: setLayerPerFrameMetadata(Blobs) / setLayerSurfaceDamage / setLayerBuffer
+Note right of HWC: frameworks/native/services/surfaceflinger/DisplayHardware/ComposerHal.h&lt;br/&gt;把几何/混合/色彩/HDR 与 buffer+fence 写入 HWC
+
+%% 决策：Device vs Client
+SF-&gt;&gt;HWC: validateDisplay
+HWC--&gt;&gt;SF: getChangedCompositionTypes → acceptDisplayChanges
+alt 存在 CLIENT 层
+  SF-&gt;&gt;RE: RenderEngine::drawLayers
+  Note right of RE: frameworks/native/libs/renderengine/*&lt;br/&gt;GPU 合成 CLIENT 层 → 产出 ClientTarget
+  SF-&gt;&gt;HWC: setClientTarget(buffer, fence, dataspace, damage)
+else 全部 Device 合成
+  SF--&gt;&gt;HWC: 无需 RenderEngine / setClientTarget
+end
+
+%% 提交 &amp; 栅栏
+SF-&gt;&gt;HWC: presentOrValidateDisplay / presentDisplay
+HWC--&gt;&gt;SF: getReleaseFences（per-layer） / getPresentFence（per-frame）
+HWC-&gt;&gt;DISP: 平面分配 / 缩放 / CSC
+DISP--&gt;&gt;DISP: 按 vsync 扫描出屏（贴近 PTS）
+</code></pre>
+<p><strong>TV Tunnel Mode AV同步流程</strong><br>
+sequenceDiagram<br>
+autonumber<br>
+participant P as NuPlayerRenderer / MediaSync（播放器渲染器）<br>
+participant AT as AudioTrack（音频主时钟）<br>
+participant MC as MediaCodec 隧道<br>
+participant SF as SurfaceFlinger<br>
+participant RE as RenderEngine<br>
+participant HWC as Composer HAL<br>
+participant DISP as 显示控制器 Panel</p>
+<pre class="notranslate"><code class="notranslate">%% 音频主时钟 &amp; 持续对时循环（硬件对时为主）
+P-&gt;&gt;AT: AudioTrack::start / write
+loop 持续对时（用于快进/校正）
+  AT--&gt;&gt;P: AudioTrack::getTimestamp / getPosition
+  P-&gt;&gt;P: MediaClock::updateAnchor / setPlaybackRate / getMediaTimeUs
+  Note right of P: 仍维护全局媒体时间；但视频对时由硬件完成
+end
+
+%% 隧道配置 &amp; sideband
+P-&gt;&gt;MC: ACodec::configureTunneledVideoPlayback(audioSessionId)
+Note right of MC: frameworks/av/media/libstagefright/ACodec.cpp&lt;br/&gt;请求解码 HAL 返回 sideband 句柄 与音频会话对齐
+MC--&gt;&gt;SF: SurfaceControl::Transaction::setSidebandStream（视频层）
+Note right of SF: frameworks/native/libs/gui/SurfaceComposerClient.cpp 等&lt;br/&gt;将 sideband 挂到视频 Layer；视频不走 BQ
+
+%% UI 层（如有）仍走常规路径（此处从 SF 往下）
+SF-&gt;&gt;HWC: setLayer*（UI 层）
+SF-&gt;&gt;HWC: setLayerSidebandStream（视频层）
+Note right of HWC: ComposerHal.h&lt;br/&gt;视频层使用 sideband 源；HDR 元数据由硬件管线处理
+
+%% 决策：UI 可能 CLIENT，视频固定 Device
+SF-&gt;&gt;HWC: validateDisplay
+HWC--&gt;&gt;SF: getChangedCompositionTypes → acceptDisplayChanges
+alt UI 存在 CLIENT 层
+  SF-&gt;&gt;RE: RenderEngine::drawLayers（仅 UI/字幕等 CLIENT 层）
+  SF-&gt;&gt;HWC: setClientTarget（与 sideband 叠加）
+else UI 全部 Device 合成
+  SF--&gt;&gt;HWC: 直接合成 sideband + UI 设备层
+end
+
+%% 提交 &amp; 硬件对时
+SF-&gt;&gt;HWC: present*
+HWC--&gt;&gt;SF: getReleaseFences（UI 层） / getPresentFence
+HWC-&gt;&gt;DISP: 叠加 sideband 视频 + UI；缩放 / CSC
+Note right of DISP: 以音频会话为基准在硬件中对时视频输出（更稳）
+</code></pre></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://lhmax2010.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z', 'copy': 'M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z', 'check': 'M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","lhmax2010/lhmax2010.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const createClipboardHTML = (codeContent, additionalClasses = '') => `
+        <pre class="notranslate"><code class="notranslate">${codeContent}</code></pre>
+        <div class="clipboard-container position-absolute right-0 top-0 ${additionalClasses}">
+            <clipboard-copy class="ClipboardButton btn m-2 p-0" role="button" style="display: inherit;">
+                <svg height="16" width="16" class="octicon octicon-copy m-2"><path d="${IconList["copy"]}"></path></svg>
+                <svg height="16" width="16" class="octicon octicon-check color-fg-success m-2 d-none"><path d="${IconList["check"]}"></path></svg>
+            </clipboard-copy>
+            <div class="copy-feedback">Copied!</div>
+        </div>
+    `;
+
+    const handleCodeElements = (selector = '') => {
+        document.querySelectorAll(selector).forEach(codeElement => {
+            const codeContent = codeElement.innerHTML;
+            const newStructure = document.createElement('div');
+            newStructure.className = 'snippet-clipboard-content position-relative overflow-auto';
+            newStructure.innerHTML = createClipboardHTML(codeContent);
+
+            const parentElement = codeElement.parentElement;
+            if (selector.includes('highlight')) {
+                parentElement.insertBefore(newStructure, codeElement.nextSibling);
+                parentElement.removeChild(codeElement);
+            } else {
+                parentElement.parentElement.replaceChild(newStructure, parentElement);
+            }
+        });
+    };
+
+    handleCodeElements('pre.notranslate > code.notranslate');
+    handleCodeElements('div.highlight > pre.notranslate');
+
+    let currentFeedback = null;
+    document.querySelectorAll('clipboard-copy').forEach(copyButton => {
+        copyButton.addEventListener('click', () => {
+            const codeContent = copyButton.closest('.snippet-clipboard-content').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeContent;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+
+            const copyIcon = copyButton.querySelector('.octicon-copy');
+            const checkIcon = copyButton.querySelector('.octicon-check');
+            const copyFeedback = copyButton.nextElementSibling;
+
+            if (currentFeedback && currentFeedback !== copyFeedback) {currentFeedback.style.display = 'none';}
+            currentFeedback = copyFeedback;
+
+            copyIcon.classList.add('d-none');
+            checkIcon.classList.remove('d-none');
+            copyFeedback.style.display = 'block';
+            copyButton.style.borderColor = 'var(--color-success-fg)';
+
+            setTimeout(() => {
+                copyIcon.classList.remove('d-none');
+                checkIcon.classList.add('d-none');
+                copyFeedback.style.display = 'none';
+                copyButton.style.borderColor = '';
+            }, 2000);
+        });
+    });
+});
+
+</script>
+
+
+</html>
