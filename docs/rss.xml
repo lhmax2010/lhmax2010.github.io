@@ -1,5 +1,61 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 17 Aug 2025 15:39:07 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>SurfaceFlinge相关调用流程</title><link>https://lhmax2010.github.io/post/SurfaceFlinge-xiang-guan-diao-yong-liu-cheng.html</link><description>端到端
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 17 Aug 2025 15:43:26 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>流媒体相关框架图</title><link>https://lhmax2010.github.io/post/liu-mei-ti-xiang-guan-kuang-jia-tu.html</link><description>flowchart TB
+
+subgraph App
+  UI[UI]
+  Video[Video Player]
+end
+
+subgraph Frameworks
+  WMS[WMS]
+  DM[DisplayManager]
+  SC[SurfaceControl]
+  CH[Choreographer]
+end
+
+subgraph Media
+  MC[MediaCodec or Codec2]
+  EX[Extractor]
+end
+
+subgraph Graphics
+  BQ[BufferQueue]
+  SF[SurfaceFlinger]
+  RE[RenderEngine GLES SkiaGL Vulkan]
+end
+
+subgraph HAL
+  HWC[HWC]
+  GR[Gralloc]
+end
+
+subgraph Kernel
+  DRM[DRM KMS]
+  GPU[GPU Driver]
+end
+
+subgraph HW
+  Panel[Panel]
+end
+
+UI --&gt; SC
+Video --&gt; MC
+EX --&gt; MC
+MC --&gt; BQ
+SC --&gt; SF
+BQ --&gt; SF
+SF --&gt; RE
+RE --&gt; HWC
+SF --&gt; HWC
+GR --&gt; BQ
+HWC --&gt; DRM
+GPU --&gt; DRM
+DRM --&gt; Panel
+
+CH -. Vsync control .-&gt; UI
+DM -. display config .-&gt; SF
+WMS -. window management .-&gt; SC
+。</description><guid isPermaLink="true">https://lhmax2010.github.io/post/liu-mei-ti-xiang-guan-kuang-jia-tu.html</guid><pubDate>Sun, 17 Aug 2025 15:42:54 +0000</pubDate></item><item><title>SurfaceFlinge相关调用流程</title><link>https://lhmax2010.github.io/post/SurfaceFlinge-xiang-guan-diao-yong-liu-cheng.html</link><description>端到端
 graph TD
   subgraph App_Producer['App / Producer']
     A1['App / MediaCodec: 写入 GraphicBuffer']
