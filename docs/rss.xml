@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 17 Aug 2025 16:06:53 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>lmkd 调研</title><link>https://lhmax2010.github.io/post/lmkd%20-diao-yan.html</link><description>lmkd流程图
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 17 Aug 2025 16:13:09 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>lmkd 调研</title><link>https://lhmax2010.github.io/post/lmkd%20-diao-yan.html</link><description>lmkd流程图
 sequenceDiagram
 autonumber
 participant AMS as AMS
@@ -82,7 +82,9 @@ KILL-&gt;&gt;AMS: stats_write - lmkd_stats.c - report to statsd and AM
 KILL--&gt;&gt;LMK: back to epoll loop
 
 lmkd的优化思路
-。</description><guid isPermaLink="true">https://lhmax2010.github.io/post/lmkd%20-diao-yan.html</guid><pubDate>Sun, 17 Aug 2025 16:06:25 +0000</pubDate></item><item><title>流媒体相关框架图</title><link>https://lhmax2010.github.io/post/liu-mei-ti-xiang-guan-kuang-jia-tu.html</link><description>flowchart TB
+0. 目标与总览
+
+目标：将 lmkd 从“只会杀”升级为动作阶梯（限流→降温→杀），支持cgroup 保护/处置、多信号融合（PSI+IO/CPU+内核统计）、自适应 backoff、可观测性完善，并在低端/无 PSI内核上有兜底。</description><guid isPermaLink="true">https://lhmax2010.github.io/post/lmkd%20-diao-yan.html</guid><pubDate>Sun, 17 Aug 2025 16:06:25 +0000</pubDate></item><item><title>流媒体相关框架图</title><link>https://lhmax2010.github.io/post/liu-mei-ti-xiang-guan-kuang-jia-tu.html</link><description>flowchart TB
 
 subgraph App
   UI[UI]
