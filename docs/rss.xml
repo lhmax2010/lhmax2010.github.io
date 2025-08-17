@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 17 Aug 2025 14:07:15 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>SurfaceFlinge相关调用流程</title><link>https://lhmax2010.github.io/post/SurfaceFlinge-xiang-guan-diao-yong-liu-cheng.html</link><description>端到端
+<rss xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><channel><title>Blog Title</title><link>https://lhmax2010.github.io</link><description>Blog description</description><copyright>Blog Title</copyright><docs>http://www.rssboard.org/rss-specification</docs><generator>python-feedgen</generator><image><url>https://github.githubassets.com/favicons/favicon.svg</url><title>avatar</title><link>https://lhmax2010.github.io</link></image><lastBuildDate>Sun, 17 Aug 2025 15:39:07 +0000</lastBuildDate><managingEditor>Blog Title</managingEditor><ttl>60</ttl><webMaster>Blog Title</webMaster><item><title>SurfaceFlinge相关调用流程</title><link>https://lhmax2010.github.io/post/SurfaceFlinge-xiang-guan-diao-yong-liu-cheng.html</link><description>端到端
 graph TD
   subgraph App_Producer['App / Producer']
     A1['App / MediaCodec: 写入 GraphicBuffer']
@@ -353,6 +353,77 @@ sequenceDiagram
     HWC--&gt;&gt;SF: getReleaseFences（UI 层） / getPresentFence
     HWC-&gt;&gt;DISP: 叠加 sideband 视频 + UI；缩放 / CSC
     Note right of DISP: 以音频会话为基准在硬件中对时视频输出（更稳）
+
+Vsync流程以及HWC相关流程（借鉴drm_composer）
+sequenceDiagram
+    autonumber
+    participant HWC as HWComposer(Composer3↔drm_hwcomposer)
+    participant VS as Vsync回调(ComposerCallback)
+    participant SCH as SF Scheduler/EventThread
+    participant SF as SurfaceFlinger
+    participant UQ as UI BufferQueue
+    participant VQ as Video BufferQueue
+    participant CE as CompositionEngine(Output/Display)
+    participant RE as RenderEngine(Client)
+    participant GL as GLESRE
+    participant SK as SkiaGLRE
+    participant VK as VulkanRE
+    participant KMS as DRM/KMS(Display Ctrl)
+
+    %% 0) Vsync 获取与派发（一次性初始化 + 周期回调）
+    SF-&gt;&gt;HWC: registerCallback(ComposerCallback)
+    SF-&gt;&gt;HWC: setVsyncEnabled(display, ENABLE)
+    HWC--&gt;&gt;VS: onVsync(display, timestamp)（硬件vsync/flip）
+    VS--&gt;&gt;SCH: VSyncSchedule/EventThread::onVsync(timestamp)
+    SCH--&gt;&gt;SF: MessageQueue::invalidate() → handleMessageRefresh()
+
+    %% 1) 本帧开始：取UI/视频帧
+    UQ--&gt;&gt;SF: onFrameAvailable(UI)
+    VQ--&gt;&gt;SF: onFrameAvailable(Video)
+    SF-&gt;&gt;SF: Layer::latchBuffer(UI)
+    SF-&gt;&gt;SF: Layer::latchBuffer(Video)
+
+    %% 2) 选择合成策略（与HWC协同）
+    SF-&gt;&gt;CE: Output::prepareFrame()
+    CE-&gt;&gt;HWC: validateDisplay()
+    HWC--&gt;&gt;CE: getChangedCompositionTypes()（标记CLIENT层）
+    HWC--&gt;&gt;CE: getDisplayRequests()（显示级请求/色彩）
+    CE-&gt;&gt;CE: applyChangedTypesToLayers()
+
+    %% 3) 若存在CLIENT层 → ClientTarget
+    alt 存在 CLIENT 层
+      CE-&gt;&gt;RE: buildLayerSettings[](CLIENT层集合)
+      RE-&gt;&gt;GL: drawLayers（GLES） ; GL-&gt;&gt;GL: bindFrameBuffer→setupLayerBlending→setupLayerTexturing→drawMesh
+      RE-&gt;&gt;SK: drawLayers（SkiaGL） ; SK-&gt;&gt;SK: 色彩/滤镜/裁剪/阴影
+      RE-&gt;&gt;VK: drawLayers（Vulkan） ; VK-&gt;&gt;VK: 合成/色彩(EOTF)转换
+      RE--&gt;&gt;CE: 产出 ClientTarget(buffer,fence,dataspace,damage)
+      CE-&gt;&gt;HWC: setClientTarget(...)
+    else 全部 Device 合成
+      CE--&gt;&gt;HWC: 无 ClientTarget
+    end
+
+    %% 4) 为各层写属性/缓冲并发起提交
+    CE-&gt;&gt;HWC: setLayerZ/DisplayFrame/SourceCrop/Blend/Alpha/Dataspace/SurfaceDamage
+    CE-&gt;&gt;HWC: setLayerBuffer（仅 DEVICE 层）
+    CE-&gt;&gt;HWC: presentOrValidateDisplay()/presentDisplay()
+
+    %% 5) HWC(drm_hwcomposer) 内部：原子检查→回退→原子提交
+    HWC-&gt;&gt;HWC: HwcDisplay::ValidateDisplay()（入口）
+    HWC-&gt;&gt;HWC: Backend::ValidateDisplay()（策略后端）
+    HWC-&gt;&gt;HWC: DrmDisplayComposition::Plan()（生成计划）
+    HWC-&gt;&gt;HWC: Planner::ProvisionPlanes()（映射层→DRM planes）
+    HWC-&gt;&gt;HWC: DrmDisplayCompositor::CommitFrame(test_only)（atomic_check）
+    alt test_only 失败
+      HWC-&gt;&gt;HWC: 回退：更多层→CLIENT / squash
+      CE-&gt;&gt;HWC: 若需则携带 ClientTarget 重试
+    else test_only 通过
+      HWC-&gt;&gt;HWC: DrmAtomicStateManager::AtomicCommit(real)（atomic_commit）
+    end
+
+    %% 6) 栅栏与扫描出屏
+    HWC--&gt;&gt;CE: getReleaseFences（per-layer） / getPresentFence（per-frame）
+    HWC-&gt;&gt;KMS: 编程 CRTC/Plane/Scaler/CSC（atomic）
+    KMS--&gt;&gt;KMS: Scanout → 面板/HDMI
 。</description><guid isPermaLink="true">https://lhmax2010.github.io/post/SurfaceFlinge-xiang-guan-diao-yong-liu-cheng.html</guid><pubDate>Sun, 17 Aug 2025 14:06:48 +0000</pubDate></item><item><title>Android 代码路径分析</title><link>https://lhmax2010.github.io/post/Android%20-dai-ma-lu-jing-fen-xi.html</link><description>| 目录              | 主要功能/内容                                            | 隶属框架/层级                    |
 |-------------------|---------------------------------------------------------|-----------------------------------|
 | art               | ART 运行环境，字节码编译、JIT/AOT、GC、解释器等          | Native 层（运行时/虚拟机）         |

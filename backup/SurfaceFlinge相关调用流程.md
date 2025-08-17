@@ -352,3 +352,74 @@ sequenceDiagram
     HWC-->>SF: getReleaseFences（UI 层） / getPresentFence
     HWC->>DISP: 叠加 sideband 视频 + UI；缩放 / CSC
     Note right of DISP: 以音频会话为基准在硬件中对时视频输出（更稳）
+
+Vsync流程以及HWC相关流程（借鉴drm_composer）
+sequenceDiagram
+    autonumber
+    participant HWC as HWComposer(Composer3↔drm_hwcomposer)
+    participant VS as Vsync回调(ComposerCallback)
+    participant SCH as SF Scheduler/EventThread
+    participant SF as SurfaceFlinger
+    participant UQ as UI BufferQueue
+    participant VQ as Video BufferQueue
+    participant CE as CompositionEngine(Output/Display)
+    participant RE as RenderEngine(Client)
+    participant GL as GLESRE
+    participant SK as SkiaGLRE
+    participant VK as VulkanRE
+    participant KMS as DRM/KMS(Display Ctrl)
+
+    %% 0) Vsync 获取与派发（一次性初始化 + 周期回调）
+    SF->>HWC: registerCallback(ComposerCallback)
+    SF->>HWC: setVsyncEnabled(display, ENABLE)
+    HWC-->>VS: onVsync(display, timestamp)（硬件vsync/flip）
+    VS-->>SCH: VSyncSchedule/EventThread::onVsync(timestamp)
+    SCH-->>SF: MessageQueue::invalidate() → handleMessageRefresh()
+
+    %% 1) 本帧开始：取UI/视频帧
+    UQ-->>SF: onFrameAvailable(UI)
+    VQ-->>SF: onFrameAvailable(Video)
+    SF->>SF: Layer::latchBuffer(UI)
+    SF->>SF: Layer::latchBuffer(Video)
+
+    %% 2) 选择合成策略（与HWC协同）
+    SF->>CE: Output::prepareFrame()
+    CE->>HWC: validateDisplay()
+    HWC-->>CE: getChangedCompositionTypes()（标记CLIENT层）
+    HWC-->>CE: getDisplayRequests()（显示级请求/色彩）
+    CE->>CE: applyChangedTypesToLayers()
+
+    %% 3) 若存在CLIENT层 → ClientTarget
+    alt 存在 CLIENT 层
+      CE->>RE: buildLayerSettings[](CLIENT层集合)
+      RE->>GL: drawLayers（GLES） ; GL->>GL: bindFrameBuffer→setupLayerBlending→setupLayerTexturing→drawMesh
+      RE->>SK: drawLayers（SkiaGL） ; SK->>SK: 色彩/滤镜/裁剪/阴影
+      RE->>VK: drawLayers（Vulkan） ; VK->>VK: 合成/色彩(EOTF)转换
+      RE-->>CE: 产出 ClientTarget(buffer,fence,dataspace,damage)
+      CE->>HWC: setClientTarget(...)
+    else 全部 Device 合成
+      CE-->>HWC: 无 ClientTarget
+    end
+
+    %% 4) 为各层写属性/缓冲并发起提交
+    CE->>HWC: setLayerZ/DisplayFrame/SourceCrop/Blend/Alpha/Dataspace/SurfaceDamage
+    CE->>HWC: setLayerBuffer（仅 DEVICE 层）
+    CE->>HWC: presentOrValidateDisplay()/presentDisplay()
+
+    %% 5) HWC(drm_hwcomposer) 内部：原子检查→回退→原子提交
+    HWC->>HWC: HwcDisplay::ValidateDisplay()（入口）
+    HWC->>HWC: Backend::ValidateDisplay()（策略后端）
+    HWC->>HWC: DrmDisplayComposition::Plan()（生成计划）
+    HWC->>HWC: Planner::ProvisionPlanes()（映射层→DRM planes）
+    HWC->>HWC: DrmDisplayCompositor::CommitFrame(test_only)（atomic_check）
+    alt test_only 失败
+      HWC->>HWC: 回退：更多层→CLIENT / squash
+      CE->>HWC: 若需则携带 ClientTarget 重试
+    else test_only 通过
+      HWC->>HWC: DrmAtomicStateManager::AtomicCommit(real)（atomic_commit）
+    end
+
+    %% 6) 栅栏与扫描出屏
+    HWC-->>CE: getReleaseFences（per-layer） / getPresentFence（per-frame）
+    HWC->>KMS: 编程 CRTC/Plane/Scaler/CSC（atomic）
+    KMS-->>KMS: Scanout → 面板/HDMI
