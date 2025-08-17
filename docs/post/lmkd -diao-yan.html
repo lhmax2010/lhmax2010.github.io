@@ -333,7 +333,8 @@ KILL--&gt;&gt;LMK: back to epoll loop</p>
 </ol>
 <p>思路：触发 Gate 后先进行「温和动作」：对候选的低优先级进程/组写 memory.high、对其地址空间做 process_madvise(MADV_COLD/PAGEOUT) 或 Compaction；仅在压力未缓解时才进入 kill。</p>
 <p>新增：lmkd_actions.h/.c<br>
-`// lmkd_actions.h<br>
+``<br>
+// lmkd_actions.h<br>
 #pragma once<br>
 #include &lt;stdbool.h&gt;<br>
 #include &lt;sys/types.h&gt;</p>
@@ -353,7 +354,9 @@ int    cooldown_ms;         // pre-action后观察窗口<br>
 <p>bool preactions_try_throttle_pid(pid_t pid, const preaction_policy_t* pol);<br>
 bool preactions_try_group_throttle(const char* cg_path, const preaction_policy_t* pol);<br>
 bool preactions_try_madvise_cold(pid_t pid, size_t bytes);<br>
-<code class="notranslate"> </code>// lmkd_actions.c (核心片段)<br>
+``</p>
+<p>``<br>
+// lmkd_actions.c (核心片段)<br>
 #include "lmkd_actions.h"<br>
 #include "lmkd_cgroup.h"<br>
 #include &lt;unistd.h&gt;<br>
@@ -399,7 +402,8 @@ return rc == 0;<br>
 return false;<br>
 #endif<br>
 }<br>
-<code class="notranslate">在 lmkd.c 的 kill 流程前插入 pre-actions</code>// lmkd.c 伪代码（在 do_kill() 里开头）<br>
+<code class="notranslate">在 lmkd.c 的 kill 流程前插入 pre-actions</code><br>
+// lmkd.c 伪代码（在 do_kill() 里开头）<br>
 #include "lmkd_actions.h"<br>
 #include "lmkd_config.h"</p>
 <p>static preaction_policy_t g_prepol;</p>
@@ -424,13 +428,15 @@ record_backoff(/<em>light</em>/true);<br>
 return 0;<br>
 }<br>
 }<br>
-<code class="notranslate">2) 按 cgroup 的保护与处置（前台保护、组降级/杀组） 新增：lmkd_cgroup.h/.c（v2 辅助）</code>// lmkd_cgroup.h<br>
+<code class="notranslate">2) 按 cgroup 的保护与处置（前台保护、组降级/杀组） 新增：lmkd_cgroup.h/.c（v2 辅助）</code><br>
+// lmkd_cgroup.h<br>
 bool cg2_path_by_pid(pid_t pid, char* dst, size_t cap);   // 解析 /proc//cgroup<br>
 long cg2_read_long(const char* cg, const char* knob);<br>
 bool cg2_write_long(const char* cg, const char* knob, long val);<br>
 bool cg2_write_str(const char* cg, const char* knob, const char* s);<br>
 bool cg2_kill_group(const char* cg, int sig);             // 枚举 cgroup.procs 全杀<br>
-<code class="notranslate"> </code>// lmkd_cgroup.c 核心片段<br>
+<code class="notranslate"> </code><br>
+// lmkd_cgroup.c 核心片段<br>
 bool cg2_kill_group(const char* cg, int sig) {<br>
 char path[PATH_MAX]; snprintf(path, sizeof(path), "%s/cgroup.procs", cg);<br>
 FILE* f = fopen(path, "re"); if (!f) return false;<br>
@@ -439,7 +445,8 @@ while (fscanf(f, "%d", &amp;p) == 1) { kill(p, sig); ok = true; }<br>
 fclose(f);<br>
 return ok;<br>
 }<br>
-<code class="notranslate">前台/关键服务保护（在 procprio_handler() 同步 cgroup knobs）</code>// lmkd.c 片段：当接收 adj 更新时，同时设置 cgroup 保护<br>
+<code class="notranslate">前台/关键服务保护（在 procprio_handler() 同步 cgroup knobs）</code><br>
+// lmkd.c 片段：当接收 adj 更新时，同时设置 cgroup 保护<br>
 if (adj &lt;= g_cfg.fg_protect_adj) {<br>
 char cg[PATH_MAX];<br>
 if (cg2_path_by_pid(pid, cg, sizeof(cg))) {<br>
@@ -449,7 +456,8 @@ cg2_write_long(cg, "memory.low", g_cfg.fg_memory_low_bytes);   // 软保护<br>
 cg2_write_str(cg, "memory.oom.group", "1");                    // 组处置一致性<br>
 }<br>
 }<br>
-<code class="notranslate">杀组（当候选进程有强耦合子进程）</code>// select_and_kill_process() 内<br>
+<code class="notranslate">杀组（当候选进程有强耦合子进程）</code><br>
+// select_and_kill_process() 内<br>
 if (g_cfg.kill_by_group) {<br>
 char cg[PATH_MAX];<br>
 if (cg2_path_by_pid(victim-&gt;pid, cg, sizeof(cg))) {<br>
@@ -459,11 +467,12 @@ return;<br>
 }<br>
 }<br>
 kill(victim-&gt;pid, SIGKILL);<br>
-`<br>
+``<br>
 3) 多信号融合（PSI + IO/CPU PSI + 内核统计）</p>
 <p>目标：减少误杀（例如 IO 堵塞导致 PSI 高）。在 evaluate_thrashing() 融合 IO PSI、CPU PSI 与内核统计（pgscan/pgsteal/refault/swapin 速率），形成 stress_score。</p>
 <p>在 lmkd_psi.c 扩展<br>
-`typedef struct {<br>
+`<br>
+typedef struct {<br>
 float mem_psi;   // memory PSI some or full (一段时间窗口)<br>
 float io_psi;    // /proc/pressure/io<br>
 float cpu_psi;   // /proc/pressure/cpu<br>
@@ -483,7 +492,8 @@ return wm<em>s-&gt;mem_psi + wi</em>s-&gt;io_psi + wc<em>s-&gt;cpu_psi + wr</em>
 signal_vec_t sv = read_all_signals(window_ms);<br>
 float stress = fuse_stress_score(&amp;sv);<br>
 bool thrashing_high = (stress &gt;= g_cfg.thrashing_score_thresh);<br>
-<code class="notranslate">4) Backoff/退火策略升级（自适应） 在 lmkd.c 维护 backoff</code>typedef struct {<br>
+<code class="notranslate">4) Backoff/退火策略升级（自适应） 在 lmkd.c 维护 backoff</code><br>
+typedef struct {<br>
 uint64_t last_action_ms;<br>
 uint32_t cur_backoff_ms;    // 当前冷却<br>
 } backoff_state_t;</p>
@@ -497,9 +507,11 @@ else g_bk.cur_backoff_ms = max(g_cfg.backoff_ms_min, g_bk.cur_backoff_ms / 2);<b
 <p>static bool backoff_expired(void) {<br>
 return (now_ms() - g_bk.last_action_ms) &gt;= g_bk.cur_backoff_ms;<br>
 }<br>
-<code class="notranslate">PSI Gate3 接入 backoff</code>// lmkd_psi.c 的 Gate3<br>
+<code class="notranslate">PSI Gate3 接入 backoff</code><br>
+// lmkd_psi.c 的 Gate3<br>
 if (!backoff_expired()) return false; // 不杀，等冷却<br>
-<code class="notranslate">5) 候选排序增强（策略表） 在 lmkd.c 的排序器替换为加权多因子</code>typedef struct {<br>
+<code class="notranslate">5) 候选排序增强（策略表） 在 lmkd.c 的排序器替换为加权多因子</code><br>
+typedef struct {<br>
 int   adj;           // 来自 AMS<br>
 long  rss_kb;<br>
 float refault_rate;<br>
@@ -516,17 +528,20 @@ return g_cfg.w_adj * f-&gt;adj<br>
 }</p>
 <p>// sort candidates<br>
 qsort(cands, n, sizeof(*cands), cmp_by_victim_score);<br>
-<code class="notranslate">6) 可观测性：动作阶梯与原因上报 在 lmkd_stats.c 扩展事件枚举与字段</code>// 增加 PRE_THROTTLE / PRE_COLD / KILL_GROUP 等类型<br>
+<code class="notranslate">6) 可观测性：动作阶梯与原因上报 在 lmkd_stats.c 扩展事件枚举与字段</code><br>
+// 增加 PRE_THROTTLE / PRE_COLD / KILL_GROUP 等类型<br>
 stats_write_event(EVENT_PREACTION_THROTTLE, pid, stress, psi, backoff_ms);<br>
 stats_write_event(EVENT_PREACTION_COLD, pid, bytes, stress);<br>
 stats_write_event(EVENT_KILL, pid, reason_code, adj, score);<br>
-<code class="notranslate">7) 低端机兜底（无 PSI/裁剪内核） 在 lmkd_psi.c 检测 PSI 不可用时使用 earlyoom 风格触发</code>if (!psi_available) {<br>
+<code class="notranslate">7) 低端机兜底（无 PSI/裁剪内核） 在 lmkd_psi.c 检测 PSI 不可用时使用 earlyoom 风格触发</code><br>
+if (!psi_available) {<br>
 long mem_avail = read_memavailable_kb();<br>
 long swap_free = read_swapfree_kb();<br>
 if (mem_avail &lt; g_cfg.low_mem_kb &amp;&amp; swap_free &lt; g_cfg.low_swap_kb)<br>
 trigger_kill_path(/<em>low_end=</em>/true);<br>
 }<br>
-<code class="notranslate">8) 配置装载与属性开关 新增：lmkd_config.h/.c</code>typedef struct {<br>
+<code class="notranslate">8) 配置装载与属性开关 新增：lmkd_config.h/.c</code><br>
+typedef struct {<br>
 bool preaction_enable;<br>
 int  preaction_min_adj;<br>
 bool enable_madvise;<br>
@@ -548,7 +563,8 @@ float w_adj, w_rss, w_ui;<br>
 } lmkd_config_t;</p>
 <p>extern lmkd_config_t g_cfg;<br>
 bool lmkd_load_config_from_props(void);<br>
-<code class="notranslate"> </code>// lmkd_config.c 片段：从 system properties 读取（示例名）<br>
+<code class="notranslate"> </code><br>
+// lmkd_config.c 片段：从 system properties 读取（示例名）<br>
 g_cfg.preaction_enable     = property_get_bool("lmkd.pre.enable", true);<br>
 g_cfg.enable_madvise       = property_get_bool("lmkd.pre.madvise", false);<br>
 g_cfg.memory_high_ratio    = property_get_float("lmkd.pre.memhigh.ratio", 0.85f);<br>
@@ -575,7 +591,7 @@ g_cfg.w_ui                 = property_get_float("lmkd.w.ui", 2.0f);<br>
 设备侧可在 vendor_prop 或 init.*.rc 中设置这些属性，快速做 A/B 调参。</p>
 <ol start="9">
 <li>Android.bp 修改示例<br>
-<code class="notranslate">cc_binary { name: "lmkd", srcs: [ "lmkd.c", "lmkd_psi.c", "lmkd_vmpressure.c", "lmkd_stats.c", "lmkd_cgroup.c", "lmkd_actions.c", "lmkd_config.c", ], cflags: [ "-DLMKD_PREACTIONS", "-DLMKD_CGROUP_V2", ], shared_libs: ["liblog", "libcutils"], // 其它保持不变 } </code></li>
+<code class="notranslate">cc_binary { name: "lmkd", srcs: [ "lmkd.c", "lmkd_psi.c", "lmkd_vmpressure.c", "lmkd_stats.c", "lmkd_cgroup.c", "lmkd_actions.c", "lmkd_config.c", ], cflags: [ "-DLMKD_PREACTIONS", "-DLMKD_CGROUP_V2", ], shared_libs: ["liblog", "libcutils"], // 其它保持不变 }</code></li>
 <li>回归与观测建议（最小集）</li>
 </ol>
 <p>指标（statsd/trace 或 logcat 汇聚）：</p>
