@@ -34,7 +34,10 @@
 [  154s] See <http://bugs.tizen.org/> for instructions.
 [  154s] make[2]: *** [projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/build.make:2044: projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/truncdfbf2.c.o] Error 1
 [  154s] make[1]: *** [CMakeFiles/Makefile2:31284: projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/all] Error 2
-[  154s] make[1]: *** Waiting for unfinished jobs....。">
+[  154s] make[1]: *** Waiting for unfinished jobs....
+
+问题分析
+看日志这是在编 compiler-rt 的 builtins（目标库：clang_rt.builtins-armv4t）时，文件 truncdfbf2.c 里实现 double -> bfloat16 转换的例程在 GCC 上崩了（reg:BF / BF=bfloat16）。">
 <meta property="og:title" content="问题研究">
 <meta property="og:description" content="[  154s] [  5%] Building ASM object projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-arm.dir/arm/sync_fetch_and_umax_4.S.o
 [  154s] [  5%] Building ASM object projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-arm.dir/arm/sync_fetch_and_umax_8.S.o
@@ -60,7 +63,10 @@
 [  154s] See <http://bugs.tizen.org/> for instructions.
 [  154s] make[2]: *** [projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/build.make:2044: projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/truncdfbf2.c.o] Error 1
 [  154s] make[1]: *** [CMakeFiles/Makefile2:31284: projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/all] Error 2
-[  154s] make[1]: *** Waiting for unfinished jobs....。">
+[  154s] make[1]: *** Waiting for unfinished jobs....
+
+问题分析
+看日志这是在编 compiler-rt 的 builtins（目标库：clang_rt.builtins-armv4t）时，文件 truncdfbf2.c 里实现 double -> bfloat16 转换的例程在 GCC 上崩了（reg:BF / BF=bfloat16）。">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://lhmax2010.github.io/post/wen-ti-yan-jiu.html">
 <meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
@@ -145,7 +151,27 @@ body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;
 [  154s] See <a href="http://bugs.tizen.org/" rel="nofollow">http://bugs.tizen.org/</a> for instructions.<br>
 [  154s] make[2]: *** [projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/build.make:2044: projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/truncdfbf2.c.o] Error 1<br>
 [  154s] make[1]: *** [CMakeFiles/Makefile2:31284: projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/all] Error 2<br>
-[  154s] make[1]: *** Waiting for unfinished jobs....</p></div>
+[  154s] make[1]: *** Waiting for unfinished jobs....</p>
+<p>问题分析<br>
+看日志这是在编 compiler-rt 的 builtins（目标库：clang_rt.builtins-armv4t）时，文件 truncdfbf2.c 里实现 double -&gt; bfloat16 转换的例程在 GCC 上崩了（reg:BF / BF=bfloat16）。ARMv4T 后端并不真正支持 BFLOAT16 的指令/模式，GCC 前端虽然能接受 __bf16 这个类型，但到后端生成 RTL 时就炸在 extract_insn（“unrecognizable insn … reg:BF … during RTL pass: vregs”），这属于编译器/目标组合不支持 BFMODE 的经典坑，不是你的工程代码问题。对应的源文件确实是 bfloat16 截断实现：lib/builtins/truncdfbf2.c（就是把 DST_BFLOAT 打开后包含通用实现）<br>
+<a href="https://codebrowser.dev/llvm/compiler-rt/lib/builtins/truncdfbf2.c.html" rel="nofollow">Code Browser</a><br>
+。<br>
+在 CMake 里，compiler-rt 只有在检测到 __bf16 类型“可编译”时才会把这批 BF16 源加入构建（BF16_SOURCES 列表）；每个目标架构都会做一次 check_c_source_compiles("_<em>bf16 ...", COMPILER_RT_HAS</em>${arch}_BFLOAT16)，若为真就把 BF16_SOURCES 追加进该架构的源码列表。你的环境里这一步误判为“可用”，于是把 truncdfbf2.c 等文件编进去，随后在 ARMv4T 的 GCC 后端挂了。相关 CMake 逻辑可见这里（定义 BF16 源并按每个 arch 判断是否加入）<br>
+<a href="https://fossies.org/linux/llvm-project-llvmorg/compiler-rt/lib/builtins/CMakeLists.txt" rel="nofollow">fossies.org</a><br>
+。LLVM 也专门有改动说明“只在（确实）支持时构建 (b)float16 代码”</p>
+<p>尝试方案</p>
+<h1>先清理旧的构建目录（重要）</h1>
+<p>rm -rf build &amp;&amp; mkdir build<br>
+cd build</p>
+<p>cmake -G Ninja ../llvm <br>
+-DLLVM_ENABLE_PROJECTS="clang;compiler-rt" <br>
+-DLLVM_ENABLE_RUNTIMES="compiler-rt" <br>
+-DLLVM_BUILTIN_TARGETS="armv4t-linux-gnueabi" <br>
+-DBUILTINS_armv4t-linux-gnueabi_CMAKE_SYSTEM_NAME=Linux <br>
+-DBUILTINS_armv4t-linux-gnueabi_TARGET_TRIPLE=armv4t-linux-gnueabi <br>
+-DBUILTINS_armv4t-linux-gnueabi_CMAKE_C_FLAGS="-march=armv4t -mfloat-abi=soft" <br>
+<strong>-DCOMPILER_RT_HAS_armv4t_BFLOAT16=OFF</strong></p>
+<p>ninja clang_rt.builtins-armv4t</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
