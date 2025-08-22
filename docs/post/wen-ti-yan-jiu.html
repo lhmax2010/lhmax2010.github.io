@@ -231,7 +231,27 @@ cd build</p>
 [  140s] make[1]: *** [CMakeFiles/Makefile2:31284: projects/compiler-rt/lib/builtins/CMakeFiles/clang_rt.builtins-armv4t.dir/all] Error 2<br>
 [  140s] make[1]: *** Waiting for unfinished jobs....<br>
 [  140s] [  0%] Copying compiler-rt's sanitizer/asan_interface.h...<br>
-[  140s] cc1plus: warning: '-Wformat-security' ignored without '-Wformat' [-Wformat-security]</p></div>
+[  140s] cc1plus: warning: '-Wformat-security' ignored without '-Wformat' [-Wformat-security]</p>
+<p>原因是：你在构建 clang_rt.builtins-armv4t 时启用了 Thumb-1（-mthumb），但 compiler-rt/lib/builtins/arm/bswapdi2.S 里用的是 ARM 状态才有的指令/编码（例如 EOR ... , ROR #imm 这种“带桶形移位”的第二操作数形式、以及需要 32 位宽编码的变体）。<br>
+ARMv4T 的 Thumb-1 不支持这些编码，于是出现：</p>
+<p>cannot honor width suffix（提示无法满足 32 位宽指令 .w/宽编码的需求）</p>
+<p>MOV Rd, Rs with two low registers is not permitted on this architecture（在它试图选用 Thumb 的 16 位变体时触发的约束错误）</p>
+<p>一系列 eor/bic/mov ... ror#... 的报错</p>
+<p>实际上用的是armv7l， 所以需要修正配置</p>
+<p>尝试方案</p>
+<h1>单独构建 compiler-rt（或在 monorepo 的 runtimes 里等价传参）</h1>
+<p>cmake -S compiler-rt -B build-rt <br>
+-DCMAKE_BUILD_TYPE=Release <br>
+-DCMAKE_C_COMPILER=clang <br>
+-DCMAKE_ASM_COMPILER=clang <br>
+-DLLVM_CONFIG_PATH=/path/to/llvm-config <br>
+-DCOMPILER_RT_BUILD_BUILTINS=ON <br>
+-DCOMPILER_RT_BUILD_SANITIZERS=OFF <br>
+-DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=armv7a-linux-gnueabihf <br>
+-DCOMPILER_RT_DEFAULT_TARGET_ONLY=ON <br>
+-DCMAKE_C_FLAGS="--target=armv7a-linux-gnueabihf -march=armv7-a -marm" <br>
+-DCMAKE_ASM_FLAGS="--target=armv7a-linux-gnueabihf -march=armv7-a -marm"</p>
+<p>cmake --build build-rt -j</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
