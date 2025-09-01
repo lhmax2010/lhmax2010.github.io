@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html data-color-mode="light" data-dark-theme="dark" data-light-theme="light" lang="zh-CN">
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link href='https://mirrors.sustech.edu.cn/cdnjs/ajax/libs/Primer/21.0.7/primer.css' rel='stylesheet' />
+    
+    <link rel="icon" href="https://github.githubassets.com/favicons/favicon.svg"><script>
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
+    </script>
+<meta name="description" content="好的，我们来详细解释这三个在大型语言模型（LLM）中至关重要的概念：**自注意力（Self-Attention）**、**自回归（Autoregression）** 和 **GEMM**。">
+<meta property="og:title" content="AI 学习">
+<meta property="og:description" content="好的，我们来详细解释这三个在大型语言模型（LLM）中至关重要的概念：**自注意力（Self-Attention）**、**自回归（Autoregression）** 和 **GEMM**。">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://lhmax2010.github.io/post/AI%20-xue-xi.html">
+<meta property="og:image" content="https://github.githubassets.com/favicons/favicon.svg">
+<title>AI 学习</title>
+
+
+
+</head>
+<style>
+body{box-sizing: border-box;min-width: 200px;max-width: 900px;margin: 20px auto;padding: 45px;font-size: 16px;font-family: sans-serif;line-height: 1.25;}
+#header{display:flex;padding-bottom:8px;border-bottom: 1px solid var(--borderColor-muted, var(--color-border-muted));margin-bottom: 16px;}
+#footer {margin-top:64px; text-align: center;font-size: small;}
+
+</style>
+
+<style>
+.postTitle{margin: auto 0;font-size:40px;font-weight:bold;}
+.title-right{display:flex;margin:auto 0 0 auto;}
+.title-right .circle{padding: 14px 16px;margin-right:8px;}
+#postBody{border-bottom: 1px solid var(--color-border-default);padding-bottom:36px;}
+#postBody hr{height:2px;}
+#cmButton{height:48px;margin-top:48px;}
+#comments{margin-top:64px;}
+.g-emoji{font-size:24px;}
+@media (max-width: 600px) {
+    body {padding: 8px;}
+    .postTitle{font-size:24px;}
+}
+
+</style>
+
+
+
+
+<body>
+    <div id="header">
+<h1 class="postTitle">AI 学习</h1>
+<div class="title-right">
+    <a href="https://lhmax2010.github.io" id="buttonHome" class="btn btn-invisible circle" title="首页">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathHome" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+    <a href="https://github.com/lhmax2010/lhmax2010.github.io/issues/16" target="_blank" class="btn btn-invisible circle" title="Issue">
+        <svg class="octicon" width="16" height="16">
+            <path id="pathIssue" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+    
+
+    <a class="btn btn-invisible circle" onclick="modeSwitch();" title="切换主题">
+        <svg class="octicon" width="16" height="16" >
+            <path id="themeSwitch" fill-rule="evenodd"></path>
+        </svg>
+    </a>
+
+</div>
+</div>
+    <div id="content">
+<div class="markdown-body" id="postBody"><p>好的，我们来详细解释这三个在大型语言模型（LLM）中至关重要的概念：<strong>自注意力（Self-Attention）</strong>、<strong>自回归（Autoregression）</strong> 和 <strong>GEMM</strong>。</p>
+<p>这三者在模型中扮演着截然不同的角色：</p>
+<ul>
+<li><strong>自注意力</strong>是模型的<strong>理解能力</strong>核心。</li>
+<li><strong>自回归</strong>是模型的<strong>生成能力</strong>核心。</li>
+<li><strong>GEMM</strong> 是支撑以上所有能力的<strong>底层计算核心</strong>。</li>
+</ul>
+<hr>
+<h3>1. 自注意力 (Self-Attention)</h3>
+<p><strong>通俗来讲：</strong><br>
+自注意力机制就是一种<strong>让模型在阅读一句话时，能够自己搞清楚句子中每个词语之间相互关系</strong>的方法。就像我们人类阅读时，看到“它”会自然地联系到上文提到的某个名词。</p>
+<p><strong>核心思想：</strong><br>
+当模型处理一个词时，自注意力机制会计算句子中所有其他词对于<strong>理解当前这个词</strong>的重要性，然后根据这个重要性（权重），将其他词的信息融入到当前词的表示中。这样，每个词的最终表示都包含了它在整个句子中的上下文信息。</p>
+<p><strong>它是如何工作的（以“The cat sat on the mat, it was tired”为例）：</strong></p>
+<ol>
+<li>
+<p><strong>创建三个“角色” (Q, K, V)：</strong> 对于句子中的每一个词（Token），模型都会生成三个向量：</p>
+<ul>
+<li><strong>Query (查询, Q):</strong> 代表当前词，它要去“查询”和自己相关的其他词。可以理解为：“我为了理解自己，需要什么样的信息？”</li>
+<li><strong>Key (键, K):</strong> 代表句子中的每个词，它等着被查询。可以理解为：“我携带着这样的信息，谁需要可以来匹配。”</li>
+<li><strong>Value (值, V):</strong> 也代表句子中的每个词，它包含了这个词的实际意义。</li>
+</ul>
+</li>
+<li>
+<p><strong>计算相关性得分：</strong> 模型会拿着当前词的 <strong>Q</strong> 向量，去和句子中所有词的 <strong>K</strong> 向量做点积运算。这个得分就代表了“查询”和“键”的匹配程度，也就是相关性有多高。例如，当处理单词 "it" 时，它的 <strong>Q</strong> 向量会和 "cat" 的 <strong>K</strong> 向量计算出非常高的分数。</p>
+</li>
+<li>
+<p><strong>加权求和：</strong> 将这些分数进行归一化（通过 Softmax 函数），变成一组权重（总和为1）。然后用这些权重去乘以每个词对应的 <strong>V</strong> 向量，最后将它们全部加起来。</p>
+</li>
+<li>
+<p><strong>得到富含上下文的表示：</strong> 最终得到的这个加权求和向量，就是当前词（例如 "it"）融合了整个句子上下文信息之后的新表示。在这个新表示里，"it" 就强烈地指向了 "cat" 的含义。</p>
+</li>
+</ol>
+<p><strong>为什么重要：</strong><br>
+自注意力是 <strong>Transformer 模型</strong>（所有现代 LLM 的基础）的核心。它使得模型能够处理长距离依赖关系，深刻理解语法、语义和上下文，并且由于其计算可以高度并行化，极大地提高了模型处理长文本的效率。这主要对应于我们之前讨论的 <strong>Prefill</strong> 阶段。</p>
+<hr>
+<h3>2. 自回归 (Autoregression)</h3>
+<p><strong>通俗来讲：</strong><br>
+自回归就是一种**“接龙”式**的文本生成方式。模型每生成一个新词，都会把这个新词当作已知信息，再回头去预测下一个词。</p>
+<p><strong>核心思想：</strong><br>
+一个序列中下一个元素的生成，完全依赖于它前面所有已经生成的元素。<br>
+$$P(w_n | w_1, w_2, ..., w_{n-1})$$<br>
+这个公式的意思是，预测第 $n$ 个词 $w_n$ 的概率，是基于前面从第 1 个到第 $n-1$ 个词已经存在的条件。</p>
+<p><strong>它是如何工作的：</strong></p>
+<ol>
+<li><strong>起始输入：</strong> 模型接收用户的提示（Prompt），例如 "今天天气真"。</li>
+<li><strong>预测第一个词：</strong> 模型处理完输入后，预测出最有可能的下一个词，比如是“不”。</li>
+<li><strong>更新输入并循环：</strong> 模型将新生成的词“不”拼接到之前的输入后面，形成新的序列 "今天天气真不"。然后，将这个新序列作为下一次的输入，去预测再下一个词，比如是“错”。</li>
+<li><strong>持续“接龙”：</strong> 这个过程不断重复（"今天天气真不错" -&gt; "！"），直到模型生成一个特殊的终止符（<code class="notranslate">[EOS]</code>）或者达到预设的最大长度。</li>
+</ol>
+<p><strong>为什么重要：</strong><br>
+自回归是所有生成式语言模型（GPT系列、Llama等）<strong>生成文本的基础模式</strong>。它让模型能够像人类一样，逐字逐句地构建出连贯、有逻辑的句子和段落。这个过程是<strong>串行</strong>的，因为生成下一个词必须等待上一个词生成完毕，这也是为什么 <strong>Decode</strong> 阶段的瓶颈在于内存访问延迟，而不是并行计算。</p>
+<hr>
+<h3>3. GEMM (General Matrix Multiplication)</h3>
+<p><strong>通俗来讲：</strong><br>
+GEMM 就是<strong>通用矩阵乘法</strong>，是计算机执行的一种基础数学运算。它不是一个模型概念，而是一个<strong>计算操作</strong>。可以把它想象成 LLM 这座宏伟大厦的**“砖块”<strong>或</strong>“基本功”**。</p>
+<p><strong>核心思想：</strong><br>
+将两个矩阵相乘得到第三个矩阵：$C = A \times B$。</p>
+<p><strong>它在 LLM 中的角色：</strong><br>
+大型语言模型中的<strong>几乎所有计算，最终都可以分解为大量的 GEMM 操作</strong>。</p>
+<ul>
+<li>在<strong>自注意力</strong>机制中，计算 Q、K、V 向量，计算注意力得分（Q 乘以 K 的转置），以及用注意力权重乘以 V，这些全都是大规模的矩阵乘法。</li>
+<li>在模型的前馈网络（FFN）层中，主要也是由两个巨大的 GEMM 操作构成。</li>
+</ul>
+<p><strong>为什么重要：</strong></p>
+<ul>
+<li><strong>计算核心：</strong> GEMM 的计算量占据了 LLM 推理过程的绝大部分。模型的推理速度，直接取决于硬件（GPU, NPU, TPU）执行 GEMM 的速度。</li>
+<li><strong>硬件优化目标：</strong> 现代的 AI 加速芯片（如 NVIDIA 的 GPU 及其 Tensor Cores）就是为了极速、并行地执行 GEMM 这类运算而设计的。</li>
+<li><strong>性能瓶颈的体现：</strong>
+<ul>
+<li>在 <strong>Prefill</strong> 阶段，模型并行处理整个长输入，会触发一次性、大规模的 <strong>“大批 GEMM”</strong>，此时的瓶颈在于硬件的峰值计算能力。</li>
+<li>在 <strong>Decode</strong> 阶段，模型每生成一个 token，虽然也需要 GEMM，但此时的矩阵规模小很多，计算本身很快，瓶颈反而转移到了读写 KV Cache 的内存延迟上。</li>
+</ul>
+</li>
+</ul>
+<h3><strong>总结：它们如何协同工作</strong></h3>
+<ol>
+<li><strong>用户输入一个 Prompt。</strong></li>
+<li><strong>Prefill 阶段</strong>：模型启动，使用<strong>自注意力 (Self-Attention)</strong> 机制来并行处理整个 Prompt，理解其中所有词语的上下文关系。这个过程在底层被分解为数以万计的<strong>大规模 GEMM</strong> 操作，在 GPU/NPU 上飞速执行。</li>
+<li><strong>Decode 阶段</strong>：Prefill 完成后，模型进入<strong>自回归 (Autoregressive)</strong> 生成循环。
+<ul>
+<li>在循环的每一步，模型都会基于之前所有的内容（原始 Prompt + 已生成的词），通过一次前向传播（其中依然包含<strong>自注意力</strong>和<strong>小规模 GEMM</strong> 计算）来预测下一个最可能的词。</li>
+<li>然后将这个新生成的词添加到输入序列中，开始下一次循环。</li>
+<li>这个过程不断重复，直到生成完整的回答。</li>
+</ul>
+</li>
+</ol></div>
+<div style="font-size:small;margin-top:8px;float:right;"></div>
+
+<button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
+<div class="comments" id="comments"></div>
+
+</div>
+    <div id="footer"><div id="footer1">Copyright © <span id="copyrightYear"></span> <a href="https://lhmax2010.github.io">Blog Title</a></div>
+<div id="footer2">
+    <span id="runday"></span><span>Powered by <a href="https://meekdai.com/Gmeek.html" target="_blank">Gmeek</a></span>
+</div>
+
+<script>
+var now=new Date();
+document.getElementById("copyrightYear").innerHTML=now.getFullYear();
+
+if(""!=""){
+    var startSite=new Date("");
+    var diff=now.getTime()-startSite.getTime();
+    var diffDay=Math.floor(diff/(1000*60*60*24));
+    document.getElementById("runday").innerHTML="网站运行"+diffDay+"天"+" • ";
+}
+</script></div>
+</body>
+<script>
+var IconList={'sun': 'M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 12a4 4 0 100-8 4 4 0 000 8zM8 0a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0V.75A.75.75 0 018 0zm0 13a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 018 13zM2.343 2.343a.75.75 0 011.061 0l1.06 1.061a.75.75 0 01-1.06 1.06l-1.06-1.06a.75.75 0 010-1.06zm9.193 9.193a.75.75 0 011.06 0l1.061 1.06a.75.75 0 01-1.06 1.061l-1.061-1.06a.75.75 0 010-1.061zM16 8a.75.75 0 01-.75.75h-1.5a.75.75 0 010-1.5h1.5A.75.75 0 0116 8zM3 8a.75.75 0 01-.75.75H.75a.75.75 0 010-1.5h1.5A.75.75 0 013 8zm10.657-5.657a.75.75 0 010 1.061l-1.061 1.06a.75.75 0 11-1.06-1.06l1.06-1.06a.75.75 0 011.06 0zm-9.193 9.193a.75.75 0 010 1.06l-1.06 1.061a.75.75 0 11-1.061-1.06l1.06-1.061a.75.75 0 011.061 0z', 'moon': 'M9.598 1.591a.75.75 0 01.785-.175 7 7 0 11-8.967 8.967.75.75 0 01.961-.96 5.5 5.5 0 007.046-7.046.75.75 0 01.175-.786zm1.616 1.945a7 7 0 01-7.678 7.678 5.5 5.5 0 107.678-7.678z', 'sync': 'M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z', 'home': 'M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z', 'github': 'M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z'};
+var utterancesLoad=0;
+
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
+    }
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+console.log("\n %c Gmeek last https://github.com/Meekdai/Gmeek \n","padding:5px 0;background:#02d81d;color:#fff");
+</script>
+
+<script>
+document.getElementById("pathHome").setAttribute("d",IconList["home"]);
+document.getElementById("pathIssue").setAttribute("d",IconList["github"]);
+
+
+
+function openComments(){
+    cm=document.getElementById("comments");
+    cmButton=document.getElementById("cmButton");
+    cmButton.innerHTML="loading";
+    span=document.createElement("span");
+    span.setAttribute("class","AnimatedEllipsis");
+    cmButton.appendChild(span);
+
+    script=document.createElement("script");
+    script.setAttribute("src","https://utteranc.es/client.js");
+    script.setAttribute("repo","lhmax2010/lhmax2010.github.io");
+    script.setAttribute("issue-term","title");
+    
+    if(localStorage.getItem("meek_theme")=="dark"){script.setAttribute("theme","dark-blue");}
+    else if(localStorage.getItem("meek_theme")=="light") {script.setAttribute("theme","github-light");}
+    else{script.setAttribute("theme","preferred-color-scheme");}
+    
+    script.setAttribute("crossorigin","anonymous");
+    script.setAttribute("async","");
+    cm.appendChild(script);
+
+    int=self.setInterval("iFrameLoading()",200);
+}
+
+function iFrameLoading(){
+    var utterances=document.getElementsByClassName('utterances');
+    if(utterances.length==1){
+        if(utterances[0].style.height!=""){
+            utterancesLoad=1;
+            int=window.clearInterval(int);
+            document.getElementById("cmButton").style.display="none";
+            console.log("utterances Load OK");
+        }
+    }
+}
+
+
+
+</script>
+<script>MathJax = {tex: {inlineMath: [["$", "$"]]}};</script><script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</html>
