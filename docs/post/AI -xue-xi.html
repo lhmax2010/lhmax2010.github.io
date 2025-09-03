@@ -278,13 +278,15 @@ $$\text{KV Cache Size} \approx 2 \times (\text{上下文长度}) \times (\text{�
 <h3>5. <code class="notranslate">每个头的维度 (Dimension per Head / Head Dim)</code></h3>
 <ul>
 <li>
-<strong>含义</strong>: 每个注意力头所处理的 Key 和 Value 向量的维度（即向量中元素的数量）。</li>
-<li>
-<strong>解释</strong>: 这个参数定义了每个 K/V 向量的大小。它与注意力头数一起，共同构成了模型的“隐藏层维度 (<code class="notranslate">hidden_size</code> 或 <code class="notranslate">d_model</code>)”。<br>
-$$\text{hidden_size} = (\text{注意力头数}) \times (\text{每个头的维度})$$
+<p><strong>含义</strong>: 每个注意力头所处理的 Key 和 Value 向量的维度（即向量中元素的数量）。</p>
 </li>
 <li>
-<strong>示例</strong>: Llama 2 7B 模型的 <code class="notranslate">hidden_size</code> 是 4096。因为它有 32 个头，所以每个头的维度就是 <code class="notranslate">4096 / 32 = 128</code>。</li>
+<p><strong>解释</strong>: 这个参数定义了每个 K/V 向量的大小。它与注意力头数一起，共同构成了模型的“隐藏层维度 (<code class="notranslate">hidden_size</code> 或 <code class="notranslate">d_model</code>)”。</p>
+<p><code class="notranslate">hidden_size=(注意力头数)×(每个头的维度)</code></p>
+</li>
+<li>
+<p><strong>示例</strong>: Llama 2 7B 模型的 <code class="notranslate">hidden_size</code> 是 4096。因为它有 32 个头，所以每个头的维度就是 <code class="notranslate">4096 / 32 = 128</code>。</p>
+</li>
 </ul>
 <hr>
 <h3>6. <code class="notranslate">数据类型字节数 (Bytes per Data Type)</code></h3>

@@ -216,7 +216,9 @@ $$\text{KV Cache Size} \approx 2 \times (\text{上下文长度}) \times (\text{�
 
 * **含义**: 每个注意力头所处理的 Key 和 Value 向量的维度（即向量中元素的数量）。
 * **解释**: 这个参数定义了每个 K/V 向量的大小。它与注意力头数一起，共同构成了模型的“隐藏层维度 (`hidden_size` 或 `d_model`)”。
-    $$\text{hidden\_size} = (\text{注意力头数}) \times (\text{每个头的维度})$$
+
+    `hidden_size=(注意力头数)×(每个头的维度)`
+
 * **示例**: Llama 2 7B 模型的 `hidden_size` 是 4096。因为它有 32 个头，所以每个头的维度就是 `4096 / 32 = 128`。
 
 ---
