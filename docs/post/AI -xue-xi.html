@@ -230,7 +230,92 @@ Top-k 是一种<strong>采样策略（Sampling Strategy）</strong>，用于模�
 <ul>
 <li><strong>显著降低二次启动时间</strong>：当用户关闭应用再重新打开时，推理引擎会检查是否存在缓存。如果存在，它会直接加载这个已经优化好的管线，跳过整个漫长的编译过程。</li>
 <li><strong>优化 TTFT</strong>：这个技术直接作用于 <strong>TTFT（首个 Token 时间）</strong> 中的 <strong>“模型加载”</strong> 环节。虽然它不减少冷启动（设备重启后第一次运行）的时间，但对于所有非冷启动的场景，它能带来数秒级别的启动速度提升，极大地改善了用户体验。</li>
-</ul></div>
+</ul>
+<p>好的，我们来详细解析一下 KV Cache 尺寸计算公式中的每一个参数。</p>
+<p>这个公式是估算一个 Transformer 模型（如 Llama, GPT, Phi-2）在运行时，其 Key-Value 缓存所占用内存大小的核心依据。</p>
+<p><strong>公式：</strong><br>
+$$\text{KV Cache Size} \approx 2 \times (\text{上下文长度}) \times (\text{层数}) \times (\text{注意力头数}) \times (\text{每个头的维度}) \times (\text{数据类型字节数})$$</p>
+<hr>
+<h3>1. <code class="notranslate">2</code></h3>
+<ul>
+<li><strong>含义</strong>: 这个 <code class="notranslate">2</code> 代表了 <strong>Key (K)</strong> 和 <strong>Value (V)</strong> 这两个部分。</li>
+<li><strong>解释</strong>: 在自注意力机制（Self-Attention）中，模型会为每个 Token 生成三个向量：Query (Q), Key (K), 和 Value (V)。
+<ul>
+<li>Query (Q) 是当前正在处理的 Token 的代表，它会去“查询”其他 Token。</li>
+<li>Key (K) 是过去所有 Token 的代表，用来和 Q 进行匹配计算相关性。</li>
+<li>Value (V) 包含了过去所有 Token 的实际信息。<br>
+为了在生成下一个词时，避免重复计算前面所有词的 Key 和 Value，模型需要将它们缓存起来。因此，对于序列中的每一个 Token，我们都需要缓存它的 Key 向量和 Value 向量，共计 <strong>2</strong> 个向量。Query (Q) 是瞬时的，不需要缓存。</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>2. <code class="notranslate">上下文长度 (Context Length / Sequence Length)</code></h3>
+<ul>
+<li><strong>含义</strong>: 指的是当前模型正在处理的序列的总长度，单位是 Token。</li>
+<li><strong>解释</strong>: 这是 KV Cache 大小的<strong>主要动态增长因素</strong>。它等于<strong>用户输入的 Prompt 长度</strong> + <strong>已经生成的 Token 数量</strong>。例如，如果用户输入了 100 个 Token，模型已经生成了 20 个 Token，那么当前的上下文长度就是 120。模型必须为这 120 个 Token 中的<strong>每一个</strong>都存储 K 和 V 向量，因此 KV Cache 的大小与上下文长度成<strong>线性正比</strong>关系。</li>
+</ul>
+<hr>
+<h3>3. <code class="notranslate">层数 (Number of Layers)</code></h3>
+<ul>
+<li><strong>含义</strong>: 指的是 Transformer 模型中堆叠的“层”（Transformer Block）的总数量。</li>
+<li><strong>解释</strong>: Transformer 模型是通过将许多结构相同的层堆叠起来构建的。<strong>每一层都有自己独立的自注意力机制</strong>，因此每一层也都需要自己独立的 KV Cache。如果一个模型有 32 层，那么对于序列中的同一个 Token，我们需要在第 1 层存一份它的 K/V，在第 2 层存一份，...，一直到第 32 层。所以总的 Cache 大小需要乘以模型的层数。</li>
+<li><strong>示例</strong>: Llama 2 7B 模型有 <strong>32</strong> 层。</li>
+</ul>
+<hr>
+<h3>4. <code class="notranslate">注意力头数 (Number of Attention Heads)</code></h3>
+<ul>
+<li>
+<p><strong>含义</strong>: 在多头注意力（Multi-Head Attention）机制中，模型将总的注意力计算能力“拆分”成的独立“头”的数量。</p>
+</li>
+<li>
+<p><strong>解释</strong>: 与其进行一次大的、单一的注意力计算，模型不如将问题分解，让多个“头”从不同的角度（不同的子空间表示）去分头学习信息。每个头都有自己独立的 K 和 V 向量。因此，总的 Cache 大小也需要乘以注意力头的数量。</p>
+</li>
+<li>
+<p><strong>示例</strong>: Llama 2 7B 模型有 <strong>32</strong> 个注意力头。</p>
+</li>
+</ul>
+<hr>
+<h3>5. <code class="notranslate">每个头的维度 (Dimension per Head / Head Dim)</code></h3>
+<ul>
+<li>
+<strong>含义</strong>: 每个注意力头所处理的 Key 和 Value 向量的维度（即向量中元素的数量）。</li>
+<li>
+<strong>解释</strong>: 这个参数定义了每个 K/V 向量的大小。它与注意力头数一起，共同构成了模型的“隐藏层维度 (<code class="notranslate">hidden_size</code> 或 <code class="notranslate">d_model</code>)”。<br>
+$$\text{hidden_size} = (\text{注意力头数}) \times (\text{每个头的维度})$$
+</li>
+<li>
+<strong>示例</strong>: Llama 2 7B 模型的 <code class="notranslate">hidden_size</code> 是 4096。因为它有 32 个头，所以每个头的维度就是 <code class="notranslate">4096 / 32 = 128</code>。</li>
+</ul>
+<hr>
+<h3>6. <code class="notranslate">数据类型字节数 (Bytes per Data Type)</code></h3>
+<ul>
+<li><strong>含义</strong>: 存储向量中每一个数字所占用的字节数。</li>
+<li><strong>解释</strong>: 这是将向量中的元素数量转换为实际内存占用的换算系数。</li>
+<li><strong>常见值</strong>:
+<ul>
+<li><strong>FP32 (32位单精度浮点)</strong>: <strong>4 字节</strong></li>
+<li><strong>FP16 (16位半精度浮点)</strong>: <strong>2 字节</strong> (这是端侧推理最常用的类型)</li>
+<li><strong>BF16 (16位bfloat16浮点)</strong>: <strong>2 字节</strong></li>
+<li><strong>INT8 (8位整型)</strong>: <strong>1 字节</strong> (量化后模型常用的类型)</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h3>综合示例：计算 Llama 2 7B 在 FP16 下的 KV Cache 大小</h3>
+<p>让我们用 Llama 2 7B 的实际参数来计算一下，当上下文长度为 <strong>1024</strong> 个 Token 时，KV Cache 有多大。</p>
+<ul>
+<li><strong>2</strong>: (K 和 V)</li>
+<li><strong>上下文长度</strong>: 1024</li>
+<li><strong>层数</strong>: 32</li>
+<li><strong>注意力头数</strong>: 32</li>
+<li><strong>每个头的维度</strong>: 128</li>
+<li><strong>数据类型字节数</strong>: 2 (因为是 FP16)</li>
+</ul>
+<p>$$\text{Size} = 2 \times 1024 \times 32 \times 32 \times 128 \times 2$$
+$$\text{Size} = 536,870,912 \text{ 字节}$$</p>
+<p>换算成 MB:<br>
+$$\frac{536,870,912}{1024 \times 1024} = \textbf{512 MB}$$</p>
+<p><strong>结论：</strong> 对于 Llama 2 7B 模型，仅仅 1K 的上下文长度，其 KV Cache 就会占用 <strong>512 MB</strong> 的内存。如果上下文达到 4K，就需要 <strong>2 GB</strong> 内存，这对于移动设备来说是一个巨大的负担。这也解释了为什么在端侧运行长上下文 LLM 时，内存管理是最大的挑战之一。</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
