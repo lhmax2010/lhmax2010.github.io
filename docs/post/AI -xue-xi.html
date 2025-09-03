@@ -317,7 +317,66 @@ $$\text{KV Cache Size} \approx 2 \times (\text{上下文长度}) \times (\text{�
 $$\text{Size} = 536,870,912 \text{ 字节}$$</p>
 <p>换算成 MB:<br>
 $$\frac{536,870,912}{1024 \times 1024} = \textbf{512 MB}$$</p>
-<p><strong>结论：</strong> 对于 Llama 2 7B 模型，仅仅 1K 的上下文长度，其 KV Cache 就会占用 <strong>512 MB</strong> 的内存。如果上下文达到 4K，就需要 <strong>2 GB</strong> 内存，这对于移动设备来说是一个巨大的负担。这也解释了为什么在端侧运行长上下文 LLM 时，内存管理是最大的挑战之一。</p></div>
+<p><strong>结论：</strong> 对于 Llama 2 7B 模型，仅仅 1K 的上下文长度，其 KV Cache 就会占用 <strong>512 MB</strong> 的内存。如果上下文达到 4K，就需要 <strong>2 GB</strong> 内存，这对于移动设备来说是一个巨大的负担。这也解释了为什么在端侧运行长上下文 LLM 时，内存管理是最大的挑战之一。</p>
+<p>好的，这是一个非常核心的系统和物理概念。</p>
+<p><strong>稳态 (Steady State)</strong>，通俗来讲，指的是一个系统在运行一段时间后，其内部的各种状态参数不再随时间发生明显变化，达到了一个<strong>动态平衡</strong>的稳定运行阶段。</p>
+<p>这个概念的关键在于“<strong>动态平衡</strong>”，而不是“静止”。系统仍在活跃地工作，有能量或物质的输入和输出，但其整体表现（如温度、速度、吞吐量等）保持在一个相对恒定的水平上。</p>
+<hr>
+<h3>一个生动的比喻：长跑运动员</h3>
+<p>为了更好地理解，我们可以把一个系统比作一个长跑运动员：</p>
+<ol>
+<li>
+<p><strong>初始阶段 (Transient State / 瞬态)</strong></p>
+<ul>
+<li>运动员刚起跑的第1分钟。他的心率急剧上升，呼吸急促且不规律，身体在努力适应运动状态。这个阶段，他的速度和状态是<strong>不稳定、在剧烈变化</strong>的。</li>
+</ul>
+</li>
+<li>
+<p><strong>进入稳态 (Steady State)</strong></p>
+<ul>
+<li>跑了大约10分钟后，运动员找到了自己的节奏。他的心率和呼吸都达到了一个较高但<strong>稳定</strong>的水平，身体的能量供应和消耗达到了平衡。他可以按照这个配速持续跑很长时间。这个阶段就是“稳态”。他的速度是稳定的，身体状态也是可预测的。</li>
+</ul>
+</li>
+<li>
+<p><strong>稳态被打破 (Degradation)</strong></p>
+<ul>
+<li>如果持续高强度运行，运动员可能会因为能量耗尽或体温过高而感到疲劳，速度开始<strong>不可避免地下降</strong>。这时，他就<strong>脱离了稳态</strong>，性能开始衰减。</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3>在我们之前讨论的“AI模型性能测试”语境中</h3>
+<p>在我们之前讨论的AI模型性能和系统测试的语境中，“稳态”特指：</p>
+<p><strong>系统（例如运行AI模型的手机芯片）在经过初始的“预热”阶段后，其性能指标（如 Decode TPS, 帧率）达到并保持在一个可持续的、相对平稳的水平。</strong></p>
+<ul>
+<li><strong>“预热”阶段发生了什么？</strong>
+<ul>
+<li><strong>缓存加载 (Caching)</strong>：CPU和GPU的缓存从无到有，逐渐被填满。</li>
+<li><strong>资源分配 (Resource Allocation)</strong>：操作系统正在分配内存，创建和调度线程。</li>
+<li><strong>频率调整 (Frequency Scaling)</strong>：芯片的CPU/GPU/NPU频率从待机的低频迅速拉升到高频。</li>
+<li><strong>管线填充 (Pipeline Filling)</strong>：硬件的计算管线被数据完全填满并开始高效流水作业。</li>
+</ul>
+</li>
+</ul>
+<p>这个初始阶段的性能数据波动很大，可能特别高（突发性能），也可能比较低，不能代表应用的真实长期体验。</p>
+<ul>
+<li><strong>为什么要关注稳态？</strong>
+<ol>
+<li><strong>代表真实体验</strong>: 用户进行连续性任务（如长文生成、玩游戏、看视频）时，体验到的是系统的长期性能，也就是稳态性能。</li>
+<li><strong>可预测和可比较</strong>: 稳态性能是一个相对稳定的值，可以用来公平地比较不同设备或不同优化方案的优劣。</li>
+<li><strong>评估稳定性的基准</strong>: 我们需要先确定一个“稳态”的性能基准，然后才能判断系统在长时间运行后（例如10分钟），是否因为<strong>散热问题（降频）或内存泄漏</strong>等原因导致性能下滑，即“稳态是否被打破”。</li>
+</ol>
+</li>
+</ul>
+<h3>在其他领域的应用</h3>
+<p>这个概念非常普适：</p>
+<ul>
+<li><strong>物理学/热力学</strong>: 一个物体，如果流入的热量和流出的热量相等，它的温度就会保持不变，这就是热稳态。</li>
+<li><strong>电子学</strong>: 一个电路在刚通电时会有短暂的电流冲击（瞬态），几微秒后，电路中的电压和电流就会稳定下来，进入稳态。</li>
+<li><strong>化学</strong>: 在一个连续的化学反应中，如果中间产物的生成速率等于其消耗速率，那么它的浓度会保持不变，达到稳态。</li>
+</ul>
+<p><strong>总结一下：</strong></p>
+<p>“稳态”就是一个系统脱离了初始的混乱和波动，进入了一个可持续的、表现平稳的“巡航”阶段。在性能测试中，我们关注的就是这个“巡航”速度有多快，以及它能维持多久。</p></div>
 <div style="font-size:small;margin-top:8px;float:right;"></div>
 
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">评论</button>
